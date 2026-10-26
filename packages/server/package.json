@@ -1,0 +1,17 @@
+{
+  "name": "@brawler/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@brawler/shared": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "brawler",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @brawler/client",
+    "dev:server": "npm run dev -w @brawler/server",
+    "build": "npm run build -w @brawler/client",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
