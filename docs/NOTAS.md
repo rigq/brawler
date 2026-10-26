@@ -8,13 +8,17 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
-- **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. `git init` hecho (falta el repo en GitHub).
+- **F0.2 (26 oct)** — `shared/src/constants.ts` (reloj de simulación, tamaño del mundo, suelo). `FixedStepAccumulator` convierte frames de duración variable en pasos fijos de 60 Hz, con tope de 250 ms por frame. `World` mínimo con `tick` y `stepWorld()`. `GameScene` simula con el acumulador, dibuja el suelo y muestra un HUD (FPS, Hz de simulación medidos, tick). Comprobado: 600 pasos en 10 s a 30, 60 y 144 FPS; en el navegador, sim 60.0 Hz.
+- **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. Repo en https://github.com/rigq/brawler.
 
 ### Decisiones
 
 - **Phaser 3.90**, no Phaser 4 (npm instala la 4 por defecto): el stack dice Phaser 3 y casi toda la documentación y ejemplos son de la 3.
 - **Sin paso de compilación para `shared` ni `server`**: todo el TS es "borrable" (`erasableSyntaxOnly`), Vite lo empaqueta en el cliente y Node 24 lo ejecuta directo en el servidor. Imports relativos con extensión `.ts`. Nada de `enum` ni `namespace`.
 - `tsconfig.base.json` común en modo `strict` + `noUncheckedIndexedAccess`; cada paquete extiende y elige sus `lib`/`types` (`shared` sin DOM ni Node, para que no se cuele nada impuro).
+- **Unidades del mundo = píxeles del canvas** (1280×720) y segundos. Las velocidades en `constants.ts` serán px/s y se multiplican por `FIXED_DT`.
+- **El acumulador no lee ningún reloj**: el cliente le pasa el `delta` de Phaser y el servidor (F3) le pasará el suyo. Así la lógica de `shared` sigue siendo pura.
+- **Render sin interpolar por ahora.** `accumulator.alpha` ya existe; se usará cuando haya cosas que se muevan (F1.1).
 - Dependencias: `typescript` (raíz), `phaser` + `vite` (cliente), `@types/node` (servidor, solo tipos).
 - Fecha del MVP: **14 de marzo de 2027** (la de CLAUDE.md manda si hay discrepancia).
 - `CLAUDE.md` vive en la raíz del repo; `docs/NOTAS.md` guarda estado y planning.
@@ -25,13 +29,12 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Siguiente tarea
 
-- F0.2 `constants.ts`, bucle de paso fijo a 60 Hz en `shared`, suelo y FPS visibles.
+- F1.1 Cuadrado que corre y salta, colisión con el suelo.
 
 ### Pendientes v2
 
 Ideas que surgen durante las sesiones y quedan fuera de la tarea actual o del MVP.
 
-- Crear el repo en GitHub y subir `main` (lo hace Riga).
 - (F5) Separar Phaser en su propio chunk para quitar el aviso de tamaño del build.
 
 ---

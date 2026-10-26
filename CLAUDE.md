@@ -59,7 +59,7 @@ brawler/
 ## Plan (marcar al completar)
 **F0 · Setup** (2–8 nov)
 - [x] F0.1 Monorepo + Vite + Phaser con escena vacía
-- [ ] F0.2 constants.ts, bucle de paso fijo 60 Hz, NOTAS.md
+- [x] F0.2 constants.ts, bucle de paso fijo 60 Hz, NOTAS.md
 
 **F1 · Movimiento local** (9–29 nov)
 - [ ] F1.1 Correr, saltar, colisión con suelo
