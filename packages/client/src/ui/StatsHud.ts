@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
+import type { World } from '@brawler/shared';
 
-const REFRESH_MS = 500;
+const REFRESH_MS = 250;
 
 /**
- * Top-left overlay with render FPS and measured simulation rate.
- * If the loop is right, "sim" stays at ~60 whatever the FPS is.
+ * Top-left overlay with render FPS, measured simulation rate and player 1's
+ * physics state. If the loop is right, "sim" stays at ~60 whatever the FPS is.
  */
 export class StatsHud {
   private readonly scene: Phaser.Scene;
@@ -17,15 +18,26 @@ export class StatsHud {
     this.text = scene.add.text(12, 12, '', { fontFamily: 'monospace', fontSize: '16px', color: '#9fe870' });
   }
 
-  update(frameMs: number, currentTick: number): void {
+  update(frameMs: number, world: World): void {
     this.elapsedMs += frameMs;
     if (this.elapsedMs < REFRESH_MS) return;
 
-    const simHz = ((currentTick - this.ticksAtLastRefresh) * 1000) / this.elapsedMs;
+    const simHz = ((world.tick - this.ticksAtLastRefresh) * 1000) / this.elapsedMs;
     const fps = this.scene.game.loop.actualFps;
-    this.text.setText(`FPS ${fps.toFixed(0)}\nsim ${simHz.toFixed(1)} Hz\ntick ${currentTick}`);
+    const lines = [`FPS ${fps.toFixed(0)}`, `sim ${simHz.toFixed(1)} Hz`, `tick ${world.tick}`];
+
+    const p1 = world.players[0];
+    if (p1) {
+      lines.push(
+        `vx ${p1.vx.toFixed(0)}  vy ${p1.vy.toFixed(0)}`,
+        `grounded ${p1.grounded}`,
+        `air jumps ${p1.airJumpsLeft}${p1.fastFalling ? '  FAST FALL' : ''}`,
+        `dodge ${p1.dodgeKind}  cooldown ${p1.dodgeCooldown}  air dodge ${p1.airDodgeAvailable ? 'yes' : 'no'}`,
+      );
+    }
+    this.text.setText(lines);
 
     this.elapsedMs = 0;
-    this.ticksAtLastRefresh = currentTick;
+    this.ticksAtLastRefresh = world.tick;
   }
 }

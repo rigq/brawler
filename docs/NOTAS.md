@@ -8,6 +8,10 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **F1.4 (26 oct)** — Nuevo input `dodge` (P1: **L** o **Shift**) y `shared/src/sim/dodge.ts`. En el suelo con dirección: **dash** (1000 px/s durante 10 ticks ≈ 167 px; enfriamiento 30 ticks). En el suelo sin dirección: **esquiva en el sitio** (18 ticks, invulnerable). En el aire: **esquiva aérea** en 8 direcciones (750 px/s durante 14 ticks, sin gravedad, invulnerable, una por salto; al acabar conserva el 35 % de la velocidad). Las esquivas tienen un enfriamiento de 54 ticks. Saltar en mitad del dash conserva su velocidad ("dash jump"). Una esquiva aérea hacia abajo termina al aterrizar. Feedback provisional: semitransparente si eres invulnerable, más claro durante el dash. Comprobado con script (23 casos, incluido el determinismo en 3000 pasos) y en el navegador con teclas reales.
+- **F1.3 (26 oct)** — Doble salto: `AIR_JUMPS` = 1 salto aéreo (`DOUBLE_JUMP_SPEED` 820, ~140 px), se recarga al aterrizar y se conserva si sales andando de un borde. Caída rápida: mantener S en el aire una vez pasado el punto más alto fija `vy` = `FAST_FALL_SPEED` (1600) hasta aterrizar o hacer el salto aéreo. HUD con saltos aéreos y "FAST FALL". Comprobado con script (altura simple 161 px / doble 294 px, sin tercer salto, S subiendo no hace nada, la caída rápida aterriza en 7 pasos frente a 22) y en el navegador.
+- **F1.2 (26 oct)** — Dos plataformas flotantes de un solo sentido (`PLATFORMS` en constantes, `world.platforms`). Se atraviesan saltando desde abajo y se aterriza encima; con S sobre una plataforma la ignoras durante `DROP_THROUGH_TICKS` (12 ticks ≈ 0,2 s) y caes. `Body` gana `onPlatform` y el jugador `dropTicks`. Comprobado con script (subir atravesando, quedarse encima, bajar con S, S en suelo sólido no hace nada, salir por el borde) y en el navegador.
+- **F1.1 (26 oct)** — Jugador (cuadrado naranja 40×60) que corre con A/D y salta con W o Espacio. En `shared`: `PlayerInput` (lo único que ve la simulación), `Rect` + `overlaps`, `moveAndCollide` (resuelve X y luego Y contra `world.solids`), `stepPlayer` (aceleración/fricción en suelo y aire, salto con corte si sueltas pronto, gravedad con velocidad máxima de caída). Si caes fuera, reapareces en el spawn (provisional hasta F2.4). Cliente: `KeyboardInput`, `PlayerView` dibujado con interpolación (`alpha`) y HUD con vx/vy/grounded. Comprobado con script (aterrizaje, velocidad máx., frenada, salto ~161 px, salto corto ~42 px, sin rebote al mantener salto, pared lateral, techo, reaparición, determinismo en 2000 pasos) y en el navegador.
 - **F0.2 (26 oct)** — `shared/src/constants.ts` (reloj de simulación, tamaño del mundo, suelo). `FixedStepAccumulator` convierte frames de duración variable en pasos fijos de 60 Hz, con tope de 250 ms por frame. `World` mínimo con `tick` y `stepWorld()`. `GameScene` simula con el acumulador, dibuja el suelo y muestra un HUD (FPS, Hz de simulación medidos, tick). Comprobado: 600 pasos en 10 s a 30, 60 y 144 FPS; en el navegador, sim 60.0 Hz.
 - **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. Repo en https://github.com/rigq/brawler.
 
@@ -18,7 +22,18 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 - `tsconfig.base.json` común en modo `strict` + `noUncheckedIndexedAccess`; cada paquete extiende y elige sus `lib`/`types` (`shared` sin DOM ni Node, para que no se cuele nada impuro).
 - **Unidades del mundo = píxeles del canvas** (1280×720) y segundos. Las velocidades en `constants.ts` serán px/s y se multiplican por `FIXED_DT`.
 - **El acumulador no lee ningún reloj**: el cliente le pasa el `delta` de Phaser y el servidor (F3) le pasará el suyo. Así la lógica de `shared` sigue siendo pura.
-- **Render sin interpolar por ahora.** `accumulator.alpha` ya existe; se usará cuando haya cosas que se muevan (F1.1).
+- **Render interpolado**: cada jugador guarda `prevX/prevY` y el cliente dibuja entre la posición anterior y la actual según `accumulator.alpha`. La física va a 60 Hz pero se ve suave a 144 Hz.
+- **Input muestreado una vez por frame de render** y reutilizado para todos los pasos de ese frame. En online (F3) se cambiará por un input por tick.
+- **El salto se detecta por flanco** (pulsado ahora y no en el paso anterior, `jumpHeld`): mantener el botón no encadena saltos.
+- **Colisión por ejes separados** (primero X, luego Y). Sencillo y sin atravesar nada mientras un paso mueva menos que el alto del jugador más el grosor de la plataforma (60 + 16 px). Lo más rápido ahora es la caída rápida: ~27 px/paso.
+- **Caída rápida tipo "snap"**: no acelera poco a poco, salta directamente a 1600 px/s. Se activa solo con `vy ≥ 0`, para que pulsar S mientras subes no corte el salto. Si bajas de una plataforma manteniendo S, entras en caída rápida directamente.
+- **Plataformas de un solo sentido**: solo frenan si caes (`vy > 0`) y en el paso anterior tus pies estaban por encima de su borde superior. Están a 130 px del suelo, al alcance de un salto simple (~160 px).
+- **Bajar de plataforma = mantener S estando encima.** Por eso la caída rápida de F1.3 (también con S) solo actuará en el aire.
+- **Mientras dura un dash o una esquiva, ella controla el movimiento**: no hay carrera, salto normal, bajada de plataforma ni caída rápida. Solo el salto cancela el dash. Estado plano (`dodgeKind`, `dodgeTicks`, `dodgeDirX/Y`…) en lugar de objetos anidados, para que sea fácil de sincronizar en F3.
+- **El dash no es invulnerable**; la esquiva en el sitio y la aérea sí (`isInvulnerable()`, que usará el combate en F2).
+- **Nada de `Math.hypot`, `Math.sin` ni funciones similares en la simulación**: JS no garantiza el mismo resultado al último decimal en todos los motores (Node y cada navegador), y eso rompería el determinismo online. Las diagonales usan la constante `Math.SQRT1_2`. Sumar, restar, multiplicar, dividir y `Math.sqrt` sí son exactos.
+- Controles P1: A/D moverse, W o Espacio saltar, S abajo, L o Shift esquivar/dash. J/K quedan reservadas para ataque ligero y pesado (F2). Las flechas son para P2 (F1.5).
+- En desarrollo, `__world` y `__game` están en la consola del navegador para inspeccionar el estado.
 - Dependencias: `typescript` (raíz), `phaser` + `vite` (cliente), `@types/node` (servidor, solo tipos).
 - Fecha del MVP: **14 de marzo de 2027** (la de CLAUDE.md manda si hay discrepancia).
 - `CLAUDE.md` vive en la raíz del repo; `docs/NOTAS.md` guarda estado y planning.
@@ -29,13 +44,14 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Siguiente tarea
 
-- F1.1 Cuadrado que corre y salta, colisión con el suelo.
+- F1.5 Segundo jugador en el mismo teclado (WASD y flechas) y mando opcional.
 
 ### Pendientes v2
 
 Ideas que surgen durante las sesiones y quedan fuera de la tarea actual o del MVP.
 
 - (F5) Separar Phaser en su propio chunk para quitar el aviso de tamaño del build.
+- (F1, si el control se siente duro) "Coyote time" (poder saltar unos frames después de salir del borde) y "jump buffer" (recordar el salto pulsado justo antes de tocar suelo).
 
 ---
 

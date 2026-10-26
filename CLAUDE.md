@@ -4,12 +4,13 @@
 Juego de lucha 2D estilo Brawlhalla, jugable en navegador y online 1v1, con personajes inspirados en compañeros de clase. Proyecto personal y pieza de portfolio de Riga (2.º DAW). MVP público antes del **14 de marzo de 2027**.
 
 ## Cómo trabajamos
-- **Una sesión = una tarea** del plan (ver "Plan" abajo). No empieces otra sin que te lo pida.
+- **Se avanza tarea a tarea** del plan (ver "Plan" abajo), en orden. Cuando Riga dice "sigue", encadena la siguiente tarea al terminar la actual.
 - Antes de tocar código, explica en **3 líneas** qué vas a cambiar y en qué archivos.
 - Al terminar, di **cómo probarlo** (comando + qué debo ver en el navegador).
 - Si surge algo fuera de la tarea, apúntalo en `docs/NOTAS.md` → "Pendientes v2". No lo hagas.
 - Explícame **1 concepto nuevo por sesión** (físicas, netcode, etc.) en lenguaje claro. Quiero entender el código, no solo tenerlo.
-- Al cerrar, actualiza `docs/NOTAS.md` (hecho, decisiones, bugs conocidos, siguiente tarea) y propón el mensaje de commit.
+- Al cerrar cada tarea, actualiza `docs/NOTAS.md` (hecho, decisiones, bugs conocidos, siguiente tarea).
+- **Commit al final del día**, uno con todo lo del día, cuando Riga lo pida. No commitear ni hacer push después de cada tarea.
 - Responde en español. Código, nombres de variables y commits en inglés.
 
 ## Stack
@@ -47,7 +48,7 @@ brawler/
 - Archivos pequeños y con una responsabilidad. Funciones cortas.
 - Sin dependencias nuevas sin preguntarme antes (di cuál y por qué).
 - Nada de assets, nombres ni sonidos de Brawlhalla u otros juegos. Placeholders: rectángulos de colores.
-- Commits pequeños, uno por tarea: `feat(shared): add double jump`.
+- Un commit por día de trabajo, con Conventional Commits y el resumen de las tareas en el cuerpo: `feat: add movement (F1.1–F1.3)`.
 
 ## Comandos
 - `npm install` — instalar todo
@@ -62,10 +63,10 @@ brawler/
 - [x] F0.2 constants.ts, bucle de paso fijo 60 Hz, NOTAS.md
 
 **F1 · Movimiento local** (9–29 nov)
-- [ ] F1.1 Correr, saltar, colisión con suelo
-- [ ] F1.2 Plataformas atravesables desde abajo
-- [ ] F1.3 Doble salto y caída rápida
-- [ ] F1.4 Dash y esquiva con cooldown
+- [x] F1.1 Correr, saltar, colisión con suelo
+- [x] F1.2 Plataformas atravesables desde abajo
+- [x] F1.3 Doble salto y caída rápida
+- [x] F1.4 Dash y esquiva con cooldown
 - [ ] F1.5 Segundo jugador en el mismo teclado
 - [ ] F1.6 Cámara que encuadra a ambos
 
