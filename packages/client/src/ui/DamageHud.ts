@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { STOCKS, WORLD_HEIGHT, WORLD_WIDTH, type Player } from '@brawler/shared';
+import { toCssColor } from '../render/palette.ts';
 
 const BOTTOM_MARGIN = 84;
 const FONT = { fontFamily: 'monospace', fontStyle: 'bold' } as const;
@@ -29,7 +30,7 @@ export class DamageHud {
     this.panels = colors.map((color, i) => {
       const x = (WORLD_WIDTH * (i + 1)) / (colors.length + 1);
       const y = WORLD_HEIGHT - BOTTOM_MARGIN;
-      const css = toCss(color);
+      const css = toCssColor(color);
       const label = scene.add.text(x, y, `P${i + 1}`, { ...FONT, fontSize: LABEL_SIZE, color: css }).setOrigin(0.5, 1);
       const percent = scene.add.text(x, y, '0%', { ...FONT, fontSize: PERCENT_SIZE }).setOrigin(0.5, 0);
       const stocks = scene.add
@@ -63,8 +64,4 @@ function damageColor(damage: number): string {
   const [from, to, local] = t < 0.5 ? [WHITE, YELLOW, t * 2] : [YELLOW, RED, (t - 0.5) * 2];
   const c = Phaser.Display.Color.Interpolate.ColorWithColor(from, to, 1, local);
   return Phaser.Display.Color.RGBToString(Math.round(c.r), Math.round(c.g), Math.round(c.b));
-}
-
-function toCss(color: number): string {
-  return `#${color.toString(16).padStart(6, '0')}`;
 }

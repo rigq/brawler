@@ -9,7 +9,10 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@brawler/shared": "*"
+    "@brawler/shared": "*",
+    "@colyseus/core": "^0.18.23",
+    "@colyseus/schema": "^5.0.42",
+    "@colyseus/ws-transport": "^0.18.4"
   },
   "devDependencies": {
     "@types/node": "^26.6.5"

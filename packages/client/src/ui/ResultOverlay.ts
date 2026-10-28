@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { WORLD_HEIGHT, WORLD_WIDTH, type MatchResult } from '@brawler/shared';
+import { toCssColor } from '../render/palette.ts';
 
 /** Wait after the final KO before covering the screen, so players see it happen. */
 const SHOW_DELAY_MS = 900;
@@ -19,13 +20,12 @@ export class ResultOverlay {
   private readonly playerColors: readonly number[];
   private msSinceOver = 0;
 
-  constructor(scene: Phaser.Scene, playerColors: readonly number[]) {
+  /** `hint` is the line under the result, e.g. how to start a rematch. */
+  constructor(scene: Phaser.Scene, playerColors: readonly number[], hint: string) {
     this.playerColors = playerColors;
     this.dim = scene.add.rectangle(0, 0, WORLD_WIDTH, WORLD_HEIGHT, DIM_COLOR, DIM_ALPHA).setOrigin(0, 0);
     this.title = scene.add.text(WORLD_WIDTH / 2, TITLE_Y, '', TITLE_STYLE).setOrigin(0.5);
-    this.hint = scene.add
-      .text(WORLD_WIDTH / 2, TITLE_Y + HINT_GAP, 'Revancha: Enter, R o Start', HINT_STYLE)
-      .setOrigin(0.5);
+    this.hint = scene.add.text(WORLD_WIDTH / 2, TITLE_Y + HINT_GAP, hint, HINT_STYLE).setOrigin(0.5);
     this.hide();
   }
 
@@ -52,6 +52,10 @@ export class ResultOverlay {
     for (const object of [this.dim, this.title, this.hint]) object.setVisible(true);
   }
 
+  setHint(text: string): void {
+    if (this.hint.text !== text) this.hint.setText(text);
+  }
+
   hide(): void {
     for (const object of [this.dim, this.title, this.hint]) object.setVisible(false);
   }
@@ -59,6 +63,6 @@ export class ResultOverlay {
   private describe(winner: number | null): { text: string; color: string } {
     if (winner === null) return { text: 'EMPATE', color: DRAW_COLOR };
     const color = this.playerColors[winner] ?? 0xffffff;
-    return { text: `GANA P${winner + 1}`, color: `#${color.toString(16).padStart(6, '0')}` };
+    return { text: `GANA P${winner + 1}`, color: toCssColor(color) };
   }
 }

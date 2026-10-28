@@ -52,8 +52,10 @@ brawler/
 
 ## Comandos
 - `npm install` — instalar todo
-- `npm run dev` — cliente en local (http://localhost:5173)
-- `npm run dev:server` — servidor en local (stub hasta F3.1; Node 24 ejecuta `.ts` directamente)
+- `npm run dev` — cliente en local (http://localhost:5173; partida local a 2 jugadores)
+- `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
+- http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
+- `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
 - `npm run build` — build de producción del cliente (incluye typecheck)
 - `npm run typecheck` — comprobar tipos en los tres paquetes
 
@@ -80,11 +82,11 @@ brawler/
 **Colchón Navidad** (14 dic – 3 ene)
 
 **F3 · Online 1v1** (4–31 ene)
-- [ ] F3.1 Sala Colyseus, dos navegadores ven el mismo mapa
-- [ ] F3.2 Inputs al servidor, simulación con `shared`, difusión de estado
-- [ ] F3.3 Predicción + reconciliación
-- [ ] F3.4 Interpolación del rival
-- [ ] F3.5 Salas con código, desconexiones
+- [x] F3.1 Sala Colyseus, dos navegadores ven el mismo mapa
+- [x] F3.2 Inputs al servidor, simulación con `shared`, difusión de estado
+- [x] F3.3 Predicción + reconciliación
+- [x] F3.4 Interpolación del rival
+- [x] F3.5 Salas con código, desconexiones
 - [ ] F3.6 Deploy (cliente Netlify/Vercel, servidor Fly.io/Hetzner)
 - [ ] F3.7 Ping en pantalla y ajustes
 

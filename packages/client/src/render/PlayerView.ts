@@ -16,6 +16,13 @@ const CHARGE_BAR_COLOR = 0xffffff;
 const CHARGE_BAR_HEIGHT = 5;
 const CHARGE_BAR_GAP = 8;
 
+/** Extra visual shift (px), e.g. to smooth out an online correction. Never affects gameplay. */
+export interface VisualOffset {
+  x: number;
+  y: number;
+}
+const NO_OFFSET: VisualOffset = { x: 0, y: 0 };
+
 /**
  * Draws one player with placeholder shapes: the body, an "eye" on the side it
  * faces, and the attack swing while its hitbox is active.
@@ -40,7 +47,7 @@ export class PlayerView {
    * `alpha` (0–1) is how far we are between the last simulation step and the next.
    * Drawing in between keeps motion smooth on screens faster than 60 Hz.
    */
-  render(player: Player, alpha: number): void {
+  render(player: Player, alpha: number, offset: VisualOffset = NO_OFFSET): void {
     // Knocked out (waiting to respawn) or out of the match: draw nothing.
     this.visible = isActive(player);
     this.body.setVisible(this.visible);
@@ -51,8 +58,8 @@ export class PlayerView {
       return;
     }
 
-    const x = lerp(player.prevX, player.x, alpha);
-    const y = lerp(player.prevY, player.y, alpha);
+    const x = lerp(player.prevX, player.x, alpha) + offset.x;
+    const y = lerp(player.prevY, player.y, alpha) + offset.y;
     const opacity = this.opacity(player);
 
     this.body.setPosition(x, y).setFillStyle(this.bodyColor(player), opacity);

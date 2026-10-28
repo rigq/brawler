@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@brawler/shared": "*",
+    "@colyseus/sdk": "^0.18.8",
     "phaser": "^3.90.0"
   },
   "devDependencies": {

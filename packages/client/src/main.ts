@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import { WORLD_HEIGHT, WORLD_WIDTH } from '@brawler/shared';
 import { GameScene } from './scenes/GameScene.ts';
+import { OnlineScene } from './scenes/OnlineScene.ts';
+
+// Until the menu (F5.1): add ?online to the URL to play online, otherwise local 2 players.
+const online = new URLSearchParams(location.search).has('online');
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -13,5 +17,5 @@ new Phaser.Game({
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   input: { gamepad: true },
-  scene: [GameScene],
+  scene: [online ? OnlineScene : GameScene],
 });

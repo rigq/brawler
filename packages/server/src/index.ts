@@ -1,5 +1,16 @@
-// Placeholder until F3.1 brings in Colyseus.
-// Node 24 runs this .ts file directly (type stripping), no build step.
-import { GAME_TITLE } from '@brawler/shared';
+// Game server: Colyseus over WebSocket. Node 24 runs this .ts file directly
+// (type stripping), no build step.
+import { defineRoom, defineServer } from '@colyseus/core';
+import { WebSocketTransport } from '@colyseus/ws-transport';
+import { GAME_TITLE, MATCH_ROOM, SERVER_PORT } from '@brawler/shared';
+import { MatchRoom } from './rooms/MatchRoom.ts';
 
-console.log(`[${GAME_TITLE} server] stub running — Colyseus arrives in F3.1`);
+const server = defineServer({
+  transport: new WebSocketTransport(),
+  rooms: {
+    [MATCH_ROOM]: defineRoom(MatchRoom),
+  },
+});
+
+await server.listen(SERVER_PORT);
+console.log(`[${GAME_TITLE} server] listening on port ${SERVER_PORT}`);

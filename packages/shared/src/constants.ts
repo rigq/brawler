@@ -190,3 +190,51 @@ export const CAMERA_MAX_ZOOM = 1.35;
 export const CAMERA_SMOOTH_MS = 140;
 /** The camera never shows anything outside this area. */
 export const CAMERA_BOUNDS = { x: -400, y: -300, width: 2080, height: 1400 } as const;
+
+// --- Network ---
+/** Port the game server listens on (WebSocket + HTTP). */
+export const SERVER_PORT = 2567;
+/** How often the server sends state patches to clients (the plan says 20–30 Hz). */
+export const PATCH_RATE_HZ = 30;
+/**
+ * Inputs the server keeps queued per player. A few absorb network jitter;
+ * more would only add delay, so older ones are dropped beyond this (~100 ms).
+ */
+export const INPUT_BUFFER_MAX = 6;
+/** A client sending more messages than this per second is disconnected (it sends ~60). */
+export const MAX_MESSAGES_PER_SECOND = 120;
+/**
+ * When a client's inputs stop arriving, the server repeats its last input for
+ * at most this many ticks (~0.15 s), then treats it as nothing pressed.
+ */
+export const INPUT_HOLD_MAX_TICKS = 10;
+
+// --- Client prediction (render side: the simulation never reads these) ---
+/** Inputs sent but not yet confirmed by the server, kept for replay (~2 s). Older ones are dropped. */
+export const MAX_PENDING_INPUTS = 120;
+/**
+ * When the server corrects your predicted position, the visible difference is
+ * faded out with this time constant (ms) instead of snapping. Lower = snappier.
+ */
+export const RECONCILE_SMOOTH_MS = 80;
+/** Corrections bigger than this (px) snap at once: a KO, a respawn, a big hit. */
+export const RECONCILE_SNAP_DISTANCE = 160;
+
+// --- Rival interpolation (render side) ---
+/**
+ * Other players are drawn this far in the past (ms), between two states that
+ * already arrived. Must cover the gap between patches (33 ms at 30 Hz) plus
+ * network jitter; the plan says ~100 ms.
+ */
+export const INTERP_DELAY_MS = 100;
+/** How much past state is kept for interpolation (ms). */
+export const SNAPSHOT_BUFFER_MS = 1000;
+/**
+ * The client's estimate of the server tick drifts towards each received tick by
+ * this fraction, so jittery arrivals don't make the rival stutter.
+ */
+export const SERVER_CLOCK_CORRECTION = 0.1;
+/** If the estimate is off by more than this many ticks (tab was in background), it jumps. */
+export const SERVER_CLOCK_SNAP_TICKS = 15;
+/** A player whose connection drops keeps their seat this long (s); the match pauses meanwhile. */
+export const RECONNECT_GRACE_SECONDS = 20;
