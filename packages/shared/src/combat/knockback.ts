@@ -43,7 +43,7 @@ function awayFrom(attacker: Player, target: Player): 1 | -1 {
 
 /**
  * Getting hit cancels whatever the target was doing. It also gives back the
- * air jump and air dodge, so a launched player always has a chance to recover.
+ * air jumps, air dodge and recovery, so a launched player always has a chance to get back.
  */
 function interrupt(target: Player): void {
   target.attackDir = 'none';
@@ -54,4 +54,5 @@ function interrupt(target: Player): void {
   target.onPlatform = false;
   target.airJumpsLeft = AIR_JUMPS;
   target.airDodgeAvailable = true;
+  target.recoveryAvailable = true;
 }

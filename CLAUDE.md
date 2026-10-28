@@ -52,7 +52,7 @@ brawler/
 
 ## Comandos
 - `npm install` — instalar todo
-- `npm run dev` — cliente en local (http://localhost:5173; partida local a 2 jugadores)
+- `npm run dev` — cliente (http://localhost:5173; partida local a 2 jugadores). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
 - http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados

@@ -16,40 +16,44 @@ export const FIXED_DT_MS = 1000 / SIM_HZ;
 export const MAX_FRAME_MS = 250;
 
 // --- World ---
+/** Size of the game canvas. The stage is bigger; the camera zooms out to fit it. */
 export const WORLD_WIDTH = 1280;
 export const WORLD_HEIGHT = 720;
 
-// --- Stage ---
-/** Main platform. (x, y) is its top-left corner. */
+// --- Stage: "floating temple" ---
+/** Main island (solid). (x, y) is its top-left corner. Centred on x = 640, 1200 px wide. */
 export const GROUND = {
-  x: 240,
+  x: 40,
   y: 560,
-  width: 800,
+  width: 1200,
   height: 40,
 } as const;
 /**
  * Floating one-way platforms: you can jump up through them and land on top.
- * Their top sits 130 px above the ground, within a single jump (~160 px).
+ * The two side ones sit 140 px above the ground and the middle one 130 px above
+ * those, so each is within a single jump (~160 px).
  */
 export const PLATFORMS = [
-  { x: 330, y: 430, width: 220, height: 16 },
-  { x: 730, y: 430, width: 220, height: 16 },
+  { x: 150, y: 420, width: 240, height: 16 },
+  { x: 890, y: 420, width: 240, height: 16 },
+  { x: 520, y: 290, width: 240, height: 16 },
 ] as const;
 /** How many steps you ignore platforms after pressing down on one (~0.2 s). */
 export const DROP_THROUGH_TICKS = 12;
 /**
  * Where each player appears (top-left of the player box), one per player.
- * Centred above each floating platform, so they drop onto it, facing each other.
+ * Centred above each side platform, so they drop onto it, facing each other.
  */
 export const SPAWNS = [
-  { x: 420, y: 300, facing: 1 },
-  { x: 820, y: 300, facing: -1 },
+  { x: 250, y: 300, facing: 1 },
+  { x: 990, y: 300, facing: -1 },
 ] as const;
 /**
  * Death zone edges: a player whose box leaves this area is knocked out.
- * The stage spans x 240–1040; there is room to be launched and recover.
+ * The island spans x 40–1240. 1000 px of room on each side, 1100 above the ground
+ * and 760 below it: a hit has to send you really far before you cannot come back.
  */
-export const BLAST_ZONE = { left: -360, right: 1640, top: -420, bottom: WORLD_HEIGHT + 300 } as const;
+export const BLAST_ZONE = { left: -960, right: 2240, top: GROUND.y - 1100, bottom: GROUND.y + 760 } as const;
 
 // --- Lives ---
 /** Lives per player. Losing the last one puts you out of the match. */
@@ -84,7 +88,7 @@ export const JUMP_CUT = 0.45;
 /** Terminal falling speed. */
 export const MAX_FALL_SPEED = 1300;
 /** Extra jumps available in the air; refilled on landing. */
-export const AIR_JUMPS = 1;
+export const AIR_JUMPS = 2;
 /** Upward speed of an air jump. Height ≈ 820² / (2 · 2400) ≈ 140 px. */
 export const DOUBLE_JUMP_SPEED = 820;
 /**
@@ -147,21 +151,31 @@ export const HEAVY_ATTACKS = {
   /** Long reach in front. */
   side: {
     startup: 10, active: 5, recovery: 22, box: { x: 36, y: 8, width: 92, height: 36 },
-    damage: 13, kbBase: 480, kbScale: 13, kbX: 1, kbY: -0.5,
+    damage: 13, kbBase: 480, kbScale: 10, kbX: 1, kbY: -0.5,
   },
   /** Big arc above, a bit to both sides. */
   up: {
     startup: 11, active: 6, recovery: 24, box: { x: -28, y: -82, width: 96, height: 86 },
-    damage: 12, kbBase: 500, kbScale: 12, kbX: 0.25, kbY: -1,
+    damage: 12, kbBase: 500, kbScale: 9, kbX: 0.25, kbY: -1,
   },
   /** Ground-level sweep reaching both sides. */
   down: {
     startup: 12, active: 5, recovery: 26, box: { x: -46, y: 30, width: 132, height: 44 },
-    damage: 11, kbBase: 460, kbScale: 12, kbX: 1, kbY: -0.7,
+    damage: 11, kbBase: 460, kbScale: 9, kbX: 1, kbY: -0.7,
   },
 } as const;
-/** Holding heavy charges for at most this long (~0.6 s), then it fires on its own. */
+/**
+ * Holding heavy charges for at most this long (~0.6 s), then it fires on its own.
+ * Only on the ground: heavies in the air fire straight away.
+ */
 export const HEAVY_MAX_CHARGE_TICKS = 36;
+/**
+ * Up heavy in the air is the "recovery": it launches you upwards at this speed
+ * (≈ 1100² / (2 · 2400) ≈ 250 px), once per time in the air. Refilled on landing or when hit.
+ */
+export const RECOVERY_SPEED = 1100;
+/** On the ground you keep running while attacking, at this fraction of RUN_SPEED. */
+export const ATTACK_MOVE_SPEED_MULT = 0.7;
 /** A fully charged heavy deals (1 + this) × damage and knockback; scales linearly with charge. */
 export const HEAVY_CHARGE_BONUS = 0.4;
 
@@ -172,7 +186,7 @@ export const KNOCKBACK_MAX_SPEED = 3600;
 export const HITSTUN_BASE_TICKS = 6;
 export const HITSTUN_TICKS_PER_SPEED = 0.012;
 /** How fast horizontal launch speed fades during hitstun (px/s²). Low = flies further. */
-export const HITSTUN_DRAG = 900;
+export const HITSTUN_DRAG = 1500;
 /** How long a player flashes white after being hit (visual only). */
 export const HIT_FLASH_TICKS = 8;
 
@@ -180,8 +194,8 @@ export const HIT_FLASH_TICKS = 8;
 /** Empty space kept around the players' bounding box, in world px. */
 export const CAMERA_PADDING_X = 280;
 export const CAMERA_PADDING_Y = 200;
-/** Zoom range. < 1 shows more than the 1280×720 stage, > 1 zooms in. */
-export const CAMERA_MIN_ZOOM = 0.75;
+/** Zoom range. < 1 shows more than the 1280×720 canvas (0.45 still shows a player near a blast zone), > 1 zooms in. */
+export const CAMERA_MIN_ZOOM = 0.45;
 export const CAMERA_MAX_ZOOM = 1.35;
 /**
  * Smoothing time constant in ms: after this long the camera has covered ~63 %
@@ -189,7 +203,7 @@ export const CAMERA_MAX_ZOOM = 1.35;
  */
 export const CAMERA_SMOOTH_MS = 140;
 /** The camera never shows anything outside this area. */
-export const CAMERA_BOUNDS = { x: -400, y: -300, width: 2080, height: 1400 } as const;
+export const CAMERA_BOUNDS = { x: -960, y: -640, width: 3200, height: 2060 } as const;
 
 // --- Network ---
 /** Port the game server listens on (WebSocket + HTTP). */

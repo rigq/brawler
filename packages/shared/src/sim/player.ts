@@ -2,6 +2,7 @@ import {
   AIR_ACCEL,
   AIR_DRAG,
   AIR_JUMPS,
+  ATTACK_MOVE_SPEED_MULT,
   DOUBLE_JUMP_SPEED,
   DROP_THROUGH_TICKS,
   FAST_FALL_SPEED,
@@ -17,7 +18,7 @@ import {
   PLAYER_WIDTH,
   RUN_SPEED,
 } from '../constants.ts';
-import { createAttackState, isAttacking, updateAttack, type AttackState } from '../combat/attacks.ts';
+import { attackPressed, createAttackState, isAttacking, updateAttack, type AttackState } from '../combat/attacks.ts';
 import type { PlayerInput } from '../input.ts';
 import { moveAndCollide, type Body, type StageGeometry } from './collision.ts';
 import { applyDodgeMovement, createDodgeState, endDodge, updateDodge, type DodgeState } from './dodge.ts';
@@ -43,6 +44,8 @@ export interface Player extends Body, DodgeState, AttackState, StockState {
   airJumpsLeft: number;
   /** Locked at FAST_FALL_SPEED until landing or jumping again. */
   fastFalling: boolean;
+  /** Up heavy in the air still gives its upward boost (once per time in the air). */
+  recoveryAvailable: boolean;
 }
 
 export function createPlayer(spawn: { x: number; y: number; facing: 1 | -1 }): Player {
@@ -65,6 +68,7 @@ export function createPlayer(spawn: { x: number; y: number; facing: 1 | -1 }): P
     dropTicks: 0,
     airJumpsLeft: AIR_JUMPS,
     fastFalling: false,
+    recoveryAvailable: true,
     ...createDodgeState(),
     ...createAttackState(),
     ...createStockState(),
@@ -79,6 +83,8 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
   if (player.dropTicks > 0) player.dropTicks -= 1;
   if (player.invulnTicks > 0) player.invulnTicks -= 1;
 
+  // Attacking out of a dash keeps its speed ("dash attack").
+  if (player.dodgeKind === 'dash' && attackPressed(player, input)) endDodge(player);
   updateAttack(player, input);
   updateDodge(player, input);
   // Jumping out of a dash keeps its speed ("dash jump").
@@ -142,12 +148,15 @@ function applyHitstunDrag(player: Player): void {
 }
 
 /**
- * While attacking you commit: on the ground you slide to a stop, in the air
- * you keep normal air control. No jumping, dodging or turning around.
+ * While attacking you can still move (slower on the ground, normal air
+ * control in the air), but you commit: no jumping, dodging or turning around.
  */
 function applyAttackDrift(player: Player, input: PlayerInput): void {
   if (player.grounded) {
-    player.vx = approach(player.vx, 0, GROUND_FRICTION * FIXED_DT);
+    // Keep running while attacking, a bit slower. A dash-attack bleeds its extra speed off.
+    const dir = Number(input.right) - Number(input.left);
+    const accel = dir !== 0 ? GROUND_ACCEL : GROUND_FRICTION;
+    player.vx = approach(player.vx, dir * RUN_SPEED * ATTACK_MOVE_SPEED_MULT, accel * FIXED_DT);
   } else {
     applyRun(player, input);
   }
@@ -201,6 +210,7 @@ function refillOnLanding(player: Player): void {
   player.airJumpsLeft = AIR_JUMPS;
   player.fastFalling = false;
   player.airDodgeAvailable = true;
+  player.recoveryAvailable = true;
 }
 
 /** Moves `value` towards `target` by at most `maxDelta`, without overshooting. */

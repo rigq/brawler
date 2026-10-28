@@ -45,6 +45,7 @@ function describePlayer(label: string, p: Player): string {
     `jumps ${p.airJumpsLeft}`,
     `dodge ${p.dodgeKind.padEnd(4)} cd ${String(p.dodgeCooldown).padStart(2)}`,
     p.airDodgeAvailable ? '' : 'no-airdodge',
+    p.recoveryAvailable ? '' : 'no-recovery',
     p.fastFalling ? 'FAST FALL' : '',
     p.hitstunTicks > 0 ? `STUN ${p.hitstunTicks}` : '',
     p.respawnTicks > 0 ? `RESPAWN ${p.respawnTicks}` : '',

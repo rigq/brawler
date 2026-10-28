@@ -1,7 +1,7 @@
 // Attack state machine and where the hitbox is.
 // Light: startup → active → recovery. Heavy: charge (while held) → startup → active → recovery.
 
-import { HEAVY_ATTACKS, HEAVY_MAX_CHARGE_TICKS, LIGHT_ATTACKS } from '../constants.ts';
+import { HEAVY_ATTACKS, HEAVY_MAX_CHARGE_TICKS, LIGHT_ATTACKS, RECOVERY_SPEED } from '../constants.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
 import type { Player } from '../sim/player.ts';
@@ -42,6 +42,11 @@ export function createAttackState(): AttackState {
 
 export function isAttacking(player: Player): boolean {
   return player.attackDir !== 'none';
+}
+
+/** A fresh press of light or heavy this step (call before updateAttack, which updates the held flags). */
+export function attackPressed(player: Player, input: PlayerInput): boolean {
+  return (input.light && !player.lightHeld) || (input.heavy && !player.heavyHeld);
 }
 
 /** Runs once at the start of every step: charges, advances, ends or starts an attack. */
@@ -105,12 +110,22 @@ function startAttack(player: Player, input: PlayerInput, strength: AttackStrengt
 
   player.attackDir = input.up ? 'up' : input.down ? 'down' : 'side';
   player.attackStrength = strength;
-  player.attackCharging = strength === 'heavy';
+  // Heavies charge only on the ground; in the air they fire at once.
+  player.attackCharging = strength === 'heavy' && player.grounded;
+  if (strength === 'heavy' && player.attackDir === 'up' && !player.grounded) launchRecovery(player);
   player.attackChargeTicks = 0;
   player.attackTick = 0;
   player.attackHitMask = 0;
   // Respawn invulnerability is for getting back in, not for attacking safely.
   player.invulnTicks = 0;
+}
+
+/** The "recovery": up heavy in the air pushes you up, once per time in the air, to get back to the stage. */
+function launchRecovery(player: Player): void {
+  if (!player.recoveryAvailable) return;
+  player.recoveryAvailable = false;
+  player.vy = -RECOVERY_SPEED;
+  player.fastFalling = false;
 }
 
 function advanceAttack(player: Player, input: PlayerInput): void {

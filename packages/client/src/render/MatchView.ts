@@ -3,6 +3,7 @@ import { WORLD_HEIGHT, WORLD_WIDTH, matchResult, type MatchResult, type World } 
 import { DamageHud } from '../ui/DamageHud.ts';
 import { ResultOverlay } from '../ui/ResultOverlay.ts';
 import { StatsHud } from '../ui/StatsHud.ts';
+import { drawBackdrop } from './Backdrop.ts';
 import { CameraRig } from './CameraRig.ts';
 import { DebugOverlay } from './DebugOverlay.ts';
 import { PLAYER_COLORS, playerColor } from './palette.ts';
@@ -25,7 +26,7 @@ export class MatchView {
 
   constructor(scene: Phaser.Scene, world: World, rematchHint: string) {
     this.scene = scene;
-    const worldObjects = drawStage(scene, world);
+    const worldObjects = [...drawBackdrop(scene), ...drawStage(scene, world)];
     this.playerViews = world.players.map((player, i) => new PlayerView(scene, player, playerColor(i)));
     worldObjects.push(...this.playerViews.flatMap((view) => view.gameObjects));
     this.debugOverlay = new DebugOverlay(scene);

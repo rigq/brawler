@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { WORLD_HEIGHT, WORLD_WIDTH } from '@brawler/shared';
+import { THEME } from './render/palette.ts';
 import { GameScene } from './scenes/GameScene.ts';
 import { OnlineScene } from './scenes/OnlineScene.ts';
 
@@ -11,7 +12,7 @@ new Phaser.Game({
   parent: 'game',
   width: WORLD_WIDTH,
   height: WORLD_HEIGHT,
-  backgroundColor: '#1d2330',
+  backgroundColor: THEME.canvas,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
