@@ -67,15 +67,15 @@ brawler/
 - [x] F1.2 Plataformas atravesables desde abajo
 - [x] F1.3 Doble salto y caída rápida
 - [x] F1.4 Dash y esquiva con cooldown
-- [ ] F1.5 Segundo jugador en el mismo teclado
-- [ ] F1.6 Cámara que encuadra a ambos
+- [x] F1.5 Segundo jugador en el mismo teclado
+- [x] F1.6 Cámara que encuadra a ambos
 
 **F2 · Combate local** (30 nov – 13 dic) → Hito: 1v1 local jugable
-- [ ] F2.1 Hitboxes/hurtboxes, ataque ligero en 3 direcciones
-- [ ] F2.2 Ataque pesado con carga
-- [ ] F2.3 Daño acumulado, knockback escalado, hitstun
-- [ ] F2.4 Zona de muerte, 3 vidas, respawn con invulnerabilidad
-- [ ] F2.5 Pantalla de victoria y revancha
+- [x] F2.1 Hitboxes/hurtboxes, ataque ligero en 3 direcciones
+- [x] F2.2 Ataque pesado con carga
+- [x] F2.3 Daño acumulado, knockback escalado, hitstun
+- [x] F2.4 Zona de muerte, 3 vidas, respawn con invulnerabilidad
+- [x] F2.5 Pantalla de victoria y revancha
 
 **Colchón Navidad** (14 dic – 3 ene)
 

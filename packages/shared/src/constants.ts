@@ -37,13 +37,27 @@ export const PLATFORMS = [
 ] as const;
 /** How many steps you ignore platforms after pressing down on one (~0.2 s). */
 export const DROP_THROUGH_TICKS = 12;
-/** Where player 1 appears (top-left of the player box). */
-export const SPAWN_P1 = { x: 620, y: 300 } as const;
 /**
- * Temporary until F2.4 (death zone): falling this far below the screen
- * puts the player back at spawn.
+ * Where each player appears (top-left of the player box), one per player.
+ * Centred above each floating platform, so they drop onto it, facing each other.
  */
-export const FALL_RESET_Y = WORLD_HEIGHT + 300;
+export const SPAWNS = [
+  { x: 420, y: 300, facing: 1 },
+  { x: 820, y: 300, facing: -1 },
+] as const;
+/**
+ * Death zone edges: a player whose box leaves this area is knocked out.
+ * The stage spans x 240–1040; there is room to be launched and recover.
+ */
+export const BLAST_ZONE = { left: -360, right: 1640, top: -420, bottom: WORLD_HEIGHT + 300 } as const;
+
+// --- Lives ---
+/** Lives per player. Losing the last one puts you out of the match. */
+export const STOCKS = 3;
+/** Ticks a knocked-out player waits, off screen, before reappearing (1 s). */
+export const RESPAWN_DELAY_TICKS = 60;
+/** Ticks of invulnerability after reappearing (2 s). Attacking ends it early. */
+export const RESPAWN_INVULN_TICKS = 120;
 
 // --- Player body ---
 export const PLAYER_WIDTH = 40;
@@ -94,3 +108,85 @@ export const AIR_DODGE_TICKS = 14;
 export const AIR_DODGE_END_SPEED_MULT = 0.35;
 /** Wait after a spot or air dodge ends before the next dash or dodge. */
 export const DODGE_COOLDOWN_TICKS = 54;
+
+// --- Combat: light attacks ---
+/**
+ * Each attack goes through three phases, in ticks (60 = 1 s):
+ * startup (winding up, harmless) → active (hitbox can hit) → recovery (harmless, can't act).
+ * `box`: hitbox relative to the player's top-left corner when facing right
+ * (mirrored when facing left). The player box is 40×60.
+ * `damage`: % added to the target.
+ * Knockback speed (px/s) = kbBase + kbScale × target's damage after the hit.
+ * (kbX, kbY): launch direction, x pointing away from the attacker, y up = negative.
+ * Any length works, it is normalised. Vectors, not angles: sin/cos are not deterministic.
+ */
+export const LIGHT_ATTACKS = {
+  /** Jab in front. Also used with no direction held. */
+  side: {
+    startup: 5, active: 3, recovery: 10, box: { x: 40, y: 14, width: 52, height: 26 },
+    damage: 6, kbBase: 320, kbScale: 7, kbX: 1, kbY: -0.45,
+  },
+  /** Arc above the head. */
+  up: {
+    startup: 6, active: 4, recovery: 12, box: { x: -12, y: -48, width: 64, height: 52 },
+    damage: 6, kbBase: 340, kbScale: 7, kbX: 0.2, kbY: -1,
+  },
+  /** Low swipe covering the feet and below (useful in the air). */
+  down: {
+    startup: 6, active: 3, recovery: 14, box: { x: 8, y: 40, width: 62, height: 40 },
+    damage: 5, kbBase: 300, kbScale: 6, kbX: 1, kbY: -0.6,
+  },
+} as const;
+
+// --- Combat: heavy attacks ---
+/**
+ * Same shape as LIGHT_ATTACKS, but slower, with more reach and harder hits.
+ * Before startup there is a charge phase while the button is held.
+ */
+export const HEAVY_ATTACKS = {
+  /** Long reach in front. */
+  side: {
+    startup: 10, active: 5, recovery: 22, box: { x: 36, y: 8, width: 92, height: 36 },
+    damage: 13, kbBase: 480, kbScale: 13, kbX: 1, kbY: -0.5,
+  },
+  /** Big arc above, a bit to both sides. */
+  up: {
+    startup: 11, active: 6, recovery: 24, box: { x: -28, y: -82, width: 96, height: 86 },
+    damage: 12, kbBase: 500, kbScale: 12, kbX: 0.25, kbY: -1,
+  },
+  /** Ground-level sweep reaching both sides. */
+  down: {
+    startup: 12, active: 5, recovery: 26, box: { x: -46, y: 30, width: 132, height: 44 },
+    damage: 11, kbBase: 460, kbScale: 12, kbX: 1, kbY: -0.7,
+  },
+} as const;
+/** Holding heavy charges for at most this long (~0.6 s), then it fires on its own. */
+export const HEAVY_MAX_CHARGE_TICKS = 36;
+/** A fully charged heavy deals (1 + this) × damage and knockback; scales linearly with charge. */
+export const HEAVY_CHARGE_BONUS = 0.4;
+
+// --- Combat: getting hit ---
+/** Launch speed cap. Keeps a step under ~60 px so nobody tunnels through platforms. */
+export const KNOCKBACK_MAX_SPEED = 3600;
+/** Hitstun (no control) = base + knockback speed × this, in ticks. 1000 px/s ≈ 18 ticks. */
+export const HITSTUN_BASE_TICKS = 6;
+export const HITSTUN_TICKS_PER_SPEED = 0.012;
+/** How fast horizontal launch speed fades during hitstun (px/s²). Low = flies further. */
+export const HITSTUN_DRAG = 900;
+/** How long a player flashes white after being hit (visual only). */
+export const HIT_FLASH_TICKS = 8;
+
+// --- Camera (render only: the simulation never reads these) ---
+/** Empty space kept around the players' bounding box, in world px. */
+export const CAMERA_PADDING_X = 280;
+export const CAMERA_PADDING_Y = 200;
+/** Zoom range. < 1 shows more than the 1280×720 stage, > 1 zooms in. */
+export const CAMERA_MIN_ZOOM = 0.75;
+export const CAMERA_MAX_ZOOM = 1.35;
+/**
+ * Smoothing time constant in ms: after this long the camera has covered ~63 %
+ * of the way to its target. Lower = snappier, higher = floatier.
+ */
+export const CAMERA_SMOOTH_MS = 140;
+/** The camera never shows anything outside this area. */
+export const CAMERA_BOUNDS = { x: -400, y: -300, width: 2080, height: 1400 } as const;

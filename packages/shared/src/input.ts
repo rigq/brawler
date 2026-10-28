@@ -11,6 +11,10 @@ export interface PlayerInput {
   jump: boolean;
   /** Dash on the ground with a direction, dodge otherwise. */
   dodge: boolean;
+  /** Light attack; up/down held pick its direction, otherwise it goes sideways. */
+  light: boolean;
+  /** Heavy attack: hold to charge, release to strike. Direction works like light. */
+  heavy: boolean;
 }
 
 export const EMPTY_INPUT: Readonly<PlayerInput> = {
@@ -20,4 +24,6 @@ export const EMPTY_INPUT: Readonly<PlayerInput> = {
   down: false,
   jump: false,
   dodge: false,
+  light: false,
+  heavy: false,
 };

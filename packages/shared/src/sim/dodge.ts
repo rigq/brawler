@@ -43,9 +43,9 @@ export function createDodgeState(): DodgeState {
   };
 }
 
-/** Spot and air dodges make the player untouchable (used by combat in F2). */
+/** Spot and air dodges, and the moments after respawning, make the player untouchable. */
 export function isInvulnerable(player: Player): boolean {
-  return player.dodgeKind === 'spot' || player.dodgeKind === 'air';
+  return player.dodgeKind === 'spot' || player.dodgeKind === 'air' || player.invulnTicks > 0;
 }
 
 /** Runs once at the start of every step: counts down, ends or starts a dodge. */
@@ -59,7 +59,8 @@ export function updateDodge(player: Player, input: PlayerInput): void {
     return;
   }
   if (player.dodgeCooldown > 0) player.dodgeCooldown -= 1;
-  if (pressed && player.dodgeCooldown === 0) startDodge(player, input);
+  const canStart = player.dodgeCooldown === 0 && player.attackDir === 'none' && player.hitstunTicks === 0;
+  if (pressed && canStart) startDodge(player, input);
 }
 
 /** Sets the velocity for this step while a dash/dodge is active. */
@@ -96,8 +97,12 @@ function startDodge(player: Player, input: PlayerInput): void {
   const dirY = Number(input.down) - Number(input.up);
 
   if (player.grounded) {
-    if (dirX !== 0) begin(player, 'dash', DASH_TICKS, dirX, 0);
-    else begin(player, 'spot', SPOT_DODGE_TICKS, 0, 0);
+    if (dirX !== 0) {
+      begin(player, 'dash', DASH_TICKS, dirX, 0);
+      player.facing = dirX === 1 ? 1 : -1;
+    } else {
+      begin(player, 'spot', SPOT_DODGE_TICKS, 0, 0);
+    }
     return;
   }
   if (!player.airDodgeAvailable) return;
