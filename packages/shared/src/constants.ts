@@ -55,6 +55,23 @@ export const SPAWNS = [
  */
 export const BLAST_ZONE = { left: -960, right: 2240, top: GROUND.y - 1100, bottom: GROUND.y + 760 } as const;
 
+// --- Ledges ---
+/** You grab a ledge when your body is within this many px of its side… */
+export const LEDGE_GRAB_REACH = 24;
+/** …and the top of your body is at most this far above / below the stage's surface. */
+export const LEDGE_GRAB_ABOVE = 24;
+export const LEDGE_GRAB_BELOW = 36;
+/** Longest you can hang (4 s) before you let go on your own. */
+export const LEDGE_HANG_TICKS = 240;
+/** Invulnerable when grabbing (~0.7 s), once until you touch the ground again. */
+export const LEDGE_INVULN_TICKS = 40;
+/** After letting go you cannot grab a ledge for this long, or you would stick right back. */
+export const LEDGE_REGRAB_TICKS = 30;
+/** Plain climb: unable to act for this long once up, so it can be read and punished. */
+export const LEDGE_CLIMB_LAG_TICKS = 8;
+/** Sideways speed of a jump from the ledge, towards the stage (px/s). */
+export const LEDGE_JUMP_PUSH_SPEED = 220;
+
 // --- Lives ---
 /** Lives per player. Losing the last one puts you out of the match. */
 export const STOCKS = 3;
@@ -87,6 +104,10 @@ export const JUMP_SPEED = 900;
 export const JUMP_CUT = 0.45;
 /** Terminal falling speed. */
 export const MAX_FALL_SPEED = 1300;
+/** After walking off a ledge you can still use your ground jump for this many ticks ("coyote time"). */
+export const COYOTE_TICKS = 5;
+/** A jump pressed this many ticks before it becomes possible on the ground still happens ("jump buffer"). */
+export const JUMP_BUFFER_TICKS = 6;
 /** Extra jumps available in the air; refilled on landing. */
 export const AIR_JUMPS = 2;
 /** Upward speed of an air jump. Height ≈ 820² / (2 · 2400) ≈ 140 px. */
@@ -98,20 +119,60 @@ export const DOUBLE_JUMP_SPEED = 820;
 export const FAST_FALL_SPEED = 1600;
 
 // --- Dash and dodge (durations and cooldowns in simulation ticks, 60 = 1 s) ---
+/** Tapping a direction twice within this many ticks starts a dash. */
+export const DASH_TAP_WINDOW_TICKS = 14;
 /** Ground dash: burst of horizontal speed. Distance ≈ 1000 · 10/60 ≈ 167 px. */
 export const DASH_SPEED = 1000;
 export const DASH_TICKS = 10;
 /** Wait after a dash ends before the next dash or dodge. */
 export const DASH_COOLDOWN_TICKS = 30;
-/** Dodge in place on the ground (no direction held). Invulnerable. */
+/** Roll: shield + left/right. Distance ≈ 520 · 20/60 ≈ 173 px. */
+export const ROLL_SPEED = 520;
+export const ROLL_TICKS = 20;
+/** The roll's last ticks are not invulnerable: that is where you punish it. */
+export const ROLL_END_VULN_TICKS = 5;
+/** Dodge in place: shield + down. Invulnerable. */
 export const SPOT_DODGE_TICKS = 18;
 /** Air dodge in the held direction (8 ways), gravity off. Invulnerable. */
 export const AIR_DODGE_SPEED = 750;
 export const AIR_DODGE_TICKS = 14;
+/** Touching the ground during an air dodge leaves you this many ticks unable to act. */
+export const AIR_DODGE_LANDING_LAG = 10;
 /** Velocity kept when an air dodge ends (0 = full stop, 1 = keep all). */
 export const AIR_DODGE_END_SPEED_MULT = 0.35;
 /** Wait after a spot or air dodge ends before the next dash or dodge. */
 export const DODGE_COOLDOWN_TICKS = 54;
+
+// --- Characters ---
+/** Stats go from 1 to 5. Each point above or below average moves the real value by these steps. */
+export const STAT_AVERAGE = 3;
+/** Multiplies run and dash speed: 0.8 to 1.2. */
+export const STAT_SPEED_STEP = 0.1;
+/** Weight: 80 to 120. */
+export const WEIGHT_AVERAGE = 100;
+export const STAT_WEIGHT_STEP = 10;
+/** Multiplies attack damage: 0.85 to 1.15. */
+export const STAT_DAMAGE_STEP = 0.075;
+/** Multiplies hitbox reach: 0.8 to 1.2. */
+export const STAT_REACH_STEP = 0.1;
+
+// --- Shield ---
+/** Full shield. Held on its own it lasts SHIELD_MAX / drain ≈ 333 ticks (5.5 s). */
+export const SHIELD_MAX = 100;
+export const SHIELD_DRAIN_PER_TICK = 0.3;
+export const SHIELD_REGEN_PER_TICK = 0.15;
+/** Blocking removes the hit's damage × this from the shield. */
+export const SHIELD_DAMAGE_MULT = 1.5;
+/** Ticks stuck in the shield after blocking = base + damage × this. */
+export const SHIELD_STUN_BASE_TICKS = 3;
+export const SHIELD_STUN_PER_DAMAGE = 0.5;
+/** Blocking slides you back at this speed (px/s); friction stops it. */
+export const SHIELD_PUSH_SPEED = 200;
+/** Lowering the shield leaves you this long unable to act. Jumping out skips it. */
+export const SHIELD_DROP_LAG_TICKS = 6;
+/** A broken shield stuns for this long (2.5 s) and comes back at SHIELD_BREAK_REFILL. */
+export const SHIELD_BREAK_STUN_TICKS = 150;
+export const SHIELD_BREAK_REFILL = 40;
 
 // --- Combat: attacks ---
 /** Every attack in the game, by id. Light ones come from J, heavy ones from K. */
@@ -119,7 +180,8 @@ export type AttackId =
   | 'jab1' | 'jab2' | 'jab3' | 'dash'
   | 'lightSide' | 'lightUp' | 'lightDown'
   | 'airNeutral' | 'airForward' | 'airBack' | 'airUp' | 'airDown'
-  | 'heavySide' | 'heavyUp' | 'heavyDown';
+  | 'heavySide' | 'heavyUp' | 'heavyDown'
+  | 'grab' | 'throwForward' | 'throwBack';
 
 /**
  * Each attack goes through three phases, in ticks (60 = 1 s):
@@ -127,7 +189,8 @@ export type AttackId =
  * `box`: hitbox relative to the player's top-left corner when facing right
  * (mirrored when facing left). The player box is 40×60.
  * `damage`: % added to the target.
- * Knockback speed (px/s) = kbBase + kbScale × target's damage after the hit.
+ * Knockback speed (px/s) = (kbBase + kbScale × p × d / 10) × 100 / weight, with p the target's
+ * damage after the hit, d this attack's damage and weight the target's (100 = average).
  * (kbX, kbY): launch direction, x pointing away from the attacker, y up = negative.
  * Any length works, it is normalised. Vectors, not angles: sin/cos are not deterministic.
  */
@@ -157,21 +220,21 @@ export interface AttackData {
 export const ATTACKS: Record<AttackId, AttackData> = {
   /**
    * Jab: light with no direction, on the ground. Up to 3 hits by pressing again.
-   * Low knockback so the next jab always connects: jab1 leaves ≈ 7 ticks of
+   * Low knockback so the next jab always connects: jab1 leaves ≈ 16 ticks of
    * hitstun and jab2 is already active 4–5 ticks after jab1's hit.
    */
   jab1: {
     heavy: false, startup: 3, active: 2, recovery: 12, box: { x: 40, y: 16, width: 44, height: 22 },
-    damage: 3, kbBase: 120, kbScale: 1, kbX: 1, kbY: -0.25, chainTo: 'jab2', chainFrom: 5,
+    damage: 3, kbBase: 120, kbScale: 3.33, kbX: 1, kbY: -0.25, chainTo: 'jab2', chainFrom: 5,
   },
   jab2: {
     heavy: false, startup: 3, active: 2, recovery: 12, box: { x: 40, y: 16, width: 46, height: 22 },
-    damage: 3, kbBase: 120, kbScale: 1, kbX: 1, kbY: -0.25, chainTo: 'jab3', chainFrom: 5,
+    damage: 3, kbBase: 120, kbScale: 3.33, kbX: 1, kbY: -0.25, chainTo: 'jab3', chainFrom: 5,
   },
   /** Jab finisher: pushes the target away, ends the string. */
   jab3: {
     heavy: false, startup: 4, active: 3, recovery: 18, box: { x: 38, y: 10, width: 56, height: 32 },
-    damage: 5, kbBase: 360, kbScale: 6, kbX: 1, kbY: -0.7,
+    damage: 5, kbBase: 360, kbScale: 12, kbX: 1, kbY: -0.7,
   },
   /**
    * Dash attack: light during a dash. Keeps sliding (DASH_ATTACK_FRICTION) and
@@ -179,66 +242,90 @@ export const ATTACKS: Record<AttackId, AttackData> = {
    */
   dash: {
     heavy: false, startup: 5, active: 5, recovery: 20, box: { x: 26, y: 10, width: 58, height: 44 },
-    damage: 8, kbBase: 360, kbScale: 6, kbX: 0.55, kbY: -1,
+    damage: 8, kbBase: 360, kbScale: 7.5, kbX: 0.55, kbY: -1,
   },
   /** Side tilt: light holding left/right, on the ground. */
   lightSide: {
     heavy: false, startup: 5, active: 3, recovery: 10, box: { x: 40, y: 14, width: 52, height: 26 },
-    damage: 6, kbBase: 320, kbScale: 7, kbX: 1, kbY: -0.45,
+    damage: 6, kbBase: 320, kbScale: 11.67, kbX: 1, kbY: -0.45,
   },
   /** Arc above the head. */
   lightUp: {
-    heavy: false, startup: 6, active: 4, recovery: 12, box: { x: -12, y: -48, width: 64, height: 52 },
-    damage: 6, kbBase: 340, kbScale: 7, kbX: 0.2, kbY: -1,
+    heavy: false, startup: 6, active: 4, recovery: 7, box: { x: -12, y: -48, width: 64, height: 52 },
+    damage: 6, kbBase: 340, kbScale: 11.67, kbX: 0.2, kbY: -1,
   },
   /** Low swipe at the feet. */
   lightDown: {
-    heavy: false, startup: 6, active: 3, recovery: 14, box: { x: 8, y: 40, width: 62, height: 40 },
-    damage: 5, kbBase: 300, kbScale: 6, kbX: 1, kbY: -0.6,
+    heavy: false, startup: 6, active: 3, recovery: 8, box: { x: 8, y: 40, width: 62, height: 40 },
+    damage: 5, kbBase: 300, kbScale: 12, kbX: 1, kbY: -0.6,
   },
   // Aerials: light in the air. "Forward" and "back" are relative to where you face,
   // which does not change in the air. The riskier the aerial, the longer its landing lag.
   /** Quick and long-lasting, around the whole body: the safe way out of trouble. */
   airNeutral: {
     heavy: false, startup: 4, active: 8, recovery: 10, box: { x: -14, y: 6, width: 68, height: 48 },
-    damage: 6, kbBase: 280, kbScale: 5, kbX: 1, kbY: -0.5, landingLag: 6,
+    damage: 6, kbBase: 280, kbScale: 8.33, kbX: 1, kbY: -0.5, landingLag: 4,
   },
   /** Reach in front: the main spacing tool, also from a short hop. */
   airForward: {
     heavy: false, startup: 7, active: 3, recovery: 14, box: { x: 38, y: 8, width: 60, height: 34 },
-    damage: 8, kbBase: 340, kbScale: 7, kbX: 1, kbY: -0.4, landingLag: 9,
+    damage: 8, kbBase: 340, kbScale: 8.75, kbX: 1, kbY: -0.4, landingLag: 6,
   },
   /** Behind you and the strongest side aerial: you must be facing away, so it takes a read. */
   airBack: {
     heavy: false, startup: 6, active: 3, recovery: 13, box: { x: -50, y: 10, width: 52, height: 32 },
-    damage: 9, kbBase: 380, kbScale: 8, kbX: 1, kbY: -0.35, landingLag: 9,
+    damage: 9, kbBase: 380, kbScale: 8.89, kbX: 1, kbY: -0.35, landingLag: 6,
   },
   /** Arc above: juggles a target who is falling onto you. */
   airUp: {
     heavy: false, startup: 5, active: 4, recovery: 11, box: { x: -10, y: -46, width: 60, height: 50 },
-    damage: 6, kbBase: 320, kbScale: 6, kbX: 0.15, kbY: -1, landingLag: 7,
+    damage: 6, kbBase: 320, kbScale: 10, kbX: 0.15, kbY: -1, landingLag: 5,
   },
   /** Slow spike under the feet: sends the target down, deadly off stage, very punishable. */
   airDown: {
     heavy: false, startup: 8, active: 4, recovery: 16, box: { x: 2, y: 52, width: 36, height: 40 },
-    damage: 9, kbBase: 340, kbScale: 7, kbX: 0.2, kbY: 1, landingLag: 12,
+    damage: 9, kbBase: 340, kbScale: 7.78, kbX: 0.2, kbY: 1, landingLag: 10,
+  },
+  /**
+   * Grab: light with the shield button held, on the ground. Goes through shields,
+   * loses to any attack landing on the same tick, and a miss is heavily punished.
+   */
+  grab: {
+    heavy: false, startup: 5, active: 3, recovery: 24, box: { x: 36, y: 10, width: 36, height: 42 },
+    damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
+  },
+  /** Throws only use the damage and knockback fields: they have no phases or hitbox. Sets up a chase. */
+  throwForward: {
+    heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 8, kbBase: 340, kbScale: 8.75, kbX: 1, kbY: -0.8,
+  },
+  /** Harder and flatter: the throw that sends you off the stage. */
+  throwBack: {
+    heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 10, kbBase: 420, kbScale: 9, kbX: 1, kbY: -0.5,
   },
   /** Heavies: slower, more reach, harder hits. A charge phase comes before startup. Long reach in front. */
   heavySide: {
     heavy: true, startup: 10, active: 5, recovery: 22, box: { x: 36, y: 8, width: 92, height: 36 },
-    damage: 13, kbBase: 480, kbScale: 10, kbX: 1, kbY: -0.5,
+    damage: 13, kbBase: 480, kbScale: 7.69, kbX: 1, kbY: -0.5,
   },
   /** Big arc above, a bit to both sides. In the air it is also the recovery (RECOVERY_SPEED). */
   heavyUp: {
     heavy: true, startup: 11, active: 6, recovery: 24, box: { x: -28, y: -82, width: 96, height: 86 },
-    damage: 12, kbBase: 500, kbScale: 9, kbX: 0.25, kbY: -1,
+    damage: 12, kbBase: 500, kbScale: 7.5, kbX: 0.25, kbY: -1,
   },
   /** Ground-level sweep reaching both sides. */
   heavyDown: {
     heavy: true, startup: 12, active: 5, recovery: 26, box: { x: -46, y: 30, width: 132, height: 44 },
-    damage: 11, kbBase: 460, kbScale: 9, kbX: 1, kbY: -0.7,
+    damage: 11, kbBase: 460, kbScale: 8.18, kbX: 1, kbY: -0.7,
   },
 };
+/** How long you can hold someone before they get away (1.5 s). */
+export const GRAB_HOLD_TICKS = 90;
+/** Unable to act after letting go without throwing. */
+export const GRAB_RELEASE_LAG_TICKS = 12;
+/** Unable to act after a throw, once the hitstop ends. */
+export const THROW_LAG_TICKS = 14;
 /** How fast a dash attack's slide slows down (px/s²): from dash speed it slides ~170 px. */
 export const DASH_ATTACK_FRICTION = 3000;
 /**
@@ -259,9 +346,19 @@ export const HEAVY_CHARGE_BONUS = 0.4;
 // --- Combat: getting hit ---
 /** Launch speed cap. Keeps a step under ~60 px so nobody tunnels through platforms. */
 export const KNOCKBACK_MAX_SPEED = 3600;
-/** Hitstun (no control) = base + knockback speed × this, in ticks. 1000 px/s ≈ 18 ticks. */
-export const HITSTUN_BASE_TICKS = 6;
-export const HITSTUN_TICKS_PER_SPEED = 0.012;
+/**
+ * Hitstun (no control) = base + knockback speed × this, in ticks. 1000 px/s = 22 ticks.
+ * High base and a gentle slope on purpose: at low % the target stays close and stunned
+ * (combos); at high % it flies much further while the stun barely grows (escapes).
+ */
+export const HITSTUN_BASE_TICKS = 16;
+export const HITSTUN_TICKS_PER_SPEED = 0.006;
+/**
+ * Every hit already taken in the current combo removes this much hitstun, down to
+ * HITSTUN_MIN_TICKS. This is what makes infinite combos impossible.
+ */
+export const HITSTUN_COMBO_DECAY_TICKS = 2;
+export const HITSTUN_MIN_TICKS = 6;
 /** How fast horizontal launch speed fades during hitstun (px/s²). Low = flies further. */
 export const HITSTUN_DRAG = 1500;
 /**

@@ -54,7 +54,8 @@ brawler/
 - `npm install` — instalar todo
 - `npm run dev` — cliente (http://localhost:5173; partida local a 2 jugadores). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
-- http://localhost:5173/?training — modo entrenamiento contra un muñeco (R reinicia, 9/0 cambian su %)
+- http://localhost:5173/?training — modo entrenamiento contra un muñeco (R reinicia, 8 activa su escudo, 9/0 cambian su %)
+- `?p1=heavy&p2=rushdown` — (hasta I2) elige personajes en local: `balanced`, `rushdown`, `heavy`, `zoner`
 - http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
 - `npm run build` — build de producción del cliente (incluye typecheck)
@@ -100,17 +101,17 @@ brawler/
 **C · Moveset y combos** (nov – dic)
 - [x] C1 Jab de 1–3 golpes (ligero neutro) y ataque en carrera propio
 - [x] C2 Aéreos propios: neutral, adelante, atrás, arriba, abajo
-- [ ] C3 Ajustar hitstun: combos reales a % bajo, escapables a % alto
-- [ ] C4 Coyote time, jump buffer y aterrizaje lento de la esquiva aérea
+- [x] C3 Ajustar hitstun: combos reales a % bajo, escapables a % alto
+- [x] C4 Coyote time, jump buffer y aterrizaje lento de la esquiva aérea
 
 **E · Defensa y bordes** (dic)
-- [ ] E1 Escudo (L mantenido en suelo) que se encoge y se rompe; L + dirección = rodar
-- [ ] E2 Agarre (L + J) y 2 lanzamientos
-- [ ] E3 Agarre al borde con invulnerabilidad una vez hasta tocar suelo; subir, saltar, atacar o rodar
-- [ ] E4 Paredes laterales para saltar
+- [x] E1 Escudo (L mantenido en suelo) que se encoge y se rompe; L + dirección = rodar
+- [x] E2 Agarre (L + J) y 2 lanzamientos
+- [x] E3 Agarre al borde con invulnerabilidad una vez hasta tocar suelo; subir, saltar, atacar o rodar
+- [ ] E4 Paredes laterales para saltar (aparcado: se hará más adelante, cambia el mapa)
 
 **P · Personajes** (dic – ene)
-- [ ] P1 Personajes por datos (peso, velocidad, daño, alcance, ataques) y knockback con peso: `(b + s·p·d/10) · 100/peso`
+- [x] P1 Personajes por datos (peso, velocidad, daño, alcance, ataques) y knockback con peso: `(b + s·p·d/10) · 100/peso`
 - [ ] P2 Botón de especial (I / M); personajes 1 y 2 con especial neutral y arriba (el de arriba es su recovery y sustituye a ↑+K)
 - [ ] P3 Personajes 3 y 4 con especial neutral y arriba
 
@@ -135,7 +136,7 @@ brawler/
 ## Referencia de jugabilidad
 `docs/JUGABILIDAD.md` (documento de Riga): **la base es Smash** (moveset por huecos, especiales como poderes, escudo · agarre · ataque, bordes) y de Brawlhalla solo lo que simplifica (enfriamiento de esquiva, stats simples, paredes, partidas a 3 vidas). Se inspira, no se copia: ni nombres, ni assets, ni valores exactos.
 
-Controles objetivo (P1 / P2): ataque J / `,` · fuerte K / `.` · especial I / M · escudo-esquiva L / `-` · agarre L+J / `-`+`,`.
+Controles (P1 / P2): ataque J / `,` · fuerte K / `.` · escudo-esquiva L / `-` · agarre L+J / `-`+`,` · dash doble toque de dirección · con escudo: lado rueda, abajo esquiva. Objetivo: especial I / M.
 
 ## Fuera del MVP (no hacer)
 Armas recogibles, 2v2/4 jugadores, matchmaking aleatorio, ranking, cuentas, rollback netcode, móvil. También v2: especiales lateral y abajo (v1.1), desgaste de ataques, rage, DI, chase dodge, súper final.

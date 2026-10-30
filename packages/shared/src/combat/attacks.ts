@@ -1,7 +1,8 @@
 // Attack state machine and where the hitbox is.
 // Light: startup → active → recovery. Heavy: charge (while held) → startup → active → recovery.
 
-import { ATTACKS, HEAVY_MAX_CHARGE_TICKS, RECOVERY_SPEED, type AttackData, type AttackId } from '../constants.ts';
+import { HEAVY_MAX_CHARGE_TICKS, RECOVERY_SPEED, type AttackData, type AttackId } from '../constants.ts';
+import { characterOf } from '../characters/index.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
 import { endDodge } from '../sim/dodge.ts';
@@ -56,7 +57,15 @@ export function updateAttack(player: Player, input: PlayerInput): void {
     advanceAttack(player, input);
     return;
   }
-  if (player.landingLagTicks > 0) return;
+  if (player.lagTicks > 0) return;
+  if (player.shielding) {
+    // The one attack you can do from the shield.
+    if (lightPressed && player.shieldStunTicks === 0) {
+      player.shielding = false;
+      startAttack(player, input, 'grab');
+    }
+    return;
+  }
   // Attacks can start from a dash (it hands over its speed), not from other dodges.
   const dodgeAllows = player.dodgeKind === 'none' || player.dodgeKind === 'dash';
   if (!dodgeAllows || player.hitstunTicks > 0) return;
@@ -67,7 +76,7 @@ export function updateAttack(player: Player, input: PlayerInput): void {
 export function attackPhase(player: Player): AttackPhase {
   if (player.attackId === 'none') return 'none';
   if (player.attackCharging) return 'charge';
-  const data = attackData(player.attackId);
+  const data = attackData(player, player.attackId);
   if (player.attackTick < data.startup) return 'startup';
   if (player.attackTick < data.startup + data.active) return 'active';
   return 'recovery';
@@ -84,7 +93,7 @@ export function attackCharge(player: Player): number {
  */
 export function attackBoxAt(player: Player, x: number, y: number): Rect | null {
   if (player.attackId === 'none') return null;
-  const box = attackData(player.attackId).box;
+  const box = attackData(player, player.attackId).box;
   const offsetX = player.facing === 1 ? box.x : player.width - box.x - box.width;
   return { x: x + offsetX, y: y + box.y, width: box.width, height: box.height };
 }
@@ -99,12 +108,14 @@ export function hurtbox(player: Player): Rect {
   return { x: player.x, y: player.y, width: player.width, height: player.height };
 }
 
-export function attackData(id: AttackId): AttackData {
-  return ATTACKS[id];
+/** This attack as this player's character does it. */
+export function attackData(player: { characterId: string }, id: AttackId): AttackData {
+  return characterOf(player).attacks[id];
 }
 
-/** Light: during a dash → dash attack; in the air → aerial; up/down → tilts; no direction → jab; else side tilt. */
+/** Light: shield button held → grab; during a dash → dash attack; in the air → aerial; up/down → tilts; no direction → jab; else side tilt. */
 function chooseLight(player: Player, input: PlayerInput): AttackId {
+  if (player.grounded && input.dodge) return 'grab';
   if (player.dodgeKind === 'dash') return 'dash';
   if (!player.grounded) return chooseAerial(player, input);
   if (input.up) return 'lightUp';
@@ -127,7 +138,7 @@ function chooseHeavy(input: PlayerInput): AttackId {
 }
 
 function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
-  const data = attackData(id);
+  const data = attackData(player, id);
   const dirX = Number(input.right) - Number(input.left);
   // Aerials keep the facing: holding backwards means back aerial, not turning around.
   if (dirX !== 0 && data.landingLag === undefined) player.facing = dirX === 1 ? 1 : -1;
@@ -139,6 +150,12 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
   if (id === 'heavyUp' && !player.grounded) launchRecovery(player);
   beginAttack(player, id);
   // Respawn invulnerability is for getting back in, not for attacking safely.
+  player.invulnTicks = 0;
+}
+
+/** The attack from a ledge: climbs up swinging forward. */
+export function startLedgeAttack(player: Player): void {
+  beginAttack(player, 'lightSide');
   player.invulnTicks = 0;
 }
 
@@ -171,7 +188,7 @@ function advanceAttack(player: Player, input: PlayerInput): void {
     return;
   }
   player.attackTick += 1;
-  const data = attackData(player.attackId);
+  const data = attackData(player, player.attackId);
   if (data.chainTo && player.attackQueued && player.attackTick >= (data.chainFrom ?? 0)) {
     beginAttack(player, data.chainTo);
     return;

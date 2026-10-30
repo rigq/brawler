@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { HITSTOP_JITTER_PX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
+import { HITSTOP_JITTER_PX, SHIELD_MAX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
 
 const DODGE_ALPHA = 0.4;
 /** After respawning the player blinks: this many ticks on, this many off. */
@@ -15,6 +15,10 @@ const SWING_ALPHA = { light: 0.55, heavy: 0.85 } as const;
 const CHARGE_BAR_COLOR = 0xffffff;
 const CHARGE_BAR_HEIGHT = 5;
 const CHARGE_BAR_GAP = 8;
+/** The shield bubble shrinks from max to min radius as it wears out. */
+const SHIELD_RADIUS = { min: 22, max: 56 } as const;
+const SHIELD_ALPHA = 0.35;
+const SHIELD_OUTLINE_WIDTH = 2;
 
 /** Extra visual shift (px), e.g. to smooth out an online correction. Never affects gameplay. */
 export interface VisualOffset {
@@ -32,6 +36,7 @@ export class PlayerView {
   private readonly eye: Phaser.GameObjects.Rectangle;
   private readonly swing: Phaser.GameObjects.Rectangle;
   private readonly chargeBar: Phaser.GameObjects.Rectangle;
+  private readonly shield: Phaser.GameObjects.Arc;
   private readonly color: number;
   private visible = true;
 
@@ -41,6 +46,10 @@ export class PlayerView {
     this.eye = scene.add.rectangle(0, 0, EYE_SIZE, EYE_SIZE, EYE_COLOR).setOrigin(0, 0);
     this.swing = scene.add.rectangle(0, 0, 1, 1, color).setOrigin(0, 0).setVisible(false);
     this.chargeBar = scene.add.rectangle(0, 0, 1, CHARGE_BAR_HEIGHT, CHARGE_BAR_COLOR).setOrigin(0, 0);
+    this.shield = scene.add
+      .circle(0, 0, SHIELD_RADIUS.max, color, SHIELD_ALPHA)
+      .setStrokeStyle(SHIELD_OUTLINE_WIDTH, color)
+      .setVisible(false);
   }
 
   /**
@@ -55,6 +64,7 @@ export class PlayerView {
     if (!this.visible) {
       this.swing.setVisible(false);
       this.chargeBar.setVisible(false);
+      this.shield.setVisible(false);
       return;
     }
 
@@ -67,6 +77,7 @@ export class PlayerView {
     this.eye.setPosition(x + eyeX, y + EYE_Y).setAlpha(opacity);
     this.renderSwing(player, x, y);
     this.renderChargeBar(player, x, y);
+    this.renderShield(player, x, y);
   }
 
   /** False while the player is knocked out or out of the match; the camera skips it. */
@@ -80,7 +91,7 @@ export class PlayerView {
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.swing, this.body, this.eye, this.chargeBar];
+    return [this.swing, this.body, this.eye, this.chargeBar, this.shield];
   }
 
   /** Blinking right after respawning, see-through while dodging, solid otherwise. */
@@ -103,8 +114,17 @@ export class PlayerView {
     this.swing.setVisible(box !== null);
     if (box) {
       this.swing.setPosition(box.x, box.y).setSize(box.width, box.height);
-      this.swing.setFillStyle(this.color, player.attackId !== 'none' && attackData(player.attackId).heavy ? SWING_ALPHA.heavy : SWING_ALPHA.light);
+      this.swing.setFillStyle(this.color, player.attackId !== 'none' && attackData(player, player.attackId).heavy ? SWING_ALPHA.heavy : SWING_ALPHA.light);
     }
+  }
+
+  /** Bubble around the body: its size is how much shield is left. */
+  private renderShield(player: Player, x: number, y: number): void {
+    this.shield.setVisible(player.shielding);
+    if (!player.shielding) return;
+    const left = player.shieldHealth / SHIELD_MAX;
+    const radius = SHIELD_RADIUS.min + (SHIELD_RADIUS.max - SHIELD_RADIUS.min) * left;
+    this.shield.setPosition(x + player.width / 2, y + player.height / 2).setRadius(radius);
   }
 
   /** Bar above the head that fills while a heavy attack charges. */

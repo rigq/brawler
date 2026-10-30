@@ -29,7 +29,7 @@ export class StatsHud {
     const simHz = ((world.tick - this.ticksAtLastRefresh) * 1000) / this.elapsedMs;
     const fps = this.scene.game.loop.actualFps;
     const lines = [`FPS ${fps.toFixed(0)}   sim ${simHz.toFixed(1)} Hz   tick ${world.tick}`];
-    world.players.forEach((player, i) => lines.push(describePlayer(`P${i + 1}`, player)));
+    world.players.forEach((player, i) => lines.push(describePlayer(`P${i + 1} ${player.characterId}`, player)));
     this.text.setText(lines);
 
     this.elapsedMs = 0;
@@ -48,7 +48,11 @@ function describePlayer(label: string, p: Player): string {
     p.recoveryAvailable ? '' : 'no-recovery',
     p.fastFalling ? 'FAST FALL' : '',
     p.hitstunTicks > 0 ? `STUN ${p.hitstunTicks}` : '',
-    p.landingLagTicks > 0 ? `LAG ${p.landingLagTicks}` : '',
+    p.lagTicks > 0 ? `LAG ${p.lagTicks}` : '',
+    p.shielding ? `SHIELD ${p.shieldHealth.toFixed(0)}` : '',
+    p.holdTicks > 0 ? `HOLD ${p.holdTicks}` : '',
+    p.ledgeSide !== 0 ? `LEDGE ${p.ledgeTicks}` : '',
+    p.grabbedTicks > 0 ? `GRABBED ${p.grabbedTicks}` : '',
     p.respawnTicks > 0 ? `RESPAWN ${p.respawnTicks}` : '',
     p.invulnTicks > 0 ? `INVULN ${p.invulnTicks}` : '',
     p.attackId === 'none'

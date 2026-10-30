@@ -1,6 +1,8 @@
 // The whole game state for one match. Grows with each task.
 
+import { resolveGrabs } from '../combat/grabs.ts';
 import { resolveHits } from '../combat/hits.ts';
+import type { CharacterId } from '../characters/index.ts';
 import { GROUND, PLATFORMS, SPAWNS } from '../constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
@@ -17,10 +19,11 @@ export interface World extends StageGeometry {
   platforms: Rect[];
 }
 
-export function createWorld(): World {
+/** `characters[i]` is player i's character; missing ones get the default. */
+export function createWorld(characters: readonly CharacterId[] = []): World {
   return {
     tick: 0,
-    players: SPAWNS.map((spawn) => createPlayer(spawn)),
+    players: SPAWNS.map((spawn, i) => createPlayer(spawn, characters[i])),
     solids: [{ ...GROUND }],
     platforms: PLATFORMS.map((platform) => ({ ...platform })),
   };
@@ -38,6 +41,7 @@ export function stepWorld(world: World, inputs: readonly PlayerInput[]): void {
   });
   // After everyone has moved, so hits use this step's final positions.
   resolveHits(world.players);
+  resolveGrabs(world.players);
   for (const player of world.players) {
     if (isActive(player) && isOutsideBlastZone(player)) knockOut(player);
   }

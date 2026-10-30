@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { STOCKS, type World } from '@brawler/shared';
+import { EMPTY_INPUT, STOCKS, type World } from '@brawler/shared';
+import type { InputSource } from '../input/InputSource.ts';
 import { TrainingHud } from '../ui/TrainingHud.ts';
 import { ComboTracker } from './ComboTracker.ts';
 
@@ -12,12 +13,15 @@ const Key = Phaser.Input.Keyboard.KeyCodes;
 
 /**
  * Training rules on top of a normal local match: infinite lives, a dummy that
- * stands still, a combo counter and keys to reset or set the dummy's damage.
+ * stands still (or shields), a combo counter and keys to reset or set its damage.
  * The simulation is untouched; this only adjusts the World between steps.
  */
 export class TrainingMode {
   private readonly combos = new ComboTracker();
   private readonly hud: TrainingHud;
+  private dummyShields = false;
+  /** The dummy's "controller": nothing pressed, or just the shield (key 8). */
+  readonly dummyInput: InputSource = { read: () => ({ ...EMPTY_INPUT, dodge: this.dummyShields }) };
 
   constructor(scene: Phaser.Scene, getWorld: () => World, onReset: () => void) {
     this.hud = new TrainingHud(scene);
@@ -25,6 +29,9 @@ export class TrainingMode {
     keyboard?.addKey(Key.R).on('down', () => {
       this.combos.reset();
       onReset();
+    });
+    keyboard?.addKey(Key.EIGHT).on('down', () => {
+      this.dummyShields = !this.dummyShields;
     });
     keyboard?.addKey(Key.NINE).on('down', () => this.changeDummyDamage(getWorld(), -DAMAGE_STEP));
     keyboard?.addKey(Key.ZERO).on('down', () => this.changeDummyDamage(getWorld(), DAMAGE_STEP));

@@ -4,15 +4,19 @@
 export const GAME_TITLE = 'Brawler';
 
 export * from './constants.ts';
+export * from './characters/index.ts';
 export * from './input.ts';
 export * from './math/rect.ts';
 export * from './loop/FixedStepAccumulator.ts';
 export * from './combat/attacks.ts';
+export * from './combat/grabs.ts';
 export * from './combat/hits.ts';
 export * from './combat/knockback.ts';
 export * from './sim/collision.ts';
 export * from './sim/dodge.ts';
+export * from './sim/ledge.ts';
 export * from './sim/player.ts';
+export * from './sim/shield.ts';
 export * from './sim/stocks.ts';
 export * from './sim/world.ts';
 export * from './net/protocol.ts';

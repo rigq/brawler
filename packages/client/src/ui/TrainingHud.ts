@@ -10,7 +10,7 @@ const LIVE_COLOR = '#ffffff';
 /** The last combo stays on screen, dimmed, once the target escapes. */
 const ENDED_ALPHA = 0.45;
 const HELP_COLOR = '#c9d1e0';
-const HELP_TEXT = 'R reiniciar   9 / 0  −/+ 10 % al muñeco';
+const HELP_TEXT = 'R reiniciar   8 escudo del muñeco   9 / 0  −/+ 10 %';
 
 /** Training mode panel, top-right: current combo, best combo and the keys. */
 export class TrainingHud {
