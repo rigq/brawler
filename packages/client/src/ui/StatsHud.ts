@@ -48,12 +48,14 @@ function describePlayer(label: string, p: Player): string {
     p.recoveryAvailable ? '' : 'no-recovery',
     p.fastFalling ? 'FAST FALL' : '',
     p.hitstunTicks > 0 ? `STUN ${p.hitstunTicks}` : '',
+    p.landingLagTicks > 0 ? `LAG ${p.landingLagTicks}` : '',
     p.respawnTicks > 0 ? `RESPAWN ${p.respawnTicks}` : '',
     p.invulnTicks > 0 ? `INVULN ${p.invulnTicks}` : '',
-    p.attackDir === 'none'
+    p.attackId === 'none'
       ? ''
-      : `${p.attackStrength} ${p.attackDir} ${attackPhase(p)} t${p.attackTick}` +
-        (p.attackStrength === 'heavy' ? ` charge ${p.attackChargeTicks}` : ''),
+      : `${p.attackId} ${attackPhase(p)} t${p.attackTick}` +
+        (p.attackCharging || p.attackChargeTicks > 0 ? ` charge ${p.attackChargeTicks}` : '') +
+        (p.attackQueued ? ' queued' : ''),
   ];
   return `${label}  ${state.filter(Boolean).join('  ')}`;
 }

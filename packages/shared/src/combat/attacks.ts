@@ -1,27 +1,27 @@
 // Attack state machine and where the hitbox is.
 // Light: startup → active → recovery. Heavy: charge (while held) → startup → active → recovery.
 
-import { HEAVY_ATTACKS, HEAVY_MAX_CHARGE_TICKS, LIGHT_ATTACKS, RECOVERY_SPEED } from '../constants.ts';
+import { ATTACKS, HEAVY_MAX_CHARGE_TICKS, RECOVERY_SPEED, type AttackData, type AttackId } from '../constants.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
+import { endDodge } from '../sim/dodge.ts';
 import type { Player } from '../sim/player.ts';
 
-export type AttackDirection = keyof typeof LIGHT_ATTACKS;
-export type AttackStrength = 'light' | 'heavy';
 export type AttackPhase = 'none' | 'charge' | 'startup' | 'active' | 'recovery';
 
 export interface AttackState {
   /** Which attack is running, or 'none'. */
-  attackDir: AttackDirection | 'none';
-  attackStrength: AttackStrength;
+  attackId: AttackId | 'none';
   /** Heavy only: still holding the button, before startup begins. */
   attackCharging: boolean;
-  /** Heavy only: ticks spent charging (0..HEAVY_MAX_CHARGE_TICKS). F2.3 scales damage with it. */
+  /** Heavy only: ticks spent charging (0..HEAVY_MAX_CHARGE_TICKS). Scales damage and knockback. */
   attackChargeTicks: number;
   /** Ticks since startup began (0 on its first tick). Stays 0 while charging. */
   attackTick: number;
   /** Bit i set = this attack already hit player i (each attack hits a target once). */
   attackHitMask: number;
+  /** Light was pressed again during this attack: chain into the next one if it has a `chainTo`. */
+  attackQueued: boolean;
   /** Button states in the previous step, to detect fresh presses. */
   lightHeld: boolean;
   heavyHeld: boolean;
@@ -29,46 +29,45 @@ export interface AttackState {
 
 export function createAttackState(): AttackState {
   return {
-    attackDir: 'none',
-    attackStrength: 'light',
+    attackId: 'none',
     attackCharging: false,
     attackChargeTicks: 0,
     attackTick: 0,
     attackHitMask: 0,
+    attackQueued: false,
     lightHeld: false,
     heavyHeld: false,
   };
 }
 
 export function isAttacking(player: Player): boolean {
-  return player.attackDir !== 'none';
+  return player.attackId !== 'none';
 }
 
-/** A fresh press of light or heavy this step (call before updateAttack, which updates the held flags). */
-export function attackPressed(player: Player, input: PlayerInput): boolean {
-  return (input.light && !player.lightHeld) || (input.heavy && !player.heavyHeld);
-}
-
-/** Runs once at the start of every step: charges, advances, ends or starts an attack. */
+/** Runs once at the start of every step: charges, advances, chains, ends or starts an attack. */
 export function updateAttack(player: Player, input: PlayerInput): void {
   const lightPressed = input.light && !player.lightHeld;
   const heavyPressed = input.heavy && !player.heavyHeld;
   player.lightHeld = input.light;
   player.heavyHeld = input.heavy;
 
-  if (player.attackDir !== 'none') {
+  if (player.attackId !== 'none') {
+    if (lightPressed) player.attackQueued = true;
     advanceAttack(player, input);
     return;
   }
-  if (player.dodgeKind !== 'none' || player.hitstunTicks > 0) return;
-  if (lightPressed) startAttack(player, input, 'light');
-  else if (heavyPressed) startAttack(player, input, 'heavy');
+  if (player.landingLagTicks > 0) return;
+  // Attacks can start from a dash (it hands over its speed), not from other dodges.
+  const dodgeAllows = player.dodgeKind === 'none' || player.dodgeKind === 'dash';
+  if (!dodgeAllows || player.hitstunTicks > 0) return;
+  if (lightPressed) startAttack(player, input, chooseLight(player, input));
+  else if (heavyPressed) startAttack(player, input, chooseHeavy(input));
 }
 
 export function attackPhase(player: Player): AttackPhase {
-  if (player.attackDir === 'none') return 'none';
+  if (player.attackId === 'none') return 'none';
   if (player.attackCharging) return 'charge';
-  const data = attackData(player.attackStrength, player.attackDir);
+  const data = attackData(player.attackId);
   if (player.attackTick < data.startup) return 'startup';
   if (player.attackTick < data.startup + data.active) return 'active';
   return 'recovery';
@@ -84,8 +83,8 @@ export function attackCharge(player: Player): number {
  * if no attack is running. The renderer passes interpolated coordinates.
  */
 export function attackBoxAt(player: Player, x: number, y: number): Rect | null {
-  if (player.attackDir === 'none') return null;
-  const box = attackData(player.attackStrength, player.attackDir).box;
+  if (player.attackId === 'none') return null;
+  const box = attackData(player.attackId).box;
   const offsetX = player.facing === 1 ? box.x : player.width - box.x - box.width;
   return { x: x + offsetX, y: y + box.y, width: box.width, height: box.height };
 }
@@ -100,24 +99,56 @@ export function hurtbox(player: Player): Rect {
   return { x: player.x, y: player.y, width: player.width, height: player.height };
 }
 
-export function attackData(strength: AttackStrength, dir: AttackDirection) {
-  return strength === 'heavy' ? HEAVY_ATTACKS[dir] : LIGHT_ATTACKS[dir];
+export function attackData(id: AttackId): AttackData {
+  return ATTACKS[id];
 }
 
-function startAttack(player: Player, input: PlayerInput, strength: AttackStrength): void {
-  const dirX = Number(input.right) - Number(input.left);
-  if (dirX !== 0) player.facing = dirX === 1 ? 1 : -1;
+/** Light: during a dash → dash attack; in the air → aerial; up/down → tilts; no direction → jab; else side tilt. */
+function chooseLight(player: Player, input: PlayerInput): AttackId {
+  if (player.dodgeKind === 'dash') return 'dash';
+  if (!player.grounded) return chooseAerial(player, input);
+  if (input.up) return 'lightUp';
+  if (input.down) return 'lightDown';
+  if (player.grounded && input.left === input.right) return 'jab1';
+  return 'lightSide';
+}
 
-  player.attackDir = input.up ? 'up' : input.down ? 'down' : 'side';
-  player.attackStrength = strength;
+/** Up and down win over sideways; sideways is relative to where the player faces. */
+function chooseAerial(player: Player, input: PlayerInput): AttackId {
+  if (input.up) return 'airUp';
+  if (input.down) return 'airDown';
+  const dirX = Number(input.right) - Number(input.left);
+  if (dirX === 0) return 'airNeutral';
+  return dirX === player.facing ? 'airForward' : 'airBack';
+}
+
+function chooseHeavy(input: PlayerInput): AttackId {
+  return input.up ? 'heavyUp' : input.down ? 'heavyDown' : 'heavySide';
+}
+
+function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
+  const data = attackData(id);
+  const dirX = Number(input.right) - Number(input.left);
+  // Aerials keep the facing: holding backwards means back aerial, not turning around.
+  if (dirX !== 0 && data.landingLag === undefined) player.facing = dirX === 1 ? 1 : -1;
+  // Attacking out of a dash keeps its speed: dash attack, or a sliding heavy.
+  endDodge(player);
+
   // Heavies charge only on the ground; in the air they fire at once.
-  player.attackCharging = strength === 'heavy' && player.grounded;
-  if (strength === 'heavy' && player.attackDir === 'up' && !player.grounded) launchRecovery(player);
+  player.attackCharging = data.heavy && player.grounded;
+  if (id === 'heavyUp' && !player.grounded) launchRecovery(player);
+  beginAttack(player, id);
+  // Respawn invulnerability is for getting back in, not for attacking safely.
+  player.invulnTicks = 0;
+}
+
+/** Resets the per-attack state for a new attack (fresh start or chained). */
+function beginAttack(player: Player, id: AttackId): void {
+  player.attackId = id;
   player.attackChargeTicks = 0;
   player.attackTick = 0;
   player.attackHitMask = 0;
-  // Respawn invulnerability is for getting back in, not for attacking safely.
-  player.invulnTicks = 0;
+  player.attackQueued = false;
 }
 
 /** The "recovery": up heavy in the air pushes you up, once per time in the air, to get back to the stage. */
@@ -129,7 +160,7 @@ function launchRecovery(player: Player): void {
 }
 
 function advanceAttack(player: Player, input: PlayerInput): void {
-  if (player.attackDir === 'none') return;
+  if (player.attackId === 'none') return;
   if (player.attackCharging) {
     // Releasing the button (or reaching full charge) starts the swing this very tick.
     if (input.heavy && player.attackChargeTicks < HEAVY_MAX_CHARGE_TICKS) {
@@ -140,6 +171,10 @@ function advanceAttack(player: Player, input: PlayerInput): void {
     return;
   }
   player.attackTick += 1;
-  const data = attackData(player.attackStrength, player.attackDir);
-  if (player.attackTick >= data.startup + data.active + data.recovery) player.attackDir = 'none';
+  const data = attackData(player.attackId);
+  if (data.chainTo && player.attackQueued && player.attackTick >= (data.chainFrom ?? 0)) {
+    beginAttack(player, data.chainTo);
+    return;
+  }
+  if (player.attackTick >= data.startup + data.active + data.recovery) player.attackId = 'none';
 }

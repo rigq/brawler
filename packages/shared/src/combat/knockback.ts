@@ -16,12 +16,14 @@ import type { AttackSnapshot } from './hits.ts';
 /**
  * Applies the attacker's current attack to the target. The more damage the
  * target has accumulated, the faster it flies: that is how players get knocked out.
+ * Returns the damage dealt, in %.
  */
-export function applyKnockback(attacker: Player, target: Player, attack: AttackSnapshot): void {
-  const data = attackData(attack.strength, attack.dir);
-  const chargeMult = attack.strength === 'heavy' ? 1 + HEAVY_CHARGE_BONUS * attack.charge : 1;
+export function applyKnockback(attacker: Player, target: Player, attack: AttackSnapshot): number {
+  const data = attackData(attack.id);
+  const chargeMult = data.heavy ? 1 + HEAVY_CHARGE_BONUS * attack.charge : 1;
+  const dealt = data.damage * chargeMult;
 
-  target.damage += data.damage * chargeMult;
+  target.damage += dealt;
   const speed = Math.min((data.kbBase + data.kbScale * target.damage) * chargeMult, KNOCKBACK_MAX_SPEED);
   // Math.sqrt is exact in every JS engine, so this stays deterministic.
   const length = Math.sqrt(data.kbX * data.kbX + data.kbY * data.kbY);
@@ -31,6 +33,7 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
   target.hitstunTicks = HITSTUN_BASE_TICKS + Math.floor(speed * HITSTUN_TICKS_PER_SPEED);
   target.hitFlashTicks = HIT_FLASH_TICKS;
   interrupt(target);
+  return dealt;
 }
 
 /** +1 if the target should fly right, -1 if left: away from the attacker. */
@@ -46,8 +49,9 @@ function awayFrom(attacker: Player, target: Player): 1 | -1 {
  * air jumps, air dodge and recovery, so a launched player always has a chance to get back.
  */
 function interrupt(target: Player): void {
-  target.attackDir = 'none';
+  target.attackId = 'none';
   target.attackCharging = false;
+  target.landingLagTicks = 0;
   endDodge(target);
   target.fastFalling = false;
   target.grounded = false;

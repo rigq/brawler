@@ -54,6 +54,7 @@ brawler/
 - `npm install` — instalar todo
 - `npm run dev` — cliente (http://localhost:5173; partida local a 2 jugadores). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
+- http://localhost:5173/?training — modo entrenamiento contra un muñeco (R reinicia, 9/0 cambian su %)
 - http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
 - `npm run build` — build de producción del cliente (incluye typecheck)
@@ -87,22 +88,54 @@ brawler/
 - [x] F3.3 Predicción + reconciliación
 - [x] F3.4 Interpolación del rival
 - [x] F3.5 Salas con código, desconexiones
-- [ ] F3.6 Deploy (cliente Netlify/Vercel, servidor Fly.io/Hetzner)
-- [ ] F3.7 Ping en pantalla y ajustes
+- (F3.6 y F3.7 pasan al bloque L, al final: primero el juego local completo)
 
-**F4 · Personajes** (1–21 feb)
-- [ ] F4.1 Sistema de personajes por datos
-- [ ] F4.2 Personajes 1 y 2
-- [ ] F4.3 Personajes 3 y 4
-- [ ] F4.4 Sprites y animaciones
-- [ ] F4.5 Selección de personaje
+> Replanificado el 29 oct: vamos adelantados, así que antes de desplegar se pule el juego en local.
 
-**F5 · Pulido y lanzamiento** (22 feb – 14 mar)
-- [ ] F5.1 Menú, sonidos, música
-- [ ] F5.2 Screen shake, partículas, hitstop
-- [ ] F5.3 Playtest con 6–8 compañeros
-- [ ] F5.4 Corregir los 5 fallos principales
-- [ ] F5.5 README con GIF, enlace en el portfolio
+**G · Sensación de golpe** (nov)
+- [x] G1 Hitstop: los dos se congelan unos ticks al conectar (en `shared`, escala con el daño)
+- [x] G2 Screen shake, chispas de impacto, estela al salir lanzado
+- [x] G3 Modo entrenamiento: muñeco, reset de %, contador y daño de combo
+
+**C · Moveset y combos** (nov – dic)
+- [x] C1 Jab de 1–3 golpes (ligero neutro) y ataque en carrera propio
+- [x] C2 Aéreos propios: neutral, adelante, atrás, arriba, abajo
+- [ ] C3 Ajustar hitstun: combos reales a % bajo, escapables a % alto
+- [ ] C4 Coyote time, jump buffer y aterrizaje lento de la esquiva aérea
+
+**E · Defensa y bordes** (dic)
+- [ ] E1 Escudo (L mantenido en suelo) que se encoge y se rompe; L + dirección = rodar
+- [ ] E2 Agarre (L + J) y 2 lanzamientos
+- [ ] E3 Agarre al borde con invulnerabilidad una vez hasta tocar suelo; subir, saltar, atacar o rodar
+- [ ] E4 Paredes laterales para saltar
+
+**P · Personajes** (dic – ene)
+- [ ] P1 Personajes por datos (peso, velocidad, daño, alcance, ataques) y knockback con peso: `(b + s·p·d/10) · 100/peso`
+- [ ] P2 Botón de especial (I / M); personajes 1 y 2 con especial neutral y arriba (el de arriba es su recovery y sustituye a ↑+K)
+- [ ] P3 Personajes 3 y 4 con especial neutral y arriba
+
+**D · Diseño gráfico** (ene)
+- [ ] D1 Muñecos articulados con formas y poses por estado (sustituyen a los rectángulos)
+- [ ] D2 Efectos: polvo al aterrizar/dash, arco de los golpes, destello de KO
+- [ ] D3 Escenario vivo (nubes, faroles que parpadean)
+
+**I · Interfaz** (feb)
+- [ ] I1 Menú principal (Local / Entrenamiento / Online / Controles)
+- [ ] I2 Selección de personaje para 2 jugadores
+- [ ] I3 HUD nuevo (retrato, vidas en iconos, % que tiembla) y pausa con Esc
+- [ ] I4 Sonidos sintetizados con Web Audio, música y volumen
+
+**L · Pulido y lanzamiento** (feb – 14 mar)
+- [ ] L1 Playtest con 6–8 compañeros
+- [ ] L2 Corregir los 5 fallos principales
+- [ ] L3 Deploy (cliente Netlify/Vercel, servidor Fly.io/Hetzner) — antes F3.6
+- [ ] L4 Ping en pantalla y ajustes de red — antes F3.7
+- [ ] L5 README con GIF, enlace en el portfolio
+
+## Referencia de jugabilidad
+`docs/JUGABILIDAD.md` (documento de Riga): **la base es Smash** (moveset por huecos, especiales como poderes, escudo · agarre · ataque, bordes) y de Brawlhalla solo lo que simplifica (enfriamiento de esquiva, stats simples, paredes, partidas a 3 vidas). Se inspira, no se copia: ni nombres, ni assets, ni valores exactos.
+
+Controles objetivo (P1 / P2): ataque J / `,` · fuerte K / `.` · especial I / M · escudo-esquiva L / `-` · agarre L+J / `-`+`,`.
 
 ## Fuera del MVP (no hacer)
-Armas recogibles, 2v2/4 jugadores, matchmaking aleatorio, ranking, cuentas, rollback netcode, móvil.
+Armas recogibles, 2v2/4 jugadores, matchmaking aleatorio, ranking, cuentas, rollback netcode, móvil. También v2: especiales lateral y abajo (v1.1), desgaste de ataques, rage, DI, chase dodge, súper final.

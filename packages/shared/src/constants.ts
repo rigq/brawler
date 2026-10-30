@@ -113,7 +113,14 @@ export const AIR_DODGE_END_SPEED_MULT = 0.35;
 /** Wait after a spot or air dodge ends before the next dash or dodge. */
 export const DODGE_COOLDOWN_TICKS = 54;
 
-// --- Combat: light attacks ---
+// --- Combat: attacks ---
+/** Every attack in the game, by id. Light ones come from J, heavy ones from K. */
+export type AttackId =
+  | 'jab1' | 'jab2' | 'jab3' | 'dash'
+  | 'lightSide' | 'lightUp' | 'lightDown'
+  | 'airNeutral' | 'airForward' | 'airBack' | 'airUp' | 'airDown'
+  | 'heavySide' | 'heavyUp' | 'heavyDown';
+
 /**
  * Each attack goes through three phases, in ticks (60 = 1 s):
  * startup (winding up, harmless) → active (hitbox can hit) → recovery (harmless, can't act).
@@ -124,46 +131,116 @@ export const DODGE_COOLDOWN_TICKS = 54;
  * (kbX, kbY): launch direction, x pointing away from the attacker, y up = negative.
  * Any length works, it is normalised. Vectors, not angles: sin/cos are not deterministic.
  */
-export const LIGHT_ATTACKS = {
-  /** Jab in front. Also used with no direction held. */
-  side: {
-    startup: 5, active: 3, recovery: 10, box: { x: 40, y: 14, width: 52, height: 26 },
+export interface AttackData {
+  /** Heavy attacks charge while K is held (on the ground only) and draw stronger. */
+  heavy: boolean;
+  startup: number;
+  active: number;
+  recovery: number;
+  box: { x: number; y: number; width: number; height: number };
+  damage: number;
+  kbBase: number;
+  kbScale: number;
+  kbX: number;
+  kbY: number;
+  /**
+   * Chains: pressing light again during this attack (any time after it starts)
+   * cancels into `chainTo` once attackTick reaches `chainFrom`. Without the press,
+   * the attack plays its full recovery.
+   */
+  chainTo?: AttackId;
+  chainFrom?: number;
+  /** Aerials only: touching the ground cuts the attack and leaves you this many ticks unable to act. */
+  landingLag?: number;
+}
+
+export const ATTACKS: Record<AttackId, AttackData> = {
+  /**
+   * Jab: light with no direction, on the ground. Up to 3 hits by pressing again.
+   * Low knockback so the next jab always connects: jab1 leaves ≈ 7 ticks of
+   * hitstun and jab2 is already active 4–5 ticks after jab1's hit.
+   */
+  jab1: {
+    heavy: false, startup: 3, active: 2, recovery: 12, box: { x: 40, y: 16, width: 44, height: 22 },
+    damage: 3, kbBase: 120, kbScale: 1, kbX: 1, kbY: -0.25, chainTo: 'jab2', chainFrom: 5,
+  },
+  jab2: {
+    heavy: false, startup: 3, active: 2, recovery: 12, box: { x: 40, y: 16, width: 46, height: 22 },
+    damage: 3, kbBase: 120, kbScale: 1, kbX: 1, kbY: -0.25, chainTo: 'jab3', chainFrom: 5,
+  },
+  /** Jab finisher: pushes the target away, ends the string. */
+  jab3: {
+    heavy: false, startup: 4, active: 3, recovery: 18, box: { x: 38, y: 10, width: 56, height: 32 },
+    damage: 5, kbBase: 360, kbScale: 6, kbX: 1, kbY: -0.7,
+  },
+  /**
+   * Dash attack: light during a dash. Keeps sliding (DASH_ATTACK_FRICTION) and
+   * pops the target up: a way in from afar, but very punishable if it misses.
+   */
+  dash: {
+    heavy: false, startup: 5, active: 5, recovery: 20, box: { x: 26, y: 10, width: 58, height: 44 },
+    damage: 8, kbBase: 360, kbScale: 6, kbX: 0.55, kbY: -1,
+  },
+  /** Side tilt: light holding left/right, on the ground. */
+  lightSide: {
+    heavy: false, startup: 5, active: 3, recovery: 10, box: { x: 40, y: 14, width: 52, height: 26 },
     damage: 6, kbBase: 320, kbScale: 7, kbX: 1, kbY: -0.45,
   },
   /** Arc above the head. */
-  up: {
-    startup: 6, active: 4, recovery: 12, box: { x: -12, y: -48, width: 64, height: 52 },
+  lightUp: {
+    heavy: false, startup: 6, active: 4, recovery: 12, box: { x: -12, y: -48, width: 64, height: 52 },
     damage: 6, kbBase: 340, kbScale: 7, kbX: 0.2, kbY: -1,
   },
-  /** Low swipe covering the feet and below (useful in the air). */
-  down: {
-    startup: 6, active: 3, recovery: 14, box: { x: 8, y: 40, width: 62, height: 40 },
+  /** Low swipe at the feet. */
+  lightDown: {
+    heavy: false, startup: 6, active: 3, recovery: 14, box: { x: 8, y: 40, width: 62, height: 40 },
     damage: 5, kbBase: 300, kbScale: 6, kbX: 1, kbY: -0.6,
   },
-} as const;
-
-// --- Combat: heavy attacks ---
-/**
- * Same shape as LIGHT_ATTACKS, but slower, with more reach and harder hits.
- * Before startup there is a charge phase while the button is held.
- */
-export const HEAVY_ATTACKS = {
-  /** Long reach in front. */
-  side: {
-    startup: 10, active: 5, recovery: 22, box: { x: 36, y: 8, width: 92, height: 36 },
+  // Aerials: light in the air. "Forward" and "back" are relative to where you face,
+  // which does not change in the air. The riskier the aerial, the longer its landing lag.
+  /** Quick and long-lasting, around the whole body: the safe way out of trouble. */
+  airNeutral: {
+    heavy: false, startup: 4, active: 8, recovery: 10, box: { x: -14, y: 6, width: 68, height: 48 },
+    damage: 6, kbBase: 280, kbScale: 5, kbX: 1, kbY: -0.5, landingLag: 6,
+  },
+  /** Reach in front: the main spacing tool, also from a short hop. */
+  airForward: {
+    heavy: false, startup: 7, active: 3, recovery: 14, box: { x: 38, y: 8, width: 60, height: 34 },
+    damage: 8, kbBase: 340, kbScale: 7, kbX: 1, kbY: -0.4, landingLag: 9,
+  },
+  /** Behind you and the strongest side aerial: you must be facing away, so it takes a read. */
+  airBack: {
+    heavy: false, startup: 6, active: 3, recovery: 13, box: { x: -50, y: 10, width: 52, height: 32 },
+    damage: 9, kbBase: 380, kbScale: 8, kbX: 1, kbY: -0.35, landingLag: 9,
+  },
+  /** Arc above: juggles a target who is falling onto you. */
+  airUp: {
+    heavy: false, startup: 5, active: 4, recovery: 11, box: { x: -10, y: -46, width: 60, height: 50 },
+    damage: 6, kbBase: 320, kbScale: 6, kbX: 0.15, kbY: -1, landingLag: 7,
+  },
+  /** Slow spike under the feet: sends the target down, deadly off stage, very punishable. */
+  airDown: {
+    heavy: false, startup: 8, active: 4, recovery: 16, box: { x: 2, y: 52, width: 36, height: 40 },
+    damage: 9, kbBase: 340, kbScale: 7, kbX: 0.2, kbY: 1, landingLag: 12,
+  },
+  /** Heavies: slower, more reach, harder hits. A charge phase comes before startup. Long reach in front. */
+  heavySide: {
+    heavy: true, startup: 10, active: 5, recovery: 22, box: { x: 36, y: 8, width: 92, height: 36 },
     damage: 13, kbBase: 480, kbScale: 10, kbX: 1, kbY: -0.5,
   },
-  /** Big arc above, a bit to both sides. */
-  up: {
-    startup: 11, active: 6, recovery: 24, box: { x: -28, y: -82, width: 96, height: 86 },
+  /** Big arc above, a bit to both sides. In the air it is also the recovery (RECOVERY_SPEED). */
+  heavyUp: {
+    heavy: true, startup: 11, active: 6, recovery: 24, box: { x: -28, y: -82, width: 96, height: 86 },
     damage: 12, kbBase: 500, kbScale: 9, kbX: 0.25, kbY: -1,
   },
   /** Ground-level sweep reaching both sides. */
-  down: {
-    startup: 12, active: 5, recovery: 26, box: { x: -46, y: 30, width: 132, height: 44 },
+  heavyDown: {
+    heavy: true, startup: 12, active: 5, recovery: 26, box: { x: -46, y: 30, width: 132, height: 44 },
     damage: 11, kbBase: 460, kbScale: 9, kbX: 1, kbY: -0.7,
   },
-} as const;
+};
+/** How fast a dash attack's slide slows down (px/s²): from dash speed it slides ~170 px. */
+export const DASH_ATTACK_FRICTION = 3000;
 /**
  * Holding heavy charges for at most this long (~0.6 s), then it fires on its own.
  * Only on the ground: heavies in the air fire straight away.
@@ -187,6 +264,15 @@ export const HITSTUN_BASE_TICKS = 6;
 export const HITSTUN_TICKS_PER_SPEED = 0.012;
 /** How fast horizontal launch speed fades during hitstun (px/s²). Low = flies further. */
 export const HITSTUN_DRAG = 1500;
+/**
+ * Hitstop: when a hit lands, attacker and target both freeze for
+ * base + damage dealt × this ticks (capped), so the impact is felt.
+ * A jab (6 %) freezes 5 ticks (~83 ms); a fully charged heavy, the cap.
+ * The launch speed is kept and applied once the freeze ends.
+ */
+export const HITSTOP_BASE_TICKS = 3;
+export const HITSTOP_TICKS_PER_DAMAGE = 0.35;
+export const HITSTOP_MAX_TICKS = 10;
 /** How long a player flashes white after being hit (visual only). */
 export const HIT_FLASH_TICKS = 8;
 
@@ -204,6 +290,21 @@ export const CAMERA_MAX_ZOOM = 1.35;
 export const CAMERA_SMOOTH_MS = 140;
 /** The camera never shows anything outside this area. */
 export const CAMERA_BOUNDS = { x: -960, y: -640, width: 3200, height: 2060 } as const;
+
+// --- Hit effects (render only: the simulation never reads these) ---
+/** Screen shake per hit: intensity = base + damage dealt × this (fraction of the screen), capped. */
+export const SHAKE_BASE = 0.002;
+export const SHAKE_PER_DAMAGE = 0.0004;
+export const SHAKE_MAX = 0.012;
+/** Shake lasts the hitstop plus this long (ms). */
+export const SHAKE_EXTRA_MS = 90;
+/** The hit player trembles ± this many px while frozen in hitstop. */
+export const HITSTOP_JITTER_PX = 3;
+/** A launched player leaves afterimages while flying faster than this (px/s)… */
+export const TRAIL_MIN_SPEED = 700;
+/** …one every this many ms, each fading out over TRAIL_LIFE_MS. */
+export const TRAIL_INTERVAL_MS = 30;
+export const TRAIL_LIFE_MS = 220;
 
 // --- Network ---
 /** Port the game server listens on (WebSocket + HTTP). */

@@ -3,6 +3,7 @@ import {
   AIR_DRAG,
   AIR_JUMPS,
   ATTACK_MOVE_SPEED_MULT,
+  DASH_ATTACK_FRICTION,
   DOUBLE_JUMP_SPEED,
   DROP_THROUGH_TICKS,
   FAST_FALL_SPEED,
@@ -18,7 +19,7 @@ import {
   PLAYER_WIDTH,
   RUN_SPEED,
 } from '../constants.ts';
-import { attackPressed, createAttackState, isAttacking, updateAttack, type AttackState } from '../combat/attacks.ts';
+import { attackData, createAttackState, isAttacking, updateAttack, type AttackState } from '../combat/attacks.ts';
 import type { PlayerInput } from '../input.ts';
 import { moveAndCollide, type Body, type StageGeometry } from './collision.ts';
 import { applyDodgeMovement, createDodgeState, endDodge, updateDodge, type DodgeState } from './dodge.ts';
@@ -33,6 +34,10 @@ export interface Player extends Body, DodgeState, AttackState, StockState {
   damage: number;
   /** Ticks left without control after being hit. */
   hitstunTicks: number;
+  /** Ticks left frozen in place after landing or taking a hit (hitstop). */
+  hitstopTicks: number;
+  /** Ticks left unable to act after landing during an aerial. */
+  landingLagTicks: number;
   /** Position at the start of the last step; the renderer interpolates from here. */
   prevX: number;
   prevY: number;
@@ -54,6 +59,8 @@ export function createPlayer(spawn: { x: number; y: number; facing: 1 | -1 }): P
     hitFlashTicks: 0,
     damage: 0,
     hitstunTicks: 0,
+    hitstopTicks: 0,
+    landingLagTicks: 0,
     x: spawn.x,
     y: spawn.y,
     prevX: spawn.x,
@@ -79,12 +86,17 @@ export function createPlayer(spawn: { x: number; y: number; facing: 1 | -1 }): P
 export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeometry): void {
   player.prevX = player.x;
   player.prevY = player.y;
+  // Hitstop: everything waits (timers, attack phases, velocity). A button still
+  // held when the freeze ends counts as a fresh press, so inputs feel buffered.
+  if (player.hitstopTicks > 0) {
+    player.hitstopTicks -= 1;
+    return;
+  }
   if (player.hitFlashTicks > 0) player.hitFlashTicks -= 1;
   if (player.dropTicks > 0) player.dropTicks -= 1;
   if (player.invulnTicks > 0) player.invulnTicks -= 1;
 
-  // Attacking out of a dash keeps its speed ("dash attack").
-  if (player.dodgeKind === 'dash' && attackPressed(player, input)) endDodge(player);
+  // Attacking out of a dash ends it and keeps its speed (see startAttack).
   updateAttack(player, input);
   updateDodge(player, input);
   // Jumping out of a dash keeps its speed ("dash jump").
@@ -93,6 +105,9 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
   const stunned = player.hitstunTicks > 0;
   if (stunned) {
     applyHitstunDrag(player);
+  } else if (player.landingLagTicks > 0) {
+    player.landingLagTicks -= 1;
+    player.vx = approach(player.vx, 0, GROUND_FRICTION * FIXED_DT);
   } else if (isAttacking(player)) {
     applyAttackDrift(player, input);
   } else if (player.dodgeKind === 'none') {
@@ -121,6 +136,8 @@ export function teleportPlayer(player: Player, spawn: { x: number; y: number; fa
   player.hitFlashTicks = 0;
   player.damage = 0;
   player.hitstunTicks = 0;
+  player.hitstopTicks = 0;
+  player.landingLagTicks = 0;
   Object.assign(player, createDodgeState(), createAttackState());
   refillOnLanding(player);
 }
@@ -128,6 +145,11 @@ export function teleportPlayer(player: Player, spawn: { x: number; y: number; fa
 function land(player: Player): void {
   if (player.dodgeKind === 'air') endDodge(player);
   refillOnLanding(player);
+  if (player.attackId === 'none') return;
+  const lag = attackData(player.attackId).landingLag;
+  if (lag === undefined) return;
+  player.attackId = 'none';
+  player.landingLagTicks = lag;
 }
 
 function applyRun(player: Player, input: PlayerInput): void {
@@ -152,7 +174,10 @@ function applyHitstunDrag(player: Player): void {
  * control in the air), but you commit: no jumping, dodging or turning around.
  */
 function applyAttackDrift(player: Player, input: PlayerInput): void {
-  if (player.grounded) {
+  if (player.grounded && player.attackId === 'dash') {
+    // The dash attack slides on with the dash's speed, slowing down.
+    player.vx = approach(player.vx, 0, DASH_ATTACK_FRICTION * FIXED_DT);
+  } else if (player.grounded) {
     // Keep running while attacking, a bit slower. A dash-attack bleeds its extra speed off.
     const dir = Number(input.right) - Number(input.left);
     const accel = dir !== 0 ? GROUND_ACCEL : GROUND_FRICTION;
@@ -162,7 +187,9 @@ function applyAttackDrift(player: Player, input: PlayerInput): void {
   }
 }
 
+/** You only turn around on the ground: in the air the facing stays, so back aerials exist. */
 function applyFacing(player: Player, input: PlayerInput): void {
+  if (!player.grounded) return;
   const dir = Number(input.right) - Number(input.left);
   if (dir !== 0) player.facing = dir === 1 ? 1 : -1;
 }

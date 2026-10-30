@@ -1,29 +1,47 @@
 import Phaser from 'phaser';
-import { FixedStepAccumulator, createWorld, stepWorld, type World } from '@brawler/shared';
+import { EMPTY_INPUT, FixedStepAccumulator, createWorld, stepWorld, type World } from '@brawler/shared';
 import { GamepadInput } from '../input/GamepadInput.ts';
 import { CombinedInput, type InputSource } from '../input/InputSource.ts';
 import { KeyboardInput, P1_BINDINGS, P2_BINDINGS, type KeyBindings } from '../input/KeyboardInput.ts';
 import { RematchInput } from '../input/RematchInput.ts';
 import { MatchView } from '../render/MatchView.ts';
+import { DUMMY_SLOT, TrainingMode } from '../training/TrainingMode.ts';
 
 const PLAYER_BINDINGS: KeyBindings[] = [P1_BINDINGS, P2_BINDINGS];
+/** The training dummy's "controller": never presses anything. */
+const DUMMY_INPUT: InputSource = { read: () => ({ ...EMPTY_INPUT }) };
 
-// Local 2-player match: runs the shared simulation at a fixed 60 Hz and draws it once per render frame.
+export type LocalMode = 'versus' | 'training';
+
+/**
+ * Local match: runs the shared simulation at a fixed 60 Hz and draws it once per render frame.
+ * 'versus': 2 players on one keyboard. 'training': P1 against a dummy (see TrainingMode).
+ */
 export class GameScene extends Phaser.Scene {
   private readonly accumulator = new FixedStepAccumulator();
+  private readonly mode: LocalMode;
   private world: World = createWorld();
   private inputs: InputSource[] = [];
   private view!: MatchView;
+  private training: TrainingMode | null = null;
 
-  constructor() {
+  constructor(mode: LocalMode = 'versus') {
     super('GameScene');
+    this.mode = mode;
   }
 
   create(): void {
     this.world = createWorld();
     this.view = new MatchView(this, this.world, 'Revancha: Enter, R o Start');
-    this.inputs = this.world.players.map((_, i) => this.createInput(i));
-    new RematchInput(this, () => this.rematch());
+    if (this.mode === 'training') {
+      this.training = new TrainingMode(this, () => this.world, () => this.restart());
+      this.view.addUi(this.training.gameObjects);
+    } else {
+      new RematchInput(this, () => this.rematch());
+    }
+    this.inputs = this.world.players.map((_, i) =>
+      this.training && i === DUMMY_SLOT ? DUMMY_INPUT : this.createInput(i),
+    );
     if (import.meta.env.DEV) exposeForDebugging(this.world, this.game);
   }
 
@@ -32,9 +50,12 @@ export class GameScene extends Phaser.Scene {
     const frameInputs = this.inputs.map((input) => input.read());
     const steps = this.accumulator.consume(delta);
     for (let i = 0; i < steps; i++) {
+      this.training?.beforeStep(this.world);
       stepWorld(this.world, frameInputs);
+      this.training?.afterStep(this.world);
     }
     this.view.render(this.world, this.accumulator.alpha, delta);
+    this.training?.render(this.world);
   }
 
   /**
@@ -43,8 +64,12 @@ export class GameScene extends Phaser.Scene {
    */
   private rematch(): void {
     if (!this.view.isResultShown) return;
-    this.world = createWorld();
     this.view.hideResult();
+    this.restart();
+  }
+
+  private restart(): void {
+    this.world = createWorld();
     if (import.meta.env.DEV) exposeForDebugging(this.world, this.game);
   }
 

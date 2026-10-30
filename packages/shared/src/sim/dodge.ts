@@ -59,7 +59,8 @@ export function updateDodge(player: Player, input: PlayerInput): void {
     return;
   }
   if (player.dodgeCooldown > 0) player.dodgeCooldown -= 1;
-  const canStart = player.dodgeCooldown === 0 && player.attackDir === 'none' && player.hitstunTicks === 0;
+  const free = player.attackId === 'none' && player.hitstunTicks === 0 && player.landingLagTicks === 0;
+  const canStart = player.dodgeCooldown === 0 && free;
   if (pressed && canStart) startDodge(player, input);
 }
 

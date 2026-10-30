@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { attackBoxAt, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
+import { HITSTOP_JITTER_PX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
 
 const DODGE_ALPHA = 0.4;
 /** After respawning the player blinks: this many ticks on, this many off. */
@@ -58,7 +58,7 @@ export class PlayerView {
       return;
     }
 
-    const x = lerp(player.prevX, player.x, alpha) + offset.x;
+    const x = lerp(player.prevX, player.x, alpha) + offset.x + hitstopJitter(player);
     const y = lerp(player.prevY, player.y, alpha) + offset.y;
     const opacity = this.opacity(player);
 
@@ -103,7 +103,7 @@ export class PlayerView {
     this.swing.setVisible(box !== null);
     if (box) {
       this.swing.setPosition(box.x, box.y).setSize(box.width, box.height);
-      this.swing.setFillStyle(this.color, SWING_ALPHA[player.attackStrength]);
+      this.swing.setFillStyle(this.color, player.attackId !== 'none' && attackData(player.attackId).heavy ? SWING_ALPHA.heavy : SWING_ALPHA.light);
     }
   }
 
@@ -116,6 +116,12 @@ export class PlayerView {
       this.chargeBar.setPosition(x, y - CHARGE_BAR_GAP - CHARGE_BAR_HEIGHT).setSize(width, CHARGE_BAR_HEIGHT);
     }
   }
+}
+
+/** The player who got hit trembles while frozen; the attacker stays still. */
+function hitstopJitter(player: Player): number {
+  if (player.hitstopTicks === 0 || player.hitFlashTicks === 0) return 0;
+  return player.hitstopTicks % 2 === 0 ? HITSTOP_JITTER_PX : -HITSTOP_JITTER_PX;
 }
 
 function lerp(from: number, to: number, t: number): number {

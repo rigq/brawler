@@ -4,8 +4,9 @@ import { THEME } from './render/palette.ts';
 import { GameScene } from './scenes/GameScene.ts';
 import { OnlineScene } from './scenes/OnlineScene.ts';
 
-// Until the menu (F5.1): add ?online to the URL to play online, otherwise local 2 players.
-const online = new URLSearchParams(location.search).has('online');
+// Until the menu (I1): ?online plays online, ?training opens training mode, otherwise local 2 players.
+const params = new URLSearchParams(location.search);
+const scene = params.has('online') ? new OnlineScene() : new GameScene(params.has('training') ? 'training' : 'versus');
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -18,5 +19,5 @@ new Phaser.Game({
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   input: { gamepad: true },
-  scene: [online ? OnlineScene : GameScene],
+  scene: [scene],
 });

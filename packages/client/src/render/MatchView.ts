@@ -1,11 +1,24 @@
 import Phaser from 'phaser';
-import { WORLD_HEIGHT, WORLD_WIDTH, matchResult, type MatchResult, type World } from '@brawler/shared';
+import {
+  FIXED_DT_MS,
+  SHAKE_BASE,
+  SHAKE_EXTRA_MS,
+  SHAKE_MAX,
+  SHAKE_PER_DAMAGE,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+  hitstopTicks,
+  matchResult,
+  type MatchResult,
+  type World,
+} from '@brawler/shared';
 import { DamageHud } from '../ui/DamageHud.ts';
 import { ResultOverlay } from '../ui/ResultOverlay.ts';
 import { StatsHud } from '../ui/StatsHud.ts';
 import { drawBackdrop } from './Backdrop.ts';
 import { CameraRig } from './CameraRig.ts';
 import { DebugOverlay } from './DebugOverlay.ts';
+import { HitEffects } from './HitEffects.ts';
 import { PLAYER_COLORS, playerColor } from './palette.ts';
 import { PlayerView, type VisualOffset } from './PlayerView.ts';
 import { drawStage } from './StageView.ts';
@@ -20,6 +33,7 @@ export class MatchView {
   private readonly playerViews: PlayerView[];
   private readonly cameraRig: CameraRig;
   private readonly debugOverlay: DebugOverlay;
+  private readonly hitEffects: HitEffects;
   private readonly hud: StatsHud;
   private readonly damageHud: DamageHud;
   private readonly resultOverlay: ResultOverlay;
@@ -29,6 +43,8 @@ export class MatchView {
     const worldObjects = [...drawBackdrop(scene), ...drawStage(scene, world)];
     this.playerViews = world.players.map((player, i) => new PlayerView(scene, player, playerColor(i)));
     worldObjects.push(...this.playerViews.flatMap((view) => view.gameObjects));
+    this.hitEffects = new HitEffects(scene, PLAYER_COLORS);
+    worldObjects.push(...this.hitEffects.gameObjects);
     this.debugOverlay = new DebugOverlay(scene);
     worldObjects.push(this.debugOverlay.gameObject);
 
@@ -62,6 +78,7 @@ export class MatchView {
     const { offsets = [], result = matchResult(world.players) } = options;
     world.players.forEach((player, i) => this.playerViews[i]?.render(player, alpha, offsets[i]));
     this.debugOverlay.render(world.players);
+    for (const dealt of this.hitEffects.update(world.players, frameMs)) this.shake(dealt);
     const onScreen = this.playerViews.filter((view) => view.isVisible);
     this.cameraRig.update(
       onScreen.map((view) => view.drawnBounds),
@@ -70,6 +87,14 @@ export class MatchView {
     this.hud.update(frameMs, world);
     this.damageHud.update(world.players);
     this.resultOverlay.update(result, frameMs);
+  }
+
+  /** Shakes the world camera only (the UI camera stays still), harder for stronger hits. */
+  private shake(dealt: number): void {
+    const intensity = Math.min(SHAKE_BASE + dealt * SHAKE_PER_DAMAGE, SHAKE_MAX);
+    const duration = hitstopTicks(dealt) * FIXED_DT_MS + SHAKE_EXTRA_MS;
+    // force = true: a new hit restarts the shake instead of being ignored.
+    this.scene.cameras.main.shake(duration, intensity, true);
   }
 
   hideResult(): void {
