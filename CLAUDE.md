@@ -55,7 +55,8 @@ brawler/
 - `npm run dev` — cliente (http://localhost:5173; partida local a 2 jugadores). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
 - http://localhost:5173/?training — modo entrenamiento contra un muñeco (R reinicia, 8 activa su escudo, 9/0 cambian su %)
-- `?p1=heavy&p2=rushdown` — (hasta I2) elige personajes en local: `balanced`, `rushdown`, `heavy`, `zoner`
+- `?p1=donate&p2=heavy` — (hasta I2) elige personajes en local: `donate` y los provisionales `balanced`, `rushdown`, `heavy`, `zoner`
+- `node tools/pixelate.ts art/<personaje>/sprites.json` — limpia los sprites generados con IA y los deja en `packages/client/public/sprites/`
 - http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
 - `npm run build` — build de producción del cliente (incluye typecheck)
@@ -112,7 +113,7 @@ brawler/
 
 **P · Personajes** (dic – ene)
 - [x] P1 Personajes por datos (peso, velocidad, daño, alcance, ataques) y knockback con peso: `(b + s·p·d/10) · 100/peso`
-- [ ] P2 Botón de especial (I / M); personajes 1 y 2 con especial neutral y arriba (el de arriba es su recovery y sustituye a ↑+K)
+- [ ] P2 Botón de especial (I / N) ✓ y Donate ✓; falta el personaje 2; personajes 1 y 2 con especial neutral y arriba (el de arriba es su recovery y sustituye a ↑+K)
 - [ ] P3 Personajes 3 y 4 con especial neutral y arriba
 
 **D · Diseño gráfico** (ene)
@@ -136,7 +137,7 @@ brawler/
 ## Referencia de jugabilidad
 `docs/JUGABILIDAD.md` (documento de Riga): **la base es Smash** (moveset por huecos, especiales como poderes, escudo · agarre · ataque, bordes) y de Brawlhalla solo lo que simplifica (enfriamiento de esquiva, stats simples, paredes, partidas a 3 vidas). Se inspira, no se copia: ni nombres, ni assets, ni valores exactos.
 
-Controles (P1 / P2): ataque J / `,` · fuerte K / `.` · escudo-esquiva L / `-` · agarre L+J / `-`+`,` · dash doble toque de dirección · con escudo: lado rueda, abajo esquiva. Objetivo: especial I / M.
+Tabla completa de controles: `docs/CONTROLES.md`. Resumen (P1 / P2): salto Espacio / M · ataque J / `,` · fuerte K / `.` · escudo-esquiva L / `-` · agarre L+J / `-`+`,` · especial I / N (con arriba: especial arriba) · dash doble toque de dirección · con escudo: lado rueda, abajo esquiva.
 
 ## Fuera del MVP (no hacer)
 Armas recogibles, 2v2/4 jugadores, matchmaking aleatorio, ranking, cuentas, rollback netcode, móvil. También v2: especiales lateral y abajo (v1.1), desgaste de ataques, rage, DI, chase dodge, súper final.

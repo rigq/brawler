@@ -21,6 +21,7 @@ import { DebugOverlay } from './DebugOverlay.ts';
 import { HitEffects } from './HitEffects.ts';
 import { PLAYER_COLORS, playerColor } from './palette.ts';
 import { PlayerView, type VisualOffset } from './PlayerView.ts';
+import { ProjectileView } from './ProjectileView.ts';
 import { drawStage } from './StageView.ts';
 
 /**
@@ -33,6 +34,7 @@ export class MatchView {
   private readonly playerViews: PlayerView[];
   private readonly cameraRig: CameraRig;
   private readonly debugOverlay: DebugOverlay;
+  private readonly projectileView: ProjectileView;
   private readonly hitEffects: HitEffects;
   private readonly hud: StatsHud;
   private readonly damageHud: DamageHud;
@@ -57,6 +59,8 @@ export class MatchView {
     // A second, fixed camera draws only the UI, so text stays put whatever the zoom.
     const uiCamera = scene.cameras.add(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     uiCamera.ignore(worldObjects);
+    // Projectiles come and go during the match: each new object is hidden from the UI camera as it appears.
+    this.projectileView = new ProjectileView(scene, (object) => uiCamera.ignore(object));
   }
 
   /** True while the end-of-match screen is up. */
@@ -76,8 +80,9 @@ export class MatchView {
    */
   render(world: World, alpha: number, frameMs: number, options: RenderOptions = {}): void {
     const { offsets = [], result = matchResult(world.players) } = options;
-    world.players.forEach((player, i) => this.playerViews[i]?.render(player, alpha, offsets[i]));
-    this.debugOverlay.render(world.players);
+    world.players.forEach((player, i) => this.playerViews[i]?.render(player, alpha, frameMs, offsets[i]));
+    this.projectileView.render(world.projectiles, alpha, frameMs);
+    this.debugOverlay.render(world.players, alpha);
     for (const dealt of this.hitEffects.update(world.players, frameMs)) this.shake(dealt);
     const onScreen = this.playerViews.filter((view) => view.isVisible);
     this.cameraRig.update(

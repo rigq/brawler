@@ -8,8 +8,9 @@ const INACTIVE_ALPHA = 0.35;
 const LINE_WIDTH = 2;
 
 /**
- * F1 toggles outlines of every hurtbox (green) and hitbox (red), drawn from
- * the simulation's own data, so what you see is exactly what the game checks.
+ * F1 toggles outlines of every hurtbox (green) and hitbox (red), from the
+ * simulation's own boxes. They are drawn at the same in-between position as the
+ * bodies, so they never drift apart from what you see (at most 1 tick behind the check).
  */
 export class DebugOverlay {
   private readonly graphics: Phaser.GameObjects.Graphics;
@@ -32,13 +33,15 @@ export class DebugOverlay {
     return this.enabled;
   }
 
-  render(players: readonly Player[]): void {
+  render(players: readonly Player[], alpha: number): void {
     if (!this.enabled) return;
     this.graphics.clear();
     for (const player of players) {
       if (!isActive(player)) continue;
-      this.outline(hurtbox(player), HURTBOX_COLOR, 1);
-      const box = attackBoxAt(player, player.x, player.y);
+      const x = player.prevX + (player.x - player.prevX) * alpha;
+      const y = player.prevY + (player.y - player.prevY) * alpha;
+      this.outline({ ...hurtbox(player), x, y }, HURTBOX_COLOR, 1);
+      const box = attackBoxAt(player, x, y);
       if (box) this.outline(box, HITBOX_COLOR, attackPhase(player) === 'active' ? 1 : INACTIVE_ALPHA);
     }
   }

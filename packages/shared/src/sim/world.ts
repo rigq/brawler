@@ -2,6 +2,7 @@
 
 import { resolveGrabs } from '../combat/grabs.ts';
 import { resolveHits } from '../combat/hits.ts';
+import { stepProjectiles, type Projectile } from '../combat/projectiles.ts';
 import type { CharacterId } from '../characters/index.ts';
 import { GROUND, PLATFORMS, SPAWNS } from '../constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../input.ts';
@@ -17,6 +18,10 @@ export interface World extends StageGeometry {
   players: Player[];
   solids: Rect[];
   platforms: Rect[];
+  /** Everything fired by specials that is still flying. */
+  projectiles: Projectile[];
+  /** Last projectile id handed out (ids only go up). */
+  nextProjectileId: number;
 }
 
 /** `characters[i]` is player i's character; missing ones get the default. */
@@ -26,6 +31,8 @@ export function createWorld(characters: readonly CharacterId[] = []): World {
     players: SPAWNS.map((spawn, i) => createPlayer(spawn, characters[i])),
     solids: [{ ...GROUND }],
     platforms: PLATFORMS.map((platform) => ({ ...platform })),
+    projectiles: [],
+    nextProjectileId: 0,
   };
 }
 
@@ -42,6 +49,7 @@ export function stepWorld(world: World, inputs: readonly PlayerInput[]): void {
   // After everyone has moved, so hits use this step's final positions.
   resolveHits(world.players);
   resolveGrabs(world.players);
+  stepProjectiles(world);
   for (const player of world.players) {
     if (isActive(player) && isOutsideBlastZone(player)) knockOut(player);
   }

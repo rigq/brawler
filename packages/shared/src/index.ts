@@ -11,6 +11,7 @@ export * from './loop/FixedStepAccumulator.ts';
 export * from './combat/attacks.ts';
 export * from './combat/grabs.ts';
 export * from './combat/hits.ts';
+export * from './combat/projectiles.ts';
 export * from './combat/knockback.ts';
 export * from './sim/collision.ts';
 export * from './sim/dodge.ts';

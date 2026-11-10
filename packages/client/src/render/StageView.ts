@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Rect, StageGeometry } from '@brawler/shared';
 import { seededRandom } from './Backdrop.ts';
+import { bake } from './bake.ts';
 import { THEME } from './palette.ts';
 
 /** Behind the players (depth 0), in front of the backdrop. */
@@ -14,6 +15,8 @@ const STONE_SPACING = 85;
 const LANTERN_SPOTS = [0.05, 0.95] as const;
 const PLANK_WIDTH = 40;
 const LANTERN = { postHeight: 70, size: 16, glowRadius: 46 } as const;
+/** Extra room around each drawing when it is baked into a picture, so nothing is cut off. */
+const BAKE_MARGIN = 8;
 
 /**
  * Draws the stage with simple shapes: a floating island (the solid ground),
@@ -22,9 +25,25 @@ const LANTERN = { postHeight: 70, size: 16, glowRadius: 46 } as const;
  */
 export function drawStage(scene: Phaser.Scene, stage: StageGeometry): Phaser.GameObjects.GameObject[] {
   const objects: Phaser.GameObjects.GameObject[] = [];
-  for (const solid of stage.solids) objects.push(drawIsland(scene, solid), ...drawLanterns(scene, solid));
-  for (const platform of stage.platforms) objects.push(drawPlatform(scene, platform));
+  for (const solid of stage.solids) {
+    const below = solid.y + solid.height + solid.width * ISLAND_DEPTH_RATIO + 30;
+    objects.push(bake(drawIsland(scene, solid), around(solid.x, solid.y - 4, solid.x + solid.width, below)));
+    const lanternTop = solid.y - LANTERN.postHeight - LANTERN.glowRadius;
+    const lanternArea = around(solid.x - LANTERN.glowRadius, lanternTop, solid.x + solid.width + LANTERN.glowRadius, solid.y);
+    objects.push(...drawLanterns(scene, solid).map((g) => bake(g, lanternArea)));
+  }
+  for (const p of stage.platforms) objects.push(bake(drawPlatform(scene, p), around(p.x, p.y, p.x + p.width, p.y + p.height + 20)));
   return objects;
+}
+
+/** The rectangle from (left, top) to (right, bottom), plus BAKE_MARGIN on every side. */
+function around(left: number, top: number, right: number, bottom: number): Rect {
+  return {
+    x: left - BAKE_MARGIN,
+    y: top - BAKE_MARGIN,
+    width: right - left + 2 * BAKE_MARGIN,
+    height: bottom - top + 2 * BAKE_MARGIN,
+  };
 }
 
 /** Grass on top, rock face, and a rocky underside tapering to a point. */

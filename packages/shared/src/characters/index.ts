@@ -2,6 +2,7 @@
 
 import { balanced } from './balanced.ts';
 import { buildCharacter } from './buildCharacter.ts';
+import { donate } from './donate.ts';
 import { heavy } from './heavy.ts';
 import { rushdown } from './rushdown.ts';
 import type { Character } from './types.ts';
@@ -9,7 +10,7 @@ import { zoner } from './zoner.ts';
 
 export type { Character, CharacterDefinition, CharacterStats } from './types.ts';
 
-const DEFINITIONS = { balanced, rushdown, heavy, zoner };
+const DEFINITIONS = { balanced, rushdown, heavy, zoner, donate };
 
 export type CharacterId = keyof typeof DEFINITIONS;
 export const DEFAULT_CHARACTER: CharacterId = 'balanced';

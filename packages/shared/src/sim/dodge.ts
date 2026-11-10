@@ -75,7 +75,7 @@ export function updateDodge(player: Player, input: PlayerInput): void {
     return;
   }
   if (player.dodgeCooldown > 0) player.dodgeCooldown -= 1;
-  const free = player.attackId === 'none' && player.hitstunTicks === 0 && player.lagTicks === 0;
+  const free = player.attackId === 'none' && player.hitstunTicks === 0 && player.lagTicks === 0 && !player.parachuting;
   if (!free || player.shielding || player.dodgeCooldown > 0) return;
   if (doubleTap && player.grounded) startDash(player, input);
   else if (pressed && !player.grounded) startAirDodge(player, input);

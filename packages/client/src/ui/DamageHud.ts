@@ -49,14 +49,23 @@ export class DamageHud {
     players.forEach((player, i) => {
       const panel = this.panels[i];
       if (!panel) return;
-      panel.stocks.setText(STOCK_FULL.repeat(player.stocks) + STOCK_LOST.repeat(STOCKS - player.stocks));
+      setIfChanged(panel.stocks, STOCK_FULL.repeat(player.stocks) + STOCK_LOST.repeat(STOCKS - player.stocks));
       if (player.stocks === 0) {
-        panel.percent.setText('OUT').setColor(OUT_COLOR);
+        setIfChanged(panel.percent, 'OUT', OUT_COLOR);
       } else {
-        panel.percent.setText(`${Math.floor(player.damage)}%`).setColor(damageColor(player.damage));
+        setIfChanged(panel.percent, `${Math.floor(player.damage)}%`, damageColor(player.damage));
       }
     });
   }
+}
+
+/**
+ * Changing a Text's text or colour redraws its texture, which is slow:
+ * only do it when something really changed, not every frame.
+ */
+function setIfChanged(text: Phaser.GameObjects.Text, value: string, color?: string): void {
+  if (text.text !== value) text.setText(value);
+  if (color !== undefined && text.style.color !== color) text.setColor(color);
 }
 
 function damageColor(damage: number): string {

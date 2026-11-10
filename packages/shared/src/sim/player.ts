@@ -17,6 +17,8 @@ import {
   JUMP_BUFFER_TICKS,
   JUMP_CUT,
   JUMP_SPEED,
+  PARACHUTE_DRIFT_MULT,
+  PARACHUTE_FALL_SPEED,
   MAX_FALL_SPEED,
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
@@ -158,6 +160,9 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
     if (player.shieldStunTicks === 0) applyJump(player, input);
   } else if (isAttacking(player)) {
     applyAttackDrift(player, input);
+  } else if (player.parachuting) {
+    // Helpless glide: steer a little, nothing else until landing (or a hit).
+    applyRun(player, input, PARACHUTE_DRIFT_MULT);
   } else if (player.dodgeKind === 'none') {
     applyRun(player, input);
     applyJump(player, input);
@@ -166,7 +171,8 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
   }
   applyDodgeMovement(player);
   if (player.dodgeKind !== 'air') applyGravity(player);
-  if (player.dodgeKind === 'none' && !stunned) applyFastFall(player, input);
+  if (player.parachuting) player.vy = Math.min(player.vy, PARACHUTE_FALL_SPEED);
+  else if (player.dodgeKind === 'none' && !stunned) applyFastFall(player, input);
 
   // After the jump check, so the window lasts exactly COYOTE_TICKS ticks in the air.
   if (player.coyoteTicks > 0) player.coyoteTicks -= 1;
@@ -210,9 +216,9 @@ function land(player: Player): void {
   player.lagTicks = lag;
 }
 
-function applyRun(player: Player, input: PlayerInput): void {
+function applyRun(player: Player, input: PlayerInput, speedMult = 1): void {
   const dir = Number(input.right) - Number(input.left);
-  const target = dir * RUN_SPEED * characterOf(player).speedMult;
+  const target = dir * RUN_SPEED * characterOf(player).speedMult * speedMult;
   let accel: number;
   if (player.grounded) {
     accel = dir !== 0 ? GROUND_ACCEL : GROUND_FRICTION;
@@ -304,6 +310,7 @@ function applyFastFall(player: Player, input: PlayerInput): void {
 }
 
 function refillOnLanding(player: Player): void {
+  player.parachuting = false;
   player.airJumpsLeft = AIR_JUMPS;
   player.fastFalling = false;
   player.airDodgeAvailable = true;

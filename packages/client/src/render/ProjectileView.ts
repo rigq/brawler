@@ -1,0 +1,99 @@
+import Phaser from 'phaser';
+import type { Projectile } from '@brawler/shared';
+import { PROJECTILE_ART } from './art.ts';
+
+/** Projectiles without art: a plain glowing ball. */
+const ORB_COLOR = 0xfff3c4;
+const FLIGHT_FRAME_MS = 80;
+const BURST_FRAME_MS = 70;
+
+/** Phaser counts an extra "__BASE" frame (the whole image) in every texture. */
+function frameCount(sprite: Phaser.GameObjects.Sprite): number {
+  return sprite.texture.frameTotal - 1;
+}
+
+interface Flying {
+  object: Phaser.GameObjects.Sprite | Phaser.GameObjects.Arc;
+  kind: string;
+  centerX: number;
+  centerY: number;
+}
+
+interface Burst {
+  sprite: Phaser.GameObjects.Sprite;
+  ageMs: number;
+}
+
+/**
+ * Draws the World's projectiles, matching them by id between frames, and an
+ * explosion where each one disappears (it hit someone or ran out of range).
+ * Render only: it never decides anything.
+ */
+export class ProjectileView {
+  private readonly scene: Phaser.Scene;
+  /** Called with every object it creates, so the UI camera can ignore it. */
+  private readonly onCreate: (object: Phaser.GameObjects.GameObject) => void;
+  private readonly flying = new Map<number, Flying>();
+  private bursts: Burst[] = [];
+  private ageMs = 0;
+
+  constructor(scene: Phaser.Scene, onCreate: (object: Phaser.GameObjects.GameObject) => void) {
+    this.scene = scene;
+    this.onCreate = onCreate;
+  }
+
+  render(projectiles: readonly Projectile[], alpha: number, frameMs: number): void {
+    this.ageMs += frameMs;
+    const seen = new Set<number>();
+    for (const p of projectiles) {
+      seen.add(p.id);
+      const view = this.flying.get(p.id) ?? this.create(p);
+      const x = p.prevX + (p.x - p.prevX) * alpha;
+      const y = p.prevY + (p.y - p.prevY) * alpha;
+      view.centerX = x + p.width / 2;
+      view.centerY = y + p.height / 2;
+      if (view.object instanceof Phaser.GameObjects.Sprite) {
+        view.object.setPosition(x, y).setFlipX(p.vx < 0);
+        view.object.setFrame(Math.floor(this.ageMs / FLIGHT_FRAME_MS) % frameCount(view.object));
+      } else {
+        view.object.setPosition(view.centerX, view.centerY);
+      }
+    }
+    for (const [id, view] of this.flying) {
+      if (seen.has(id)) continue;
+      this.explode(view);
+      view.object.destroy();
+      this.flying.delete(id);
+    }
+    this.updateBursts(frameMs);
+  }
+
+  private create(p: Projectile): Flying {
+    const art = PROJECTILE_ART[p.kind];
+    const object = art
+      ? this.scene.add.sprite(p.x, p.y, art.sheet.key, 0).setOrigin(0, 0)
+      : this.scene.add.circle(p.x, p.y, p.width / 2, ORB_COLOR);
+    this.onCreate(object);
+    const view: Flying = { object, kind: p.kind, centerX: p.x, centerY: p.y };
+    this.flying.set(p.id, view);
+    return view;
+  }
+
+  private explode(view: Flying): void {
+    const burst = PROJECTILE_ART[view.kind]?.burst;
+    if (!burst) return;
+    const sprite = this.scene.add.sprite(view.centerX, view.centerY, burst.key, 0).setOrigin(0.5, 0.5);
+    this.onCreate(sprite);
+    this.bursts.push({ sprite, ageMs: 0 });
+  }
+
+  private updateBursts(frameMs: number): void {
+    for (const burst of this.bursts) {
+      burst.ageMs += frameMs;
+      const frame = Math.floor(burst.ageMs / BURST_FRAME_MS);
+      if (frame < frameCount(burst.sprite)) burst.sprite.setFrame(frame);
+      else burst.sprite.destroy();
+    }
+    this.bursts = this.bursts.filter((burst) => burst.sprite.active);
+  }
+}

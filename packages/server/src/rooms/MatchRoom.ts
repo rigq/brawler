@@ -9,6 +9,7 @@ import {
   SPAWNS,
   STOCKS,
   copyPlayer,
+  copyProjectile,
   createPlayer,
   createWorld,
   matchResult,
@@ -17,9 +18,10 @@ import {
   type EndReason,
   type MatchPhase,
   type Player,
+  type Projectile,
 } from '@brawler/shared';
 import { InputQueue } from '../net/InputQueue.ts';
-import { MatchState, PlayerState } from '../state/MatchState.ts';
+import { MatchState, PlayerState, ProjectileState } from '../state/MatchState.ts';
 import { claimRoomCode, releaseRoomCode } from './roomCodes.ts';
 
 /**
@@ -191,6 +193,18 @@ export class MatchRoom extends Room<{ state: MatchState }> {
       const synced = this.state.players[slot];
       if (synced) copyPlayer(synced as unknown as Player, player);
       this.state.acks[slot] = this.inputQueues[slot]?.lastProcessedSeq ?? -1;
+    });
+    this.syncProjectiles();
+  }
+
+  /** Same length as World.projectiles, reusing entries so Colyseus only sends what changed. */
+  private syncProjectiles(): void {
+    const list = this.state.projectiles;
+    while (list.length > this.world.projectiles.length) list.pop();
+    while (list.length < this.world.projectiles.length) list.push(new ProjectileState());
+    this.world.projectiles.forEach((projectile, i) => {
+      const synced = list[i];
+      if (synced) copyProjectile(synced as unknown as Projectile, projectile);
     });
   }
 

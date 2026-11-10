@@ -107,6 +107,7 @@ function grabLedge(player: Player, solid: Rect, index: number, side: number): vo
   player.fastFalling = false;
   player.attackId = 'none';
   player.attackCharging = false;
+  player.parachuting = false;
   player.facing = side === -1 ? 1 : -1;
   player.airJumpsLeft = AIR_JUMPS;
   player.airDodgeAvailable = true;

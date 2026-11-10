@@ -74,6 +74,7 @@ export function awayFrom(attacker: Player, target: Player): 1 | -1 {
 export function interrupt(target: Player): void {
   target.attackId = 'none';
   target.attackCharging = false;
+  target.parachuting = false;
   target.lagTicks = 0;
   target.ledgeSide = 0;
   target.shielding = false;

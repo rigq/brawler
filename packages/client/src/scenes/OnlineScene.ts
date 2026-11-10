@@ -8,6 +8,8 @@ import {
   MATCH_ROOM,
   REMATCH_MESSAGE,
   SERVER_PORT,
+  copyProjectile,
+  createProjectile,
   createWorld,
   normalizeRoomCode,
   type InputMessage,
@@ -24,6 +26,7 @@ import { Predictor } from '../net/Predictor.ts';
 import { ServerClock } from '../net/ServerClock.ts';
 import { Smoother } from '../net/Smoother.ts';
 import { SnapshotBuffer } from '../net/SnapshotBuffer.ts';
+import { preloadArt } from '../render/art.ts';
 import { MatchView } from '../render/MatchView.ts';
 import type { VisualOffset } from '../render/PlayerView.ts';
 import { exposeForDebugging } from './GameScene.ts';
@@ -66,6 +69,10 @@ export class OnlineScene extends Phaser.Scene {
 
   constructor() {
     super('OnlineScene');
+  }
+
+  preload(): void {
+    preloadArt(this);
   }
 
   create(): void {
@@ -155,6 +162,12 @@ export class OnlineScene extends Phaser.Scene {
     this.mirror.tick = tick;
     this.snapshots.push(tick, players);
     this.clock.onServerTick(tick);
+    // Projectiles come straight from the server (no prediction): only the server decides hits.
+    this.mirror.projectiles = Array.from(room.state.projectiles ?? [], (synced) => {
+      const copy = createProjectile();
+      copyProjectile(copy, synced);
+      return copy;
+    });
 
     if (mySlot === undefined) return;
     const me = this.mirror.players[mySlot];

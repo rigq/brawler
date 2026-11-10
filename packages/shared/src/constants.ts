@@ -181,7 +181,20 @@ export type AttackId =
   | 'lightSide' | 'lightUp' | 'lightDown'
   | 'airNeutral' | 'airForward' | 'airBack' | 'airUp' | 'airDown'
   | 'heavySide' | 'heavyUp' | 'heavyDown'
-  | 'grab' | 'throwForward' | 'throwBack';
+  | 'grab' | 'throwForward' | 'throwBack'
+  | 'specialNeutral' | 'specialUp' | 'specialProjectile';
+
+/** What a special fires. Positions in px from the body's front edge and top. */
+export interface ProjectileSpec {
+  /** How it looks; the simulation never reads it. */
+  kind: string;
+  speed: number;
+  width: number;
+  height: number;
+  offsetX: number;
+  offsetY: number;
+  lifetimeTicks: number;
+}
 
 /**
  * Each attack goes through three phases, in ticks (60 = 1 s):
@@ -215,6 +228,17 @@ export interface AttackData {
   chainFrom?: number;
   /** Aerials only: touching the ground cuts the attack and leaves you this many ticks unable to act. */
   landingLag?: number;
+  // Specials only. Each is a behaviour the engine knows; the numbers come from the character.
+  /** Fired on the first active tick; it hits with the 'specialProjectile' data. */
+  projectile?: ProjectileSpec;
+  /** Wait after firing before the next projectile. */
+  cooldownTicks?: number;
+  /** Cannot be started in the air. */
+  groundOnly?: boolean;
+  /** Launches the player upwards at this speed when it starts (uses up the recovery). */
+  launchSpeed?: number;
+  /** When it ends in the air, the player glides down under a parachute, unable to attack. */
+  parachute?: boolean;
 }
 
 export const ATTACKS: Record<AttackId, AttackData> = {
@@ -304,6 +328,23 @@ export const ATTACKS: Record<AttackId, AttackData> = {
     heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
     damage: 10, kbBase: 420, kbScale: 9, kbX: 1, kbY: -0.5,
   },
+  // Specials (I / N): every character has these slots; character files replace them with their powers.
+  /** Neutral special: a small energy shot. */
+  specialNeutral: {
+    heavy: false, startup: 12, active: 1, recovery: 20, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0, cooldownTicks: 45,
+    projectile: { kind: 'orb', speed: 600, width: 16, height: 16, offsetX: 4, offsetY: 18, lifetimeTicks: 60 },
+  },
+  /** What the neutral special's projectile does when it hits. */
+  specialProjectile: {
+    heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 6, kbBase: 260, kbScale: 10, kbX: 1, kbY: -0.3,
+  },
+  /** Up special: the recovery. A rising hit that launches you up (replaces up + heavy in P3). */
+  specialUp: {
+    heavy: false, startup: 4, active: 8, recovery: 18, box: { x: -6, y: -40, width: 52, height: 44 },
+    damage: 5, kbBase: 300, kbScale: 12, kbX: 0.2, kbY: -1, launchSpeed: 1100,
+  },
   /** Heavies: slower, more reach, harder hits. A charge phase comes before startup. Long reach in front. */
   heavySide: {
     heavy: true, startup: 10, active: 5, recovery: 22, box: { x: 36, y: 8, width: 92, height: 36 },
@@ -342,6 +383,11 @@ export const RECOVERY_SPEED = 1100;
 export const ATTACK_MOVE_SPEED_MULT = 0.7;
 /** A fully charged heavy deals (1 + this) × damage and knockback; scales linearly with charge. */
 export const HEAVY_CHARGE_BONUS = 0.4;
+
+/** Under a parachute you fall at most this fast (px/s)… */
+export const PARACHUTE_FALL_SPEED = 180;
+/** …and steer at this fraction of the normal air speed. */
+export const PARACHUTE_DRIFT_MULT = 0.6;
 
 // --- Combat: getting hit ---
 /** Launch speed cap. Keeps a step under ~60 px so nobody tunnels through platforms. */

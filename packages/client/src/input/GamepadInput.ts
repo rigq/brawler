@@ -48,7 +48,8 @@ export class GamepadInput implements InputSource {
       jump: pressed(Button.A),
       dodge: pressed(Button.LB, Button.RB, Button.LT, Button.RT),
       light: pressed(Button.X),
-      heavy: pressed(Button.B, Button.Y),
+      heavy: pressed(Button.B),
+      special: pressed(Button.Y),
     };
   }
 }

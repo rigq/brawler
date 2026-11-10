@@ -26,6 +26,11 @@ export interface AttackState {
   /** Button states in the previous step, to detect fresh presses. */
   lightHeld: boolean;
   heavyHeld: boolean;
+  specialHeld: boolean;
+  /** Ticks until a projectile special can be used again. */
+  specialCooldown: number;
+  /** Gliding down after a parachute special: no attacks, air jumps or dodges until landing. */
+  parachuting: boolean;
 }
 
 export function createAttackState(): AttackState {
@@ -38,6 +43,9 @@ export function createAttackState(): AttackState {
     attackQueued: false,
     lightHeld: false,
     heavyHeld: false,
+    specialHeld: false,
+    specialCooldown: 0,
+    parachuting: false,
   };
 }
 
@@ -49,15 +57,18 @@ export function isAttacking(player: Player): boolean {
 export function updateAttack(player: Player, input: PlayerInput): void {
   const lightPressed = input.light && !player.lightHeld;
   const heavyPressed = input.heavy && !player.heavyHeld;
+  const specialPressed = input.special && !player.specialHeld;
   player.lightHeld = input.light;
   player.heavyHeld = input.heavy;
+  player.specialHeld = input.special;
+  if (player.specialCooldown > 0) player.specialCooldown -= 1;
 
   if (player.attackId !== 'none') {
     if (lightPressed) player.attackQueued = true;
     advanceAttack(player, input);
     return;
   }
-  if (player.lagTicks > 0) return;
+  if (player.lagTicks > 0 || player.parachuting) return;
   if (player.shielding) {
     // The one attack you can do from the shield.
     if (lightPressed && player.shieldStunTicks === 0) {
@@ -71,6 +82,17 @@ export function updateAttack(player: Player, input: PlayerInput): void {
   if (!dodgeAllows || player.hitstunTicks > 0) return;
   if (lightPressed) startAttack(player, input, chooseLight(player, input));
   else if (heavyPressed) startAttack(player, input, chooseHeavy(input));
+  else if (specialPressed) startSpecial(player, input);
+}
+
+/** Up = up special (only while the recovery is unused); otherwise neutral, if its cooldown and the ground allow. */
+function startSpecial(player: Player, input: PlayerInput): void {
+  const id: AttackId = input.up ? 'specialUp' : 'specialNeutral';
+  const data = attackData(player, id);
+  if (data.groundOnly && !player.grounded) return;
+  if (data.projectile && player.specialCooldown > 0) return;
+  if (data.launchSpeed !== undefined && !player.recoveryAvailable) return;
+  startAttack(player, input, id);
 }
 
 export function attackPhase(player: Player): AttackPhase {
@@ -98,9 +120,10 @@ export function attackBoxAt(player: Player, x: number, y: number): Rect | null {
   return { x: x + offsetX, y: y + box.y, width: box.width, height: box.height };
 }
 
-/** The hitbox that can hit right now (active phase only), or null. */
+/** The hitbox that can hit right now (active phase only), or null. Empty boxes (specials that only fire) never hit. */
 export function activeHitbox(player: Player): Rect | null {
-  return attackPhase(player) === 'active' ? attackBoxAt(player, player.x, player.y) : null;
+  const box = attackPhase(player) === 'active' ? attackBoxAt(player, player.x, player.y) : null;
+  return box && box.width > 0 && box.height > 0 ? box : null;
 }
 
 /** Where the player can be hit. For now, the whole body box. */
@@ -147,7 +170,8 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
 
   // Heavies charge only on the ground; in the air they fire at once.
   player.attackCharging = data.heavy && player.grounded;
-  if (id === 'heavyUp' && !player.grounded) launchRecovery(player);
+  if (id === 'heavyUp' && !player.grounded) launchRecovery(player, RECOVERY_SPEED);
+  if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed);
   beginAttack(player, id);
   // Respawn invulnerability is for getting back in, not for attacking safely.
   player.invulnTicks = 0;
@@ -168,11 +192,12 @@ function beginAttack(player: Player, id: AttackId): void {
   player.attackQueued = false;
 }
 
-/** The "recovery": up heavy in the air pushes you up, once per time in the air, to get back to the stage. */
-function launchRecovery(player: Player): void {
+/** The "recovery": pushes you up, once per time in the air, to get back to the stage. */
+function launchRecovery(player: Player, speed: number): void {
   if (!player.recoveryAvailable) return;
   player.recoveryAvailable = false;
-  player.vy = -RECOVERY_SPEED;
+  player.vy = -speed;
+  player.grounded = false;
   player.fastFalling = false;
 }
 
@@ -193,5 +218,7 @@ function advanceAttack(player: Player, input: PlayerInput): void {
     beginAttack(player, data.chainTo);
     return;
   }
-  if (player.attackTick >= data.startup + data.active + data.recovery) player.attackId = 'none';
+  if (player.attackTick < data.startup + data.active + data.recovery) return;
+  player.attackId = 'none';
+  if (data.parachute && !player.grounded) player.parachuting = true;
 }

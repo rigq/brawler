@@ -1,6 +1,7 @@
 // What client and server agree on over the network. Plain types and helpers only:
 // the server implements the state with Colyseus schemas, the client reads it.
 
+import { createProjectile, type Projectile } from '../combat/projectiles.ts';
 import { SPAWNS } from '../constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../input.ts';
 import { createPlayer, type Player } from '../sim/player.ts';
@@ -60,6 +61,18 @@ export interface NetMatchState {
   away: ArrayLike<boolean>;
   /** rematchVotes[slot]: that player asked for a rematch. */
   rematchVotes: ArrayLike<boolean>;
+  /** Every projectile in flight, as World.projectiles. */
+  projectiles: ArrayLike<Projectile>;
+}
+
+/** Every Projectile field, in a fixed order. */
+export const PROJECTILE_FIELDS = Object.keys(createProjectile()) as (keyof Projectile)[];
+
+/** Copies every Projectile field from `source` into `target` (plain object or synced schema). */
+export function copyProjectile(target: Projectile, source: Projectile): void {
+  const to = target as unknown as Record<string, unknown>;
+  const from = source as unknown as Record<string, unknown>;
+  for (const field of PROJECTILE_FIELDS) to[field] = from[field];
 }
 
 /** Every Player field, in a fixed order: exactly what gets synced. */

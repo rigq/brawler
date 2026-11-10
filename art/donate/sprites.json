@@ -1,0 +1,9 @@
+{
+  "outDir": "../../packages/client/public/sprites/donate",
+  "assets": [
+    { "name": "tank", "file": "tank.png", "frames": 3, "height": 78, "alignX": "left" },
+    { "name": "shell", "file": "shell.png", "frames": 2, "width": 44, "alignX": "right", "alignY": "center" },
+    { "name": "explosion", "file": "explosion.png", "columns": [[0, 165], [165, 512], [512, 805], [805, 1024]], "height": 64, "alignY": "center" },
+    { "name": "parachute", "file": "parachute.png", "frames": 2, "width": 62, "minRowPixels": 10 }
+  ]
+}

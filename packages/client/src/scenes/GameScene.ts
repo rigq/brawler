@@ -4,6 +4,7 @@ import { GamepadInput } from '../input/GamepadInput.ts';
 import { CombinedInput, type InputSource } from '../input/InputSource.ts';
 import { KeyboardInput, P1_BINDINGS, P2_BINDINGS, type KeyBindings } from '../input/KeyboardInput.ts';
 import { RematchInput } from '../input/RematchInput.ts';
+import { preloadArt } from '../render/art.ts';
 import { MatchView } from '../render/MatchView.ts';
 import { DUMMY_SLOT, TrainingMode } from '../training/TrainingMode.ts';
 
@@ -28,6 +29,10 @@ export class GameScene extends Phaser.Scene {
     super('GameScene');
     this.mode = mode;
     this.characters = characters;
+  }
+
+  preload(): void {
+    preloadArt(this);
   }
 
   create(): void {

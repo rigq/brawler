@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { CAMERA_MIN_ZOOM, WORLD_HEIGHT, WORLD_WIDTH } from '@brawler/shared';
+import { bake } from './bake.ts';
 import { THEME } from './palette.ts';
 
 /**
@@ -35,7 +36,7 @@ function drawSky(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
   return sky;
 }
 
-function drawStars(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
+function drawStars(scene: Phaser.Scene): Phaser.GameObjects.GameObject {
   const stars = scene.add.graphics().setScrollFactor(0.05).setDepth(DEPTH.stars);
   const random = seededRandom(3);
   for (let i = 0; i < 140; i++) {
@@ -43,10 +44,11 @@ function drawStars(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
     const y = CENTER_Y - COVER_H / 2 + random() * COVER_H * 0.55;
     stars.fillStyle(THEME.star, 0.25 + random() * 0.6).fillCircle(x, y, random() < 0.15 ? 2 : 1);
   }
-  return stars;
+  // 140 circles redrawn every frame were the most expensive thing on screen: draw them once.
+  return bake(stars, { x: CENTER_X - COVER_W / 2 - 4, y: CENTER_Y - COVER_H / 2 - 4, width: COVER_W + 8, height: COVER_H * 0.55 + 8 });
 }
 
-function drawMoon(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
+function drawMoon(scene: Phaser.Scene): Phaser.GameObjects.GameObject {
   const moon = scene.add.graphics().setScrollFactor(0.1).setDepth(DEPTH.moon);
   const x = 1010;
   const y = 70;
@@ -57,15 +59,15 @@ function drawMoon(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
   moon.fillStyle(THEME.moon, 1).fillCircle(x, y, 42);
   // A couple of darker "craters".
   moon.fillStyle(THEME.mountainsNear, 0.12).fillCircle(x - 12, y - 8, 9).fillCircle(x + 14, y + 12, 6);
-  return moon;
+  return bake(moon, { x: x - 112, y: y - 112, width: 224, height: 224 });
 }
 
-function drawHorizonGlow(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
+function drawHorizonGlow(scene: Phaser.Scene): Phaser.GameObjects.GameObject {
   const glow = scene.add.graphics().setScrollFactor(0.2).setDepth(DEPTH.glow);
   for (const [height, alpha] of [[420, 0.1], [260, 0.12], [140, 0.15]] as const) {
     glow.fillStyle(THEME.horizonGlow, alpha).fillEllipse(CENTER_X, 640, COVER_W, height);
   }
-  return glow;
+  return bake(glow, { x: CENTER_X - COVER_W / 2 - 4, y: 640 - 214, width: COVER_W + 8, height: 428 });
 }
 
 interface MountainLayer {

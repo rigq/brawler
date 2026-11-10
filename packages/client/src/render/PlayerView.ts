@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { HITSTOP_JITTER_PX, SHIELD_MAX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
+import { CHARACTER_ART } from './art.ts';
+import { CharacterSprite } from './CharacterSprite.ts';
 
 const DODGE_ALPHA = 0.4;
 /** After respawning the player blinks: this many ticks on, this many off. */
@@ -12,6 +14,14 @@ const EYE_SIZE = 8;
 const EYE_INSET_X = 6;
 const EYE_Y = 12;
 const SWING_ALPHA = { light: 0.55, heavy: 0.85 } as const;
+/** During startup only the outline of where the hit will land is shown, as a warning. */
+const SWING_WARNING_ALPHA = 0.45;
+const SWING_OUTLINE_WIDTH = 2;
+/**
+ * A hit is shown for at least this long, even when it is active for only
+ * 2 ticks: otherwise a dropped frame could hide it and the hit would seem to come from nowhere.
+ */
+const SWING_MIN_SHOW_MS = 80;
 const CHARGE_BAR_COLOR = 0xffffff;
 const CHARGE_BAR_HEIGHT = 5;
 const CHARGE_BAR_GAP = 8;
@@ -28,8 +38,9 @@ export interface VisualOffset {
 const NO_OFFSET: VisualOffset = { x: 0, y: 0 };
 
 /**
- * Draws one player with placeholder shapes: the body, an "eye" on the side it
- * faces, and the attack swing while its hitbox is active.
+ * Draws one player: pixel art if its character has some (CharacterSprite),
+ * otherwise a coloured rectangle with an "eye" on the side it faces. Plus the
+ * attack swing, charge bar and shield, the same for everyone.
  */
 export class PlayerView {
   private readonly body: Phaser.GameObjects.Rectangle;
@@ -38,12 +49,23 @@ export class PlayerView {
   private readonly chargeBar: Phaser.GameObjects.Rectangle;
   private readonly shield: Phaser.GameObjects.Arc;
   private readonly color: number;
+  /** Null: no art for this character, the rectangle is the body. */
+  private readonly sprite: CharacterSprite | null;
   private visible = true;
+  /** Time the last active hitbox stays on screen after its active phase ended. */
+  private swingLeftMs = 0;
 
   constructor(scene: Phaser.Scene, player: Player, color: number) {
     this.color = color;
+    const art = CHARACTER_ART[player.characterId];
+    this.sprite = art ? new CharacterSprite(scene, art) : null;
+    // With art the rectangle stays as an invisible box: the camera frames it.
     this.body = scene.add.rectangle(player.x, player.y, player.width, player.height, color).setOrigin(0, 0);
     this.eye = scene.add.rectangle(0, 0, EYE_SIZE, EYE_SIZE, EYE_COLOR).setOrigin(0, 0);
+    if (this.sprite) {
+      this.body.setFillStyle(color, 0);
+      this.eye.setVisible(false);
+    }
     this.swing = scene.add.rectangle(0, 0, 1, 1, color).setOrigin(0, 0).setVisible(false);
     this.chargeBar = scene.add.rectangle(0, 0, 1, CHARGE_BAR_HEIGHT, CHARGE_BAR_COLOR).setOrigin(0, 0);
     this.shield = scene.add
@@ -56,12 +78,13 @@ export class PlayerView {
    * `alpha` (0–1) is how far we are between the last simulation step and the next.
    * Drawing in between keeps motion smooth on screens faster than 60 Hz.
    */
-  render(player: Player, alpha: number, offset: VisualOffset = NO_OFFSET): void {
+  render(player: Player, alpha: number, frameMs: number, offset: VisualOffset = NO_OFFSET): void {
     // Knocked out (waiting to respawn) or out of the match: draw nothing.
     this.visible = isActive(player);
     this.body.setVisible(this.visible);
-    this.eye.setVisible(this.visible);
+    this.eye.setVisible(this.visible && !this.sprite);
     if (!this.visible) {
+      this.sprite?.hide();
       this.swing.setVisible(false);
       this.chargeBar.setVisible(false);
       this.shield.setVisible(false);
@@ -72,10 +95,15 @@ export class PlayerView {
     const y = lerp(player.prevY, player.y, alpha) + offset.y;
     const opacity = this.opacity(player);
 
-    this.body.setPosition(x, y).setFillStyle(this.bodyColor(player), opacity);
-    const eyeX = player.facing === 1 ? player.width - EYE_INSET_X - EYE_SIZE : EYE_INSET_X;
-    this.eye.setPosition(x + eyeX, y + EYE_Y).setAlpha(opacity);
-    this.renderSwing(player, x, y);
+    if (this.sprite) {
+      this.body.setPosition(x, y);
+      this.sprite.render(player, x, y, opacity, frameMs);
+    } else {
+      this.body.setPosition(x, y).setFillStyle(this.bodyColor(player), opacity);
+      const eyeX = player.facing === 1 ? player.width - EYE_INSET_X - EYE_SIZE : EYE_INSET_X;
+      this.eye.setPosition(x + eyeX, y + EYE_Y).setAlpha(opacity);
+    }
+    this.renderSwing(player, x, y, frameMs);
     this.renderChargeBar(player, x, y);
     this.renderShield(player, x, y);
   }
@@ -91,7 +119,7 @@ export class PlayerView {
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.swing, this.body, this.eye, this.chargeBar, this.shield];
+    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield];
   }
 
   /** Blinking right after respawning, see-through while dodging, solid otherwise. */
@@ -109,13 +137,21 @@ export class PlayerView {
     return this.color;
   }
 
-  private renderSwing(player: Player, x: number, y: number): void {
-    const box = attackPhase(player) === 'active' ? attackBoxAt(player, x, y) : null;
-    this.swing.setVisible(box !== null);
-    if (box) {
-      this.swing.setPosition(box.x, box.y).setSize(box.width, box.height);
-      this.swing.setFillStyle(this.color, player.attackId !== 'none' && attackData(player, player.attackId).heavy ? SWING_ALPHA.heavy : SWING_ALPHA.light);
-    }
+  /** Startup: outline (warning). Active: filled, and kept for SWING_MIN_SHOW_MS. Recovery: hidden. */
+  private renderSwing(player: Player, x: number, y: number, frameMs: number): void {
+    const phase = attackPhase(player);
+    const box = attackBoxAt(player, x, y);
+    if (phase === 'active') this.swingLeftMs = SWING_MIN_SHOW_MS;
+    else this.swingLeftMs = Math.max(this.swingLeftMs - frameMs, 0);
+
+    const filled = phase === 'active' || this.swingLeftMs > 0;
+    const warning = phase === 'startup' || phase === 'charge';
+    this.swing.setVisible(box !== null && (filled || warning));
+    if (!box || !(filled || warning)) return;
+    this.swing.setPosition(box.x, box.y).setSize(box.width, box.height);
+    const heavy = player.attackId !== 'none' && attackData(player, player.attackId).heavy;
+    const fill = filled ? (heavy ? SWING_ALPHA.heavy : SWING_ALPHA.light) : 0;
+    this.swing.setFillStyle(this.color, fill).setStrokeStyle(SWING_OUTLINE_WIDTH, this.color, SWING_WARNING_ALPHA);
   }
 
   /** Bubble around the body: its size is how much shield is left. */

@@ -15,6 +15,8 @@ export interface PlayerInput {
   light: boolean;
   /** Heavy attack: hold to charge, release to strike. Direction works like light. */
   heavy: boolean;
+  /** Special: up for the up special (recovery), otherwise the neutral special. */
+  special: boolean;
 }
 
 export const EMPTY_INPUT: Readonly<PlayerInput> = {
@@ -26,4 +28,5 @@ export const EMPTY_INPUT: Readonly<PlayerInput> = {
   dodge: false,
   light: false,
   heavy: false,
+  special: false,
 };

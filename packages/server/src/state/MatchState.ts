@@ -3,17 +3,16 @@
 // Colyseus only sends the fields that changed since the last patch.
 
 import { schema, t, type SchemaType } from '@colyseus/schema';
-import { PLAYER_FIELDS, SPAWNS, createPlayer } from '@brawler/shared';
+import { PLAYER_FIELDS, PROJECTILE_FIELDS, SPAWNS, createPlayer, createProjectile } from '@brawler/shared';
 
 /**
  * One synced field per Player field, generated from a real Player so the two can
  * never drift apart: add a field to Player and it is synced automatically.
  * Numbers are float64 so positions and speeds arrive exactly as simulated.
  */
-function playerFields() {
-  const template = createPlayer(SPAWNS[0]) as unknown as Record<string, unknown>;
+function schemaFields(template: Record<string, unknown>, fields: readonly string[]) {
   return Object.fromEntries(
-    PLAYER_FIELDS.map((field) => {
+    fields.map((field) => {
       const value = template[field];
       if (typeof value === 'number') return [field, t.float64()];
       if (typeof value === 'boolean') return [field, t.boolean()];
@@ -22,7 +21,16 @@ function playerFields() {
   );
 }
 
+const playerFields = () => schemaFields(createPlayer(SPAWNS[0]) as unknown as Record<string, unknown>, PLAYER_FIELDS);
+
 export const PlayerState = schema(playerFields(), 'PlayerState');
+
+/** One synced field per Projectile field, the same way. */
+export const ProjectileState = schema(
+  schemaFields(createProjectile() as unknown as Record<string, unknown>, PROJECTILE_FIELDS),
+  'ProjectileState',
+);
+export type ProjectileState = SchemaType<typeof ProjectileState>;
 export type PlayerState = SchemaType<typeof PlayerState>;
 
 export const MatchState = schema(
@@ -44,6 +52,8 @@ export const MatchState = schema(
     away: t.array('boolean'),
     /** rematchVotes[slot]: that player asked for a rematch. */
     rematchVotes: t.array('boolean'),
+    /** Every projectile in flight (World.projectiles). */
+    projectiles: t.array(ProjectileState),
   },
   'MatchState',
 );
