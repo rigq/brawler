@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import type { CharacterId } from '@brawler/shared';
+import { ANIM_NAMES, type AnimName } from './bodyAnimation.ts';
+import donateAnims from './anims/donate.json';
 
 /** A sprite strip in public/sprites: frames side by side, all the same size. */
 interface Sheet {
@@ -16,35 +18,102 @@ export const SHEETS = {
   donateShell: { key: 'donate-shell', file: 'sprites/donate/shell.png', frameWidth: 44, frameHeight: 13 },
   donateExplosion: { key: 'donate-explosion', file: 'sprites/donate/explosion.png', frameWidth: 62, frameHeight: 64 },
   donateParachute: { key: 'donate-parachute', file: 'sprites/donate/parachute.png', frameWidth: 62, frameHeight: 46 },
+  robertBody: { key: 'robert-body', file: 'sprites/robert/robert.png', frameWidth: 41, frameHeight: 74 },
+  robertSmoke: { key: 'robert-smoke', file: 'sprites/robert/smoke.png', frameWidth: 39, frameHeight: 56 },
+  robertRapper: { key: 'robert-rapper', file: 'sprites/robert/rapper.png', frameWidth: 43, frameHeight: 87 },
+  samuBody: { key: 'samu-body', file: 'sprites/samu/samu.png', frameWidth: 32, frameHeight: 72 },
+  samuBall: { key: 'samu-ball', file: 'sprites/samu/ball.png', frameWidth: 17, frameHeight: 16 },
+  samuFlag: { key: 'samu-flag', file: 'sprites/samu/flag.png', frameWidth: 33, frameHeight: 64 },
+  samuFlagPlant: { key: 'samu-flag-plant', file: 'sprites/samu/flag-plant.png', frameWidth: 39, frameHeight: 64 },
+  samuTeleport: { key: 'samu-teleport', file: 'sprites/samu/teleport.png', frameWidth: 38, frameHeight: 96 },
+  chachinBody: { key: 'chachin-body', file: 'sprites/chachin/chachin.png', frameWidth: 16, frameHeight: 54 },
+  chachinScream: { key: 'chachin-scream', file: 'sprites/chachin/scream.png', frameWidth: 101, frameHeight: 128 },
+  chachinRocket: { key: 'chachin-rocket', file: 'sprites/chachin/scream-rocket.png', frameWidth: 65, frameHeight: 96 },
+  chachinDizzy: { key: 'chachin-dizzy', file: 'sprites/chachin/dizzy.png', frameWidth: 48, frameHeight: 35 },
 } as const satisfies Record<string, Sheet>;
+
+/** Frame sizes of a character's animation strips, as tools/pixelate.ts writes them (anims/<character>.json). */
+type AnimManifest = Partial<Record<string, { frameWidth: number; frameHeight: number; frames: number }>>;
+
+export interface AnimSheet extends Sheet {
+  frames: number;
+}
+
+/** The strips in public/sprites/<character>/anim/ listed in its manifest. Unknown names are ignored. */
+function animSheets(character: CharacterId, manifest: AnimManifest): Partial<Record<AnimName, AnimSheet>> {
+  const sheets: Partial<Record<AnimName, AnimSheet>> = {};
+  for (const name of ANIM_NAMES) {
+    const size = manifest[name];
+    if (size) sheets[name] = { key: `${character}-anim-${name}`, file: `sprites/${character}/anim/${name}.png`, ...size };
+  }
+  return sheets;
+}
 
 /** How a character with pixel art is drawn. Characters without an entry stay coloured rectangles. */
 export interface CharacterArt {
+  /** The still pose: used when there is no animation for what the character is doing. */
   body: Sheet;
+  /** Body animations by name (see bodyAnimation.ts); missing ones fall back to a similar one or the still pose. */
+  anims?: Partial<Record<AnimName, AnimSheet>>;
   /** Shown behind the character during the neutral special (frames: arrive, fire, after the shot). */
-  neutralSpecial?: Sheet;
+  neutralProp?: Sheet;
+  /** Shown on the ground where the up special started (frames: startup, active, recovery). */
+  upProp?: Sheet;
   /** Shown above the character while gliding down after the up special. */
   parachute?: Sheet;
+  /** Centred on the body during the neutral special (frames: winding up, hitting ×2, fading). */
+  neutralAura?: Sheet;
+  /** Under the feet during the up special, rising with the character (3 frames). */
+  upBlast?: Sheet;
+  /** Around the body during a teleporting up special (frames: gathering ×3, arriving ×2). */
+  teleport?: Sheet;
+  /** Planted at the player's flag point while they are in the air: planting, then waving. */
+  flag?: { plant: Sheet; wave: Sheet };
 }
 
 export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
-  donate: { body: SHEETS.donateBody, neutralSpecial: SHEETS.donateTank, parachute: SHEETS.donateParachute },
+  donate: { body: SHEETS.donateBody, anims: animSheets('donate', donateAnims), neutralProp: SHEETS.donateTank, parachute: SHEETS.donateParachute },
+  robert: { body: SHEETS.robertBody, upProp: SHEETS.robertRapper },
+  samu: {
+    body: SHEETS.samuBody,
+    teleport: SHEETS.samuTeleport,
+    flag: { plant: SHEETS.samuFlagPlant, wave: SHEETS.samuFlag },
+  },
+  chachin: { body: SHEETS.chachinBody, neutralAura: SHEETS.chachinScream, upBlast: SHEETS.chachinRocket },
 };
 
-/** What each projectile kind looks like, and what it leaves when it disappears. */
-export const PROJECTILE_ART: Record<string, { sheet: Sheet; burst?: Sheet } | undefined> = {
-  shell: { sheet: SHEETS.donateShell, burst: SHEETS.donateExplosion },
+/**
+ * What each projectile kind looks like and what it leaves when it disappears.
+ * `animation`: 'loop' cycles its frames; 'life' plays them over its lifetime
+ * (first frame: appearing, last: breaking up, the middle two loop meanwhile).
+ */
+export interface ProjectileArt {
+  sheet: Sheet;
+  animation: 'loop' | 'life';
+  burst?: Sheet;
+}
+
+export const PROJECTILE_ART: Record<string, ProjectileArt | undefined> = {
+  shell: { sheet: SHEETS.donateShell, animation: 'loop', burst: SHEETS.donateExplosion },
+  smoke: { sheet: SHEETS.robertSmoke, animation: 'life' },
+  ball: { sheet: SHEETS.samuBall, animation: 'loop' },
 };
+
+/** Every sheet to load: the fixed ones and each character's animations. */
+const ALL_SHEETS: Sheet[] = [
+  ...Object.values(SHEETS),
+  ...Object.values(CHARACTER_ART).flatMap((art) => Object.values(art.anims ?? {})),
+];
 
 /** Queues every sheet for loading. Call from the scene's preload(). */
 export function preloadArt(scene: Phaser.Scene): void {
-  for (const sheet of Object.values(SHEETS)) {
+  for (const sheet of ALL_SHEETS) {
     const { frameWidth, frameHeight } = sheet;
     scene.load.spritesheet(sheet.key, import.meta.env.BASE_URL + sheet.file, { frameWidth, frameHeight });
   }
   // Pixel art must stay sharp when the camera zooms: no smoothing between pixels.
   scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-    for (const sheet of Object.values(SHEETS)) {
+    for (const sheet of ALL_SHEETS) {
       scene.textures.get(sheet.key).setFilter(Phaser.Textures.FilterMode.NEAREST);
     }
   });

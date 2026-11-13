@@ -1,19 +1,20 @@
 // The roster. To add a character: write its file and add it to DEFINITIONS.
 
-import { balanced } from './balanced.ts';
 import { buildCharacter } from './buildCharacter.ts';
+import { chachin } from './chachin.ts';
 import { donate } from './donate.ts';
-import { heavy } from './heavy.ts';
-import { rushdown } from './rushdown.ts';
+import { robert } from './robert.ts';
+import { samu } from './samu.ts';
 import type { Character } from './types.ts';
-import { zoner } from './zoner.ts';
 
 export type { Character, CharacterDefinition, CharacterStats } from './types.ts';
 
-const DEFINITIONS = { balanced, rushdown, heavy, zoner, donate };
+const DEFINITIONS = { donate, robert, samu, chachin };
 
 export type CharacterId = keyof typeof DEFINITIONS;
-export const DEFAULT_CHARACTER: CharacterId = 'balanced';
+export const DEFAULT_CHARACTER: CharacterId = 'donate';
+/** Who plays in each slot when nobody chooses (until character select, I2). */
+export const DEFAULT_LINEUP: readonly CharacterId[] = ['donate', 'robert'];
 export const CHARACTER_IDS = Object.keys(DEFINITIONS) as CharacterId[];
 
 const CHARACTERS = Object.fromEntries(

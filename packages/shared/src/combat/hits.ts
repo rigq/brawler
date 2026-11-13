@@ -6,7 +6,7 @@ import { isInvulnerable } from '../sim/dodge.ts';
 import type { Player } from '../sim/player.ts';
 import { blockHit } from '../sim/shield.ts';
 import { isActive } from '../sim/stocks.ts';
-import { activeHitbox, attackCharge, hurtbox } from './attacks.ts';
+import { activeHitbox, attackCharge, hurtbox, sweetspotBoxAt } from './attacks.ts';
 import { startGrab } from './grabs.ts';
 import { applyKnockback, attackDamage, awayFrom } from './knockback.ts';
 
@@ -15,6 +15,8 @@ export interface AttackSnapshot {
   id: AttackId;
   /** Heavy charge, 0–1. */
   charge: number;
+  /** Landed with the sweet spot (if the attack has one). */
+  sweet?: boolean;
 }
 
 export interface Hit {
@@ -43,12 +45,15 @@ function findHits(players: Player[]): Hit[] {
   players.forEach((attacker, a) => {
     const box = activeHitbox(attacker);
     if (!box || attacker.attackId === 'none' || !isActive(attacker)) return;
-    const attack = { id: attacker.attackId, charge: attackCharge(attacker) };
+    const id = attacker.attackId;
+    const sweetBox = sweetspotBoxAt(attacker, attacker.x, attacker.y);
     players.forEach((target, t) => {
       if (t === a || !isActive(target) || target.grabbedTicks > 0) return;
       if (attacker.attackHitMask & (1 << t)) return;
       if (isInvulnerable(target)) return;
-      if (overlaps(box, hurtbox(target))) hits.push({ attacker: a, target: t, attack });
+      if (!overlaps(box, hurtbox(target))) return;
+      const sweet = sweetBox !== null && overlaps(sweetBox, hurtbox(target));
+      hits.push({ attacker: a, target: t, attack: { id, charge: attackCharge(attacker), sweet } });
     });
   });
   return hits;

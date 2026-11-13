@@ -13,6 +13,8 @@ export interface CharacterStats {
 export interface CharacterDefinition {
   name: string;
   stats: CharacterStats;
+  /** Body box in px (default PLAYER_WIDTH × PLAYER_HEIGHT). */
+  size?: { width: number; height: number };
   attacks?: Partial<Record<AttackId, Partial<AttackData>>>;
 }
 
@@ -23,5 +25,7 @@ export interface Character {
   speedMult: number;
   /** 100 = average; knockback is multiplied by 100 / weight. */
   weight: number;
+  width: number;
+  height: number;
   attacks: Record<AttackId, AttackData>;
 }

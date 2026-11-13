@@ -5,6 +5,7 @@ import { createProjectile, type Projectile } from '../combat/projectiles.ts';
 import { SPAWNS } from '../constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../input.ts';
 import { createPlayer, type Player } from '../sim/player.ts';
+import { DEFAULT_LINEUP, isCharacterId, type CharacterId } from '../characters/index.ts';
 
 /** Name of the room type every match is played in. */
 export const MATCH_ROOM = 'match';
@@ -28,6 +29,21 @@ export const ROOM_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
 export const ROOM_CODE_LENGTH = 4;
 
 /** Upper-cases a typed code and checks it could be one; null if not. */
+/** What the client sends when creating a room. */
+export interface CreateRoomOptions {
+  /** Character of each seat (P1, P2). Until character select (I2) it comes from ?p1=…&p2=…. */
+  lineup?: CharacterId[];
+}
+
+/** The lineup from untrusted room options: unknown or missing seats get the default character. */
+export function parseLineup(raw: unknown): CharacterId[] {
+  const asked = Array.isArray(raw) ? raw : [];
+  return SPAWNS.map((_, slot) => {
+    const id: unknown = asked[slot];
+    return typeof id === 'string' && isCharacterId(id) ? id : DEFAULT_LINEUP[slot]!;
+  });
+}
+
 export function normalizeRoomCode(raw: string): string | null {
   const code = raw.trim().toUpperCase();
   const valid = code.length === ROOM_CODE_LENGTH && [...code].every((c) => ROOM_CODE_ALPHABET.includes(c));
@@ -75,8 +91,18 @@ export function copyProjectile(target: Projectile, source: Projectile): void {
   for (const field of PROJECTILE_FIELDS) to[field] = from[field];
 }
 
-/** Every Player field, in a fixed order: exactly what gets synced. */
-export const PLAYER_FIELDS = Object.keys(createPlayer(SPAWNS[0])) as (keyof Player)[];
+/**
+ * Player fields that never travel over the network: where the body was at the
+ * start of the last step, only used to smooth the drawing. Each client sets them
+ * itself (prediction steps them, the interpolation of other players overwrites them).
+ * Leaving them out keeps the synced schema under its limit of 63 fields.
+ */
+const LOCAL_ONLY_FIELDS: readonly (keyof Player)[] = ['prevX', 'prevY'];
+
+/** Every synced Player field, in a fixed order. */
+export const PLAYER_FIELDS = (Object.keys(createPlayer(SPAWNS[0])) as (keyof Player)[]).filter(
+  (field) => !LOCAL_ONLY_FIELDS.includes(field),
+);
 
 /** Copies every Player field from `source` into `target` (plain object or synced schema). */
 export function copyPlayer(target: Player, source: Player): void {

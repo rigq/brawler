@@ -13,8 +13,10 @@ import {
   createPlayer,
   createWorld,
   matchResult,
+  parseLineup,
   parseInputMessage,
   stepWorld,
+  type CreateRoomOptions,
   type EndReason,
   type MatchPhase,
   type Player,
@@ -41,12 +43,14 @@ export class MatchRoom extends Room<{ state: MatchState }> {
   patchRate = 1000 / PATCH_RATE_HZ;
   state = new MatchState();
 
-  private readonly world = createWorld();
+  /** Replaced in onCreate with the lineup the creator asked for. */
+  private world = createWorld();
   private readonly accumulator = new FixedStepAccumulator();
   /** inputQueues[slot]: one queue per player, empty seats stay idle. */
   private readonly inputQueues = SPAWNS.map(() => new InputQueue());
 
-  onCreate(): void {
+  onCreate(options: CreateRoomOptions = {}): void {
+    this.world = createWorld(parseLineup(options.lineup));
     this.roomId = claimRoomCode();
     // Only reachable by code: never handed out to someone looking for any match.
     void this.setPrivate(true);
@@ -180,7 +184,8 @@ export class MatchRoom extends Room<{ state: MatchState }> {
   private resetPlayer(slot: number): void {
     const player = this.world.players[slot];
     const spawn = SPAWNS[slot];
-    if (player && spawn) copyPlayer(player, createPlayer(spawn));
+    // Same character: only position, damage, stocks… go back to the start.
+    if (player && spawn) copyPlayer(player, createPlayer(spawn, player.characterId));
   }
 
   /**

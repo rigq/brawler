@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
 import type { Projectile } from '@brawler/shared';
-import { PROJECTILE_ART } from './art.ts';
+import { PROJECTILE_ART, type ProjectileArt } from './art.ts';
 
 /** Projectiles without art: a plain glowing ball. */
 const ORB_COLOR = 0xfff3c4;
 const FLIGHT_FRAME_MS = 80;
 const BURST_FRAME_MS = 70;
+/** 'life' animations: share of the lifetime spent appearing and breaking up. */
+const LIFE_APPEAR = 0.15;
+const LIFE_BREAK = 0.85;
 
 /** Phaser counts an extra "__BASE" frame (the whole image) in every texture. */
 function frameCount(sprite: Phaser.GameObjects.Sprite): number {
@@ -52,9 +55,10 @@ export class ProjectileView {
       const y = p.prevY + (p.y - p.prevY) * alpha;
       view.centerX = x + p.width / 2;
       view.centerY = y + p.height / 2;
-      if (view.object instanceof Phaser.GameObjects.Sprite) {
-        view.object.setPosition(x, y).setFlipX(p.vx < 0);
-        view.object.setFrame(Math.floor(this.ageMs / FLIGHT_FRAME_MS) % frameCount(view.object));
+      const art = PROJECTILE_ART[p.kind];
+      if (art && view.object instanceof Phaser.GameObjects.Sprite) {
+        view.object.setPosition(view.centerX, view.centerY).setFlipX(p.vx < 0);
+        view.object.setFrame(this.frameFor(art, p, frameCount(view.object)));
       } else {
         view.object.setPosition(view.centerX, view.centerY);
       }
@@ -71,12 +75,22 @@ export class ProjectileView {
   private create(p: Projectile): Flying {
     const art = PROJECTILE_ART[p.kind];
     const object = art
-      ? this.scene.add.sprite(p.x, p.y, art.sheet.key, 0).setOrigin(0, 0)
+      ? this.scene.add.sprite(p.x, p.y, art.sheet.key, 0).setOrigin(0.5, 0.5)
       : this.scene.add.circle(p.x, p.y, p.width / 2, ORB_COLOR);
     this.onCreate(object);
     const view: Flying = { object, kind: p.kind, centerX: p.x, centerY: p.y };
     this.flying.set(p.id, view);
     return view;
+  }
+
+  private frameFor(art: ProjectileArt, p: Projectile, frames: number): number {
+    const loop = Math.floor(this.ageMs / FLIGHT_FRAME_MS);
+    if (art.animation === 'loop' || frames < 4) return loop % frames;
+    const age = 1 - p.ticksLeft / Math.max(p.lifetime, 1);
+    if (age < LIFE_APPEAR / 2) return 0;
+    if (age < LIFE_APPEAR) return 1;
+    if (age >= LIFE_BREAK) return frames - 1;
+    return 2 + (loop % (frames - 3));
   }
 
   private explode(view: Flying): void {

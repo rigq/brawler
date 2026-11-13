@@ -1,7 +1,7 @@
 // Attack state machine and where the hitbox is.
 // Light: startup → active → recovery. Heavy: charge (while held) → startup → active → recovery.
 
-import { HEAVY_MAX_CHARGE_TICKS, RECOVERY_SPEED, type AttackData, type AttackId } from '../constants.ts';
+import { HEAVY_MAX_CHARGE_TICKS, WHIFF_STUMBLE_SPEED, type AttackData, type AttackId } from '../constants.ts';
 import { characterOf } from '../characters/index.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
@@ -90,9 +90,13 @@ function startSpecial(player: Player, input: PlayerInput): void {
   const id: AttackId = input.up ? 'specialUp' : 'specialNeutral';
   const data = attackData(player, id);
   if (data.groundOnly && !player.grounded) return;
-  if (data.projectile && player.specialCooldown > 0) return;
-  if (data.launchSpeed !== undefined && !player.recoveryAvailable) return;
+  if (data.cooldownTicks && player.specialCooldown > 0) return;
+  const recovery = data.launchSpeed !== undefined || data.teleportToFlag === true;
+  if (recovery && !player.recoveryAvailable) return;
   startAttack(player, input, id);
+  // A projectile special starts its cooldown when it fires (see fireIfReady); the rest, now.
+  if (!data.projectile && data.cooldownTicks) player.specialCooldown = data.cooldownTicks;
+  if (data.teleportToFlag) player.recoveryAvailable = false;
 }
 
 export function attackPhase(player: Player): AttackPhase {
@@ -170,7 +174,6 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
 
   // Heavies charge only on the ground; in the air they fire at once.
   player.attackCharging = data.heavy && player.grounded;
-  if (id === 'heavyUp' && !player.grounded) launchRecovery(player, RECOVERY_SPEED);
   if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed);
   beginAttack(player, id);
   // Respawn invulnerability is for getting back in, not for attacking safely.
@@ -214,6 +217,7 @@ function advanceAttack(player: Player, input: PlayerInput): void {
   }
   player.attackTick += 1;
   const data = attackData(player, player.attackId);
+  if (data.teleportToFlag && player.attackTick === data.startup) teleportToFlag(player);
   if (data.chainTo && player.attackQueued && player.attackTick >= (data.chainFrom ?? 0)) {
     beginAttack(player, data.chainTo);
     return;
@@ -221,4 +225,26 @@ function advanceAttack(player: Player, input: PlayerInput): void {
   if (player.attackTick < data.startup + data.active + data.recovery) return;
   player.attackId = 'none';
   if (data.parachute && !player.grounded) player.parachuting = true;
+  if (data.whiffLagTicks && player.attackHitMask === 0) {
+    player.lagTicks = data.whiffLagTicks;
+    player.vx = -player.facing * WHIFF_STUMBLE_SPEED;
+  }
+}
+
+/** Appears standing on the flag (the feet of the last spot the player stood on). */
+function teleportToFlag(player: Player): void {
+  player.x = player.flagX - player.width / 2;
+  player.y = player.flagY - player.height;
+  player.vx = 0;
+  player.vy = 0;
+  player.fastFalling = false;
+}
+
+/** The sweet spot box in world space if the player stood at (x, y), or null if this attack has none. */
+export function sweetspotBoxAt(player: Player, x: number, y: number): Rect | null {
+  if (player.attackId === 'none') return null;
+  const box = attackData(player, player.attackId).sweetspot?.box;
+  if (!box) return null;
+  const offsetX = player.facing === 1 ? box.x : player.width - box.x - box.width;
+  return { x: x + offsetX, y: y + box.y, width: box.width, height: box.height };
 }

@@ -24,7 +24,7 @@ import type { AttackSnapshot } from './hits.ts';
  * Returns the damage dealt, in %.
  */
 export function applyKnockback(attacker: Player, target: Player, attack: AttackSnapshot): number {
-  const data = attackData(attacker, attack.id);
+  const data = landedData(attacker, attack);
   const chargeMult = chargeMultiplier(data, attack);
   const dealt = data.damage * chargeMult;
 
@@ -36,7 +36,7 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
 
   target.vx = awayFrom(attacker, target) * (data.kbX / length) * speed;
   target.vy = (data.kbY / length) * speed;
-  target.hitstunTicks = hitstunFor(speed, target.comboHits);
+  target.hitstunTicks = hitstunFor(speed, target.comboHits, data.stunTicks ?? 0);
   target.comboHits += 1;
   target.hitFlashTicks = HIT_FLASH_TICKS;
   interrupt(target);
@@ -45,7 +45,7 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
 
 /** The attack's damage in %, charge included. */
 export function attackDamage(attacker: Player, attack: AttackSnapshot): number {
-  const data = attackData(attacker, attack.id);
+  const data = landedData(attacker, attack);
   return data.damage * chargeMultiplier(data, attack);
 }
 
@@ -54,9 +54,15 @@ function chargeMultiplier(data: AttackData, attack: AttackSnapshot): number {
 }
 
 /** The more hits already taken in this combo, the shorter the stun: combos always end. */
-function hitstunFor(speed: number, comboHits: number): number {
-  const stun = HITSTUN_BASE_TICKS + Math.floor(speed * HITSTUN_TICKS_PER_SPEED);
+function hitstunFor(speed: number, comboHits: number, minimumStun: number): number {
+  const stun = Math.max(HITSTUN_BASE_TICKS + Math.floor(speed * HITSTUN_TICKS_PER_SPEED), minimumStun);
   return Math.max(stun - comboHits * HITSTUN_COMBO_DECAY_TICKS, HITSTUN_MIN_TICKS);
+}
+
+/** The attack's data as it landed: the sweet spot replaces damage, knockback and stun. */
+function landedData(attacker: Player, attack: AttackSnapshot): AttackData {
+  const data = attackData(attacker, attack.id);
+  return attack.sweet && data.sweetspot ? { ...data, ...data.sweetspot, box: data.box } : data;
 }
 
 /** +1 if the target should fly right, -1 if left: away from the attacker. */

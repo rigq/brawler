@@ -20,13 +20,11 @@ import {
   PARACHUTE_DRIFT_MULT,
   PARACHUTE_FALL_SPEED,
   MAX_FALL_SPEED,
-  PLAYER_HEIGHT,
-  PLAYER_WIDTH,
   RUN_SPEED,
 } from '../constants.ts';
 import { DEFAULT_CHARACTER, characterOf, type CharacterId } from '../characters/index.ts';
 import { createGrabState, chooseThrow, type GrabState } from '../combat/grabs.ts';
-import { attackData, createAttackState, isAttacking, updateAttack, type AttackState } from '../combat/attacks.ts';
+import { attackData, attackPhase, createAttackState, isAttacking, updateAttack, type AttackState } from '../combat/attacks.ts';
 import type { PlayerInput } from '../input.ts';
 import { moveAndCollide, type Body, type StageGeometry } from './collision.ts';
 import { applyDodgeMovement, createDodgeState, endDodge, updateDodge, type DodgeState } from './dodge.ts';
@@ -37,6 +35,9 @@ import { createStockState, type StockState } from './stocks.ts';
 export interface Player extends Body, DodgeState, AttackState, GrabState, LedgeState, ShieldState, StockState {
   /** Who this is: stats and attacks come from this character. */
   characterId: CharacterId;
+  /** Feet of the last spot this player stood on (Samu's flag teleports here). */
+  flagX: number;
+  flagY: number;
   /** 1 = facing right, -1 = facing left. Side attacks go this way. */
   facing: 1 | -1;
   /** Ticks left of the "just got hit" flash. */
@@ -76,8 +77,11 @@ export function createPlayer(
   spawn: { x: number; y: number; facing: 1 | -1 },
   characterId: CharacterId = DEFAULT_CHARACTER,
 ): Player {
+  const size = characterOf({ characterId });
   return {
     characterId,
+    flagX: spawn.x + size.width / 2,
+    flagY: spawn.y + size.height,
     facing: spawn.facing,
     hitFlashTicks: 0,
     damage: 0,
@@ -89,8 +93,8 @@ export function createPlayer(
     y: spawn.y,
     prevX: spawn.x,
     prevY: spawn.y,
-    width: PLAYER_WIDTH,
-    height: PLAYER_HEIGHT,
+    width: size.width,
+    height: size.height,
     vx: 0,
     vy: 0,
     grounded: false,
@@ -158,6 +162,9 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
     // Rooted in place; the only way out without lag is jumping.
     player.vx = approach(player.vx, 0, GROUND_FRICTION * FIXED_DT);
     if (player.shieldStunTicks === 0) applyJump(player, input);
+  } else if (isHovering(player)) {
+    player.vx = 0;
+    player.vy = 0;
   } else if (isAttacking(player)) {
     applyAttackDrift(player, input);
   } else if (player.parachuting) {
@@ -170,7 +177,7 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
     applyFacing(player, input);
   }
   applyDodgeMovement(player);
-  if (player.dodgeKind !== 'air') applyGravity(player);
+  if (player.dodgeKind !== 'air' && !isHovering(player)) applyGravity(player);
   if (player.parachuting) player.vy = Math.min(player.vy, PARACHUTE_FALL_SPEED);
   else if (player.dodgeKind === 'none' && !stunned) applyFastFall(player, input);
 
@@ -208,12 +215,19 @@ function land(player: Player): void {
     player.lagTicks = AIR_DODGE_LANDING_LAG;
   }
   player.coyoteTicks = COYOTE_TICKS;
+  player.flagX = player.x + player.width / 2;
+  player.flagY = player.y + player.height;
   refillOnLanding(player);
   if (player.attackId === 'none') return;
   const lag = attackData(player, player.attackId).landingLag;
   if (lag === undefined) return;
   player.attackId = 'none';
   player.lagTicks = lag;
+}
+
+/** Specials with `hover` keep the player still in the air while they wind up. */
+function isHovering(player: Player): boolean {
+  return player.attackId !== 'none' && attackPhase(player) === 'startup' && attackData(player, player.attackId).hover === true;
 }
 
 function applyRun(player: Player, input: PlayerInput, speedMult = 1): void {

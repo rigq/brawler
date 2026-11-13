@@ -1,0 +1,9 @@
+{
+  "outDir": "../../packages/client/public/sprites/robert",
+  "assets": [
+    { "name": "robert", "file": "robert.png", "columns": [[341, 683]], "height": 74 },
+    { "name": "smoke", "file": "smoke.jpg", "columns": [[55, 400], [454, 991], [1046, 1638], [1693, 2257], [2298, 2725]], "height": 56, "alignY": "center" },
+    { "name": "rapper", "file": "rapper.jpg", "columns": [[126, 872], [1062, 1580], [1694, 2465]], "height": 86 },
+    { "name": "knife", "file": "knife.jpg", "frames": 1, "width": 24, "alignY": "center" }
+  ]
+}

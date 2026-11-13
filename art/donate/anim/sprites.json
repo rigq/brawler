@@ -1,0 +1,33 @@
+{
+  "outDir": "../../../packages/client/public/sprites/donate/anim",
+  "manifest": "../../../packages/client/src/render/anims/donate.json",
+  "standingHeight": 72,
+  "assets": [
+    { "name": "idle", "file": "idle.jpg", "detect": 4, "standing": 1280, "alignX": "mass", "clean": true },
+    { "name": "run", "file": "run.jpg", "detect": 7, "standing": 615, "alignX": "mass", "clean": true },
+    { "name": "jump", "file": "jump.jpg", "detect": 2, "standing": 875, "alignX": "mass", "clean": true },
+    { "name": "fall", "file": "fall.jpg", "detect": 2, "standing": 1000, "alignX": "mass", "clean": true },
+    { "name": "hurt", "file": "hurt.jpg", "detect": 2, "standing": 1520, "alignX": "mass", "clean": true },
+    { "name": "jab", "file": "jab.jpg", "detect": 3, "standing": 1100, "alignX": "mass", "clean": true },
+    { "name": "light-side", "file": "light-side.jpg", "detect": 3, "standing": 1060, "alignX": "mass", "clean": true },
+    { "name": "light-up", "file": "light-up.jpg", "detect": 3, "standing": 1000, "alignX": "mass", "clean": true },
+    { "name": "light-down", "file": "light-down.jpg", "detect": 3, "standing": 1160, "alignX": "mass", "clean": true },
+    { "name": "dash-attack", "file": "dash-attack.jpg", "detect": 3, "standing": 1040, "alignX": "mass", "clean": true },
+    { "name": "air-neutral", "file": "air-neutral.jpg", "detect": 3, "standing": 1080, "alignX": "mass", "clean": true },
+    { "name": "air-forward", "file": "air-forward.jpg", "detect": 3, "rows": [360, 1314], "standing": 1060, "alignX": "mass", "clean": true },
+    { "name": "air-back", "file": "air-back.jpg", "detect": 3, "standing": 1070, "alignX": "mass", "clean": true },
+    { "name": "air-up", "file": "air-up.jpg", "detect": 3, "standing": 1080, "alignX": "mass", "clean": true },
+    { "name": "air-down", "file": "air-down.jpg", "detect": 3, "standing": 1060, "alignX": "mass", "clean": true },
+    { "name": "heavy-side", "file": "heavy-side.jpg", "columns": [[75, 593], [682, 1176], [1230, 1950], [1912, 2475]], "clean": true, "standing": 845, "alignX": "mass", "clean": true },
+    { "name": "heavy-up", "file": "heavy-up.jpg", "detect": 4, "standing": 730, "alignX": "mass", "clean": true },
+    { "name": "heavy-down", "file": "heavy-down.jpg", "detect": 4, "standing": 720, "alignX": "mass", "clean": true },
+    { "name": "shield", "file": "shield.jpg", "detect": 4, "standing": 965, "alignX": "mass", "clean": true },
+    { "name": "roll", "file": "roll.jpg", "detect": 4, "standing": 1060, "alignX": "mass", "clean": true },
+    { "name": "dodge", "file": "dodge.jpg", "detect": 2, "standing": 1320, "alignX": "mass", "clean": true },
+    { "name": "grab", "file": "grab.jpg", "detect": 2, "standing": 1340, "alignX": "mass", "clean": true },
+    { "name": "throw", "file": "throw.jpg", "detect": 2, "standing": 1320, "alignX": "mass", "clean": true },
+    { "name": "ledge", "file": "ledge.jpg", "detect": 1, "standing": 1230, "alignX": "mass", "clean": true, "alignY": "top" },
+    { "name": "special-neutral", "file": "special-neutral.jpg", "detect": 2, "standing": 1300, "alignX": "mass", "clean": true },
+    { "name": "special-up", "file": "special-up.jpg", "detect": 2, "standing": 1060, "alignX": "mass", "clean": true, "minRowPixels": 12 }
+  ]
+}

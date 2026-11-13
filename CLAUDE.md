@@ -55,7 +55,7 @@ brawler/
 - `npm run dev` — cliente (http://localhost:5173; partida local a 2 jugadores). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
 - http://localhost:5173/?training — modo entrenamiento contra un muñeco (R reinicia, 8 activa su escudo, 9/0 cambian su %)
-- `?p1=donate&p2=heavy` — (hasta I2) elige personajes en local: `donate` y los provisionales `balanced`, `rushdown`, `heavy`, `zoner`
+- `?p1=samu&p2=chachin` — (hasta I2) elige personajes: `donate`, `robert`, `samu`, `chachin` (sin elegir: Donate contra Robert). Online vale la del que crea la sala: `?online&p1=donate&p2=donate`
 - `node tools/pixelate.ts art/<personaje>/sprites.json` — limpia los sprites generados con IA y los deja en `packages/client/public/sprites/`
 - http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
@@ -113,8 +113,8 @@ brawler/
 
 **P · Personajes** (dic – ene)
 - [x] P1 Personajes por datos (peso, velocidad, daño, alcance, ataques) y knockback con peso: `(b + s·p·d/10) · 100/peso`
-- [ ] P2 Botón de especial (I / N) ✓ y Donate ✓; falta el personaje 2; personajes 1 y 2 con especial neutral y arriba (el de arriba es su recovery y sustituye a ↑+K)
-- [ ] P3 Personajes 3 y 4 con especial neutral y arriba
+- [x] P2 Botón de especial (I / N); Donate y Robert con especial neutral y arriba
+- [x] P3 Samu y Chachin con especial neutral y arriba (el especial arriba es la recovery de todos; ↑+K ya no)
 
 **D · Diseño gráfico** (ene)
 - [ ] D1 Muñecos articulados con formas y poses por estado (sustituyen a los rectángulos)

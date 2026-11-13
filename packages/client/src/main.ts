@@ -1,18 +1,19 @@
 import Phaser from 'phaser';
-import { DEFAULT_CHARACTER, WORLD_HEIGHT, WORLD_WIDTH, isCharacterId } from '@brawler/shared';
+import { DEFAULT_LINEUP, WORLD_HEIGHT, WORLD_WIDTH, isCharacterId } from '@brawler/shared';
 import { THEME } from './render/palette.ts';
 import { GameScene } from './scenes/GameScene.ts';
 import { OnlineScene } from './scenes/OnlineScene.ts';
+import { mountControlsPanel } from './ui/ControlsPanel.ts';
 
 // Until the menu (I1): ?online plays online, ?training opens training mode, otherwise local 2 players.
-// Until character select (I2): ?p1=heavy&p2=rushdown picks the local characters.
+// Until character select (I2): ?p1=samu&p2=chachin picks the characters (online: whoever creates the room).
 const params = new URLSearchParams(location.search);
-const characters = ['p1', 'p2'].map((key) => {
+const characters = ['p1', 'p2'].map((key, slot) => {
   const id = params.get(key);
-  return isCharacterId(id) ? id : DEFAULT_CHARACTER;
+  return isCharacterId(id) ? id : DEFAULT_LINEUP[slot]!;
 });
 const scene = params.has('online')
-  ? new OnlineScene()
+  ? new OnlineScene(characters)
   : new GameScene(params.has('training') ? 'training' : 'versus', characters);
 
 new Phaser.Game({
@@ -28,3 +29,5 @@ new Phaser.Game({
   input: { gamepad: true },
   scene: [scene],
 });
+
+mountControlsPanel(document.body);

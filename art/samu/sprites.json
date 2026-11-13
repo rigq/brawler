@@ -1,0 +1,11 @@
+{
+  "outDir": "../../packages/client/public/sprites/samu",
+  "assets": [
+    { "name": "samu", "file": "samu.jpg", "columns": [[872, 1542]], "height": 72 },
+    { "name": "flag", "file": "flag.jpg", "frames": 4, "height": 64, "alignX": "left" },
+    { "name": "flag-plant", "file": "flag-plant.jpg", "columns": [[126, 771], [859, 1643], [1694, 2440]], "height": 64 },
+    { "name": "teleport", "file": "teleport.jpg", "columns": [[95, 523], [729, 1156], [1299, 1853], [2043, 2408], [2693, 3010]], "height": 96, "alignY": "center" },
+    { "name": "ball", "file": "ball.jpg", "frames": 4, "rows": [150, 760], "height": 16, "alignY": "center" },
+    { "name": "ball-trail", "file": "ball-trail.jpg", "frames": 2, "width": 32, "alignY": "center" }
+  ]
+}

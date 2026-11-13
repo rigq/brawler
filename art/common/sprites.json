@@ -1,0 +1,7 @@
+{
+  "outDir": "../../packages/client/public/sprites/common",
+  "assets": [
+    { "name": "hit-spark", "file": "hit-spark.jpg", "frames": 3, "height": 40, "alignY": "center" },
+    { "name": "dust", "file": "dust.jpg", "columns": [[179, 680], [949, 1772], [1772, 2909], [2918, 3490]], "height": 34 }
+  ]
+}

@@ -3,7 +3,7 @@
 import { resolveGrabs } from '../combat/grabs.ts';
 import { resolveHits } from '../combat/hits.ts';
 import { stepProjectiles, type Projectile } from '../combat/projectiles.ts';
-import type { CharacterId } from '../characters/index.ts';
+import { DEFAULT_LINEUP, type CharacterId } from '../characters/index.ts';
 import { GROUND, PLATFORMS, SPAWNS } from '../constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
@@ -24,11 +24,11 @@ export interface World extends StageGeometry {
   nextProjectileId: number;
 }
 
-/** `characters[i]` is player i's character; missing ones get the default. */
-export function createWorld(characters: readonly CharacterId[] = []): World {
+/** `characters[i]` is player i's character; missing ones come from DEFAULT_LINEUP. */
+export function createWorld(characters: readonly CharacterId[] = DEFAULT_LINEUP): World {
   return {
     tick: 0,
-    players: SPAWNS.map((spawn, i) => createPlayer(spawn, characters[i])),
+    players: SPAWNS.map((spawn, i) => createPlayer(spawn, characters[i] ?? DEFAULT_LINEUP[i])),
     solids: [{ ...GROUND }],
     platforms: PLATFORMS.map((platform) => ({ ...platform })),
     projectiles: [],

@@ -12,6 +12,8 @@ import {
   createProjectile,
   createWorld,
   normalizeRoomCode,
+  type CharacterId,
+  type CreateRoomOptions,
   type InputMessage,
   type MatchResult,
   type NetMatchState,
@@ -52,7 +54,8 @@ export class OnlineScene extends Phaser.Scene {
   /** Why we could not get into a room, shown instead of the normal status. */
   private failure = '';
   /** The world as this client sees it: rival interpolated, own player predicted. */
-  private readonly mirror = createWorld();
+  /** Rebuilt with the room's characters when its first state arrives. */
+  private mirror = createWorld();
   /** Counts the same fixed 60 Hz ticks as the server, to send one input per tick. */
   private readonly accumulator = new FixedStepAccumulator();
   private readonly predictor = new Predictor();
@@ -64,11 +67,15 @@ export class OnlineScene extends Phaser.Scene {
   /** Server tick of the last state applied, to reconcile once per new state. */
   private lastServerTick = -1;
   private controls!: InputSource;
-  private view!: MatchView;
+  /** Created with the first server state, when we know each seat's character. */
+  private view: MatchView | null = null;
+  /** Characters asked for when creating a room (?p1=…&p2=…). */
+  private readonly lineup: CharacterId[];
   private status!: Phaser.GameObjects.Text;
 
-  constructor() {
+  constructor(lineup: CharacterId[]) {
     super('OnlineScene');
+    this.lineup = lineup;
   }
 
   preload(): void {
@@ -76,13 +83,10 @@ export class OnlineScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.view = new MatchView(this, this.mirror, '');
     this.status = this.add.text(STATUS_POS.x, STATUS_POS.y, '', STATUS_STYLE);
-    this.view.addUi([this.status]);
     this.controls = this.createInput();
     new RematchInput(this, () => this.askRematch());
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => void this.room?.leave());
-    if (import.meta.env.DEV) exposeForDebugging(this.mirror, this.game);
     void this.connect();
   }
 
@@ -93,13 +97,13 @@ export class OnlineScene extends Phaser.Scene {
       this.applyServerState(room, mySlot);
       if (this.canPlay(room, mySlot)) this.sendAndPredict(room, mySlot, delta);
       this.drawOthers(mySlot, delta);
-      this.view.setResultHint(this.resultHint(room, mySlot));
+      this.view?.setResultHint(this.resultHint(room, mySlot));
     }
     this.status.setText(this.statusText(room, mySlot));
 
     const offsets: (VisualOffset | undefined)[] = [];
     if (mySlot !== undefined) offsets[mySlot] = { x: this.smoother.offsetX, y: this.smoother.offsetY };
-    this.view.render(this.mirror, this.accumulator.alpha, delta, { offsets, result: serverResult(room) });
+    this.view?.render(this.mirror, this.accumulator.alpha, delta, { offsets, result: serverResult(room) });
     this.smoother.decay(delta);
   }
 
@@ -112,7 +116,8 @@ export class OnlineScene extends Phaser.Scene {
     try {
       let room: MatchRoom;
       if (requested === '') {
-        room = await client.create<NetMatchState>(MATCH_ROOM);
+        const options: CreateRoomOptions = { lineup: this.lineup };
+        room = await client.create<NetMatchState>(MATCH_ROOM, options);
         showCodeInUrl(room.roomId);
       } else {
         const code = normalizeRoomCode(requested);
@@ -158,6 +163,7 @@ export class OnlineScene extends Phaser.Scene {
   private applyServerState(room: MatchRoom, mySlot: number | undefined): void {
     const { players, tick, acks } = room.state;
     if (!players || !acks || tick === this.lastServerTick) return;
+    if (!this.view) this.buildView(players);
     this.lastServerTick = tick;
     this.mirror.tick = tick;
     this.snapshots.push(tick, players);
@@ -173,6 +179,14 @@ export class OnlineScene extends Phaser.Scene {
     const me = this.mirror.players[mySlot];
     const server = players[mySlot];
     if (me && server) this.reconcileOwn(me, server, acks[mySlot] ?? -1);
+  }
+
+  /** The room's characters are known now: mirror and drawing are made for them. */
+  private buildView(players: ArrayLike<Player>): void {
+    this.mirror = createWorld(Array.from(players, (player) => player.characterId));
+    this.view = new MatchView(this, this.mirror, '');
+    this.view.addUi([this.status]);
+    if (import.meta.env.DEV) exposeForDebugging(this.mirror, this.game);
   }
 
   private reconcileOwn(player: Player, server: Player, ack: number): void {

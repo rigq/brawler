@@ -18,10 +18,11 @@ export const donate: CharacterDefinition = {
     specialProjectile: { damage: 12, kbBase: 400, kbScale: 7, kbX: 1, kbY: -0.45 },
     /**
      * "Salto de mortero": the cannon blasts him upwards (the blast hits whoever
-     * is just below), then he comes down slowly under a parachute, unable to attack.
+     * is just below, from the first tick, before he is out of reach), then he
+     * comes down slowly under a parachute, unable to attack.
      */
     specialUp: {
-      startup: 6, active: 4, recovery: 12, box: { x: -10, y: 50, width: 60, height: 30 },
+      startup: 0, active: 6, recovery: 16, box: { x: -10, y: 40, width: 60, height: 70 },
       damage: 6, kbBase: 320, kbScale: 13, kbX: 0.4, kbY: -0.3, launchSpeed: 1350, parachute: true,
     },
   },

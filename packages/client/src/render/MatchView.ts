@@ -19,7 +19,7 @@ import { drawBackdrop } from './Backdrop.ts';
 import { CameraRig } from './CameraRig.ts';
 import { DebugOverlay } from './DebugOverlay.ts';
 import { HitEffects } from './HitEffects.ts';
-import { PLAYER_COLORS, playerColor } from './palette.ts';
+import { MIRROR_TINT, PLAYER_COLORS, playerColor } from './palette.ts';
 import { PlayerView, type VisualOffset } from './PlayerView.ts';
 import { ProjectileView } from './ProjectileView.ts';
 import { drawStage } from './StageView.ts';
@@ -43,7 +43,11 @@ export class MatchView {
   constructor(scene: Phaser.Scene, world: World, rematchHint: string) {
     this.scene = scene;
     const worldObjects = [...drawBackdrop(scene), ...drawStage(scene, world)];
-    this.playerViews = world.players.map((player, i) => new PlayerView(scene, player, playerColor(i)));
+    // Same character as someone before them (Donate vs Donate): tinted, so the two look different.
+    this.playerViews = world.players.map((player, i) => {
+      const repeated = world.players.slice(0, i).some((other) => other.characterId === player.characterId);
+      return new PlayerView(scene, player, playerColor(i), repeated ? MIRROR_TINT : null);
+    });
     worldObjects.push(...this.playerViews.flatMap((view) => view.gameObjects));
     this.hitEffects = new HitEffects(scene, PLAYER_COLORS);
     worldObjects.push(...this.hitEffects.gameObjects);

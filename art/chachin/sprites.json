@@ -1,0 +1,9 @@
+{
+  "outDir": "../../packages/client/public/sprites/chachin",
+  "assets": [
+    { "name": "chachin", "file": "chachin.png", "columns": [[341, 683]], "height": 54 },
+    { "name": "scream", "file": "scream.jpg", "columns": [[63, 539], [649, 1410], [1520, 2519], [2661, 3168]], "height": 128, "alignY": "center" },
+    { "name": "scream-rocket", "file": "scream-rocket.jpg", "columns": [[302, 620], [894, 1872], [1926, 2697]], "height": 96 },
+    { "name": "dizzy", "file": "dizzy.jpg", "frames": 4, "width": 48, "alignY": "center" }
+  ]
+}

@@ -194,6 +194,16 @@ export interface ProjectileSpec {
   offsetX: number;
   offsetY: number;
   lifetimeTicks: number;
+  /** How many times it can hit before vanishing (default 1). */
+  hits?: number;
+  /** With several hits: ticks between two of them. */
+  hitIntervalTicks?: number;
+  /** Initial downward speed (px/s; negative = up). */
+  speedY?: number;
+  /** Pulls it down (px/s²). */
+  gravity?: number;
+  /** If set, it bounces on the stage this many times (and vanishes on the next landing). */
+  bounces?: number;
 }
 
 /**
@@ -239,6 +249,16 @@ export interface AttackData {
   launchSpeed?: number;
   /** When it ends in the air, the player glides down under a parachute, unable to attack. */
   parachute?: boolean;
+  /** Stands still in the air during startup (no falling). */
+  hover?: boolean;
+  /** On the first active tick, the player appears at their flag (where they last stood). */
+  teleportToFlag?: boolean;
+  /** Hitstun of at least this many ticks, however little it launches: a stun. */
+  stunTicks?: number;
+  /** A smaller box inside the hitbox that hits harder (closer = stronger). */
+  sweetspot?: { box: { x: number; y: number; width: number; height: number }; damage: number; kbBase: number; kbScale: number; stunTicks?: number };
+  /** If the attack ends without hitting anyone: unable to act this long, stumbling backwards. */
+  whiffLagTicks?: number;
 }
 
 export const ATTACKS: Record<AttackId, AttackData> = {
@@ -350,7 +370,7 @@ export const ATTACKS: Record<AttackId, AttackData> = {
     heavy: true, startup: 10, active: 5, recovery: 22, box: { x: 36, y: 8, width: 92, height: 36 },
     damage: 13, kbBase: 480, kbScale: 7.69, kbX: 1, kbY: -0.5,
   },
-  /** Big arc above, a bit to both sides. In the air it is also the recovery (RECOVERY_SPEED). */
+  /** Big arc above, a bit to both sides. (The recovery is each character's up special.) */
   heavyUp: {
     heavy: true, startup: 11, active: 6, recovery: 24, box: { x: -28, y: -82, width: 96, height: 86 },
     damage: 12, kbBase: 500, kbScale: 7.5, kbX: 0.25, kbY: -1,
@@ -374,16 +394,15 @@ export const DASH_ATTACK_FRICTION = 3000;
  * Only on the ground: heavies in the air fire straight away.
  */
 export const HEAVY_MAX_CHARGE_TICKS = 36;
-/**
- * Up heavy in the air is the "recovery": it launches you upwards at this speed
- * (≈ 1100² / (2 · 2400) ≈ 250 px), once per time in the air. Refilled on landing or when hit.
- */
-export const RECOVERY_SPEED = 1100;
 /** On the ground you keep running while attacking, at this fraction of RUN_SPEED. */
 export const ATTACK_MOVE_SPEED_MULT = 0.7;
 /** A fully charged heavy deals (1 + this) × damage and knockback; scales linearly with charge. */
 export const HEAVY_CHARGE_BONUS = 0.4;
 
+/** Stumbling back after a missed heavy (whiffLagTicks): this speed, slowed by friction. */
+export const WHIFF_STUMBLE_SPEED = 220;
+/** Projectiles that bounce keep this fraction of their falling speed, going up. */
+export const PROJECTILE_BOUNCE = 0.6;
 /** Under a parachute you fall at most this fast (px/s)… */
 export const PARACHUTE_FALL_SPEED = 180;
 /** …and steer at this fraction of the normal air speed. */

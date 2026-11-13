@@ -1,5 +1,6 @@
 import {
   ATTACKS,
+  PLAYER_HEIGHT,
   PLAYER_WIDTH,
   STAT_AVERAGE,
   STAT_DAMAGE_STEP,
@@ -17,26 +18,30 @@ export function buildCharacter(definition: CharacterDefinition): Character {
   const { stats } = definition;
   const damageMult = 1 + (stats.damage - STAT_AVERAGE) * STAT_DAMAGE_STEP;
   const reachMult = 1 + (stats.reach - STAT_AVERAGE) * STAT_REACH_STEP;
+  const centerX = (definition.size?.width ?? PLAYER_WIDTH) / 2;
   const ids = Object.keys(ATTACKS) as AttackId[];
   const attacks = Object.fromEntries(
-    ids.map((id) => [id, scaleAttack({ ...ATTACKS[id], ...definition.attacks?.[id] }, damageMult, reachMult)]),
+    ids.map((id) => [id, scaleAttack({ ...ATTACKS[id], ...definition.attacks?.[id] }, damageMult, reachMult, centerX)]),
   ) as Record<AttackId, AttackData>;
 
   return {
     name: definition.name,
     speedMult: 1 + (stats.speed - STAT_AVERAGE) * STAT_SPEED_STEP,
     weight: WEIGHT_AVERAGE + (stats.weight - STAT_AVERAGE) * STAT_WEIGHT_STEP,
+    width: definition.size?.width ?? PLAYER_WIDTH,
+    height: definition.size?.height ?? PLAYER_HEIGHT,
     attacks,
   };
 }
 
 /** Reach stretches the hitbox from the body's centre, so it works in front of and behind you. */
-function scaleAttack(attack: AttackData, damageMult: number, reachMult: number): AttackData {
-  const centerX = PLAYER_WIDTH / 2;
-  const { box } = attack;
+function scaleAttack(attack: AttackData, damageMult: number, reachMult: number, centerX: number): AttackData {
+  const stretch = (box: AttackData['box']) => ({ ...box, x: centerX + (box.x - centerX) * reachMult, width: box.width * reachMult });
+  const { sweetspot } = attack;
   return {
     ...attack,
     damage: attack.damage * damageMult,
-    box: { ...box, x: centerX + (box.x - centerX) * reachMult, width: box.width * reachMult },
+    box: stretch(attack.box),
+    sweetspot: sweetspot && { ...sweetspot, box: stretch(sweetspot.box), damage: sweetspot.damage * damageMult },
   };
 }

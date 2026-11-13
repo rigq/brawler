@@ -35,6 +35,9 @@ export class Predictor {
    */
   reconcile(player: Player, stage: StageGeometry, serverPlayer: Player, ack: number): void {
     copyPlayer(player, serverPlayer);
+    // prevX/prevY are not synced: start the replay from where the server says we are.
+    player.prevX = player.x;
+    player.prevY = player.y;
     this.pending = this.pending.filter((message) => message.seq > ack);
     for (const message of this.pending) {
       if (isActive(player)) stepPlayer(player, message.input, stage);

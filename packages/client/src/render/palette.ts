@@ -5,6 +5,12 @@
 /** Indexed by player slot: P1 orange, P2 blue. */
 export const PLAYER_COLORS = [0xf2a541, 0x4fc3f7] as const;
 
+/**
+ * Two players with the same character: the second one's sprite is multiplied
+ * by this (a light version of P2's blue), so you can tell who is who.
+ */
+export const MIRROR_TINT = 0x9fd8ff;
+
 export const THEME = {
   /** Shown before anything is drawn and outside the backdrop. */
   canvas: '#0b1026',

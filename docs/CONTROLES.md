@@ -38,7 +38,7 @@ Los dos juegos de teclas de P1 funcionan siempre: el de **J K L** para jugar sol
 | Ataque en carrera | Ligero durante el dash |
 | Aéreos | Ligero en el aire: sin dirección (neutral), hacia donde miras (adelante), al revés (atrás), arriba o abajo |
 | Pesados (se cargan en el suelo) | Fuerte + lado, arriba o abajo |
-| Recovery (subir en el aire) | Fuerte + arriba en el aire, una vez hasta tocar suelo |
+| Recovery (volver al escenario) | Especial + arriba, una vez hasta tocar suelo (cada personaje a su manera) |
 | Agarre | Escudo + ligero, o ligero con el escudo levantado |
 | Especial neutral | Especial (sin arriba) |
 | Especial arriba | Especial + arriba: en casi todos es su forma de volver al escenario |
@@ -60,6 +60,7 @@ En el aire no te giras: "adelante" y "atrás" dependen de hacia dónde mirabas a
 
 | Tecla | Qué hace |
 | --- | --- |
+| H | Abre o cierra el panel de controles (arriba a la derecha) |
 | F1 | Muestra hurtboxes (verde) y hitboxes (rojo) |
 | Enter, R o Start | Revancha (partida local, al terminar) |
 | R | Reiniciar (entrenamiento) |
@@ -72,7 +73,7 @@ En el aire no te giras: "adelante" y "atrás" dependen de hacia dónde mirabas a
 | --- | --- |
 | http://localhost:5173 | 1 contra 1 en el mismo teclado |
 | `?training` | Entrenamiento contra un muñeco |
-| `?p1=donate&p2=heavy` | Elegir personajes: `donate` y los provisionales `balanced`, `rushdown`, `heavy`, `zoner` |
+| `?p1=samu&p2=chachin` | Elegir personajes: `donate`, `robert`, `samu`, `chachin` (sin elegir: Donate contra Robert). Online los elige quien crea la sala: `?online&p1=donate&p2=donate` |
 | `?online` | Crear sala online (comparte el enlace `?online=CÓDIGO`) |
 
 W y ↑ son solo dirección: no saltan. Así W + J siempre es el golpe arriba en el suelo, aunque pulses W un poco antes (antes saltabas y salía el aéreo arriba).

@@ -22,6 +22,8 @@ const SWING_OUTLINE_WIDTH = 2;
  * 2 ticks: otherwise a dropped frame could hide it and the hit would seem to come from nowhere.
  */
 const SWING_MIN_SHOW_MS = 80;
+/** Characters with pixel art: the swing's fill is fainter so it does not cover the sprites. */
+const SWING_ART_FILL_MULT = 0.4;
 const CHARGE_BAR_COLOR = 0xffffff;
 const CHARGE_BAR_HEIGHT = 5;
 const CHARGE_BAR_GAP = 8;
@@ -55,10 +57,11 @@ export class PlayerView {
   /** Time the last active hitbox stays on screen after its active phase ended. */
   private swingLeftMs = 0;
 
-  constructor(scene: Phaser.Scene, player: Player, color: number) {
+  /** `tint`: multiplies the character's art (null: drawn as is). */
+  constructor(scene: Phaser.Scene, player: Player, color: number, tint: number | null = null) {
     this.color = color;
     const art = CHARACTER_ART[player.characterId];
-    this.sprite = art ? new CharacterSprite(scene, art) : null;
+    this.sprite = art ? new CharacterSprite(scene, art, tint) : null;
     // With art the rectangle stays as an invisible box: the camera frames it.
     this.body = scene.add.rectangle(player.x, player.y, player.width, player.height, color).setOrigin(0, 0);
     this.eye = scene.add.rectangle(0, 0, EYE_SIZE, EYE_SIZE, EYE_COLOR).setOrigin(0, 0);
@@ -150,7 +153,8 @@ export class PlayerView {
     if (!box || !(filled || warning)) return;
     this.swing.setPosition(box.x, box.y).setSize(box.width, box.height);
     const heavy = player.attackId !== 'none' && attackData(player, player.attackId).heavy;
-    const fill = filled ? (heavy ? SWING_ALPHA.heavy : SWING_ALPHA.light) : 0;
+    const artMult = this.sprite ? SWING_ART_FILL_MULT : 1;
+    const fill = filled ? (heavy ? SWING_ALPHA.heavy : SWING_ALPHA.light) * artMult : 0;
     this.swing.setFillStyle(this.color, fill).setStrokeStyle(SWING_OUTLINE_WIDTH, this.color, SWING_WARNING_ALPHA);
   }
 

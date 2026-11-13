@@ -5,15 +5,26 @@
 //
 // The JSON lists the assets; paths are relative to the JSON file. Each asset:
 //   name     output file name (no extension), written to `outDir`
-//   file     source PNG
+//   file     source PNG or JPG (JPG goes through Windows' own decoder, see readImage)
 //   frames   number of frames, laid out left to right in equal columns of the source
 //            (or `columns`: explicit [x0, x1] source ranges, one per frame)
+//            (or `detect`: find this many frames by the empty space around them, row by row)
 //   height / width   size in game pixels of the biggest frame (one of the two)
-//   alignX   left | center | right (default center); alignY bottom | center (default bottom)
+//            (or `standing`: how tall the character stands in this source, in source pixels;
+//            the config's `standingHeight` is that height in game pixels. One scale for
+//            every strip whatever the pose: a crouch comes out shorter, not bigger)
+//   alignX   left | center | right | mass (default center); alignY bottom | center | top (default bottom)
+//            mass: each frame's centre of mass goes to the middle, so the body stays put
+//            while arms and legs reach out (animation strips)
 //   minRowPixels     optional: drop rows with fewer solid pixels (thin cords, stray specks)
+//   clean    optional: drop loose bits much smaller than the frame's main shape
+//            (a neighbour's fist or heel that reached into this frame's columns)
+//   rows     optional [y0, y1]: only use this horizontal band of the source (skip a bad row of frames)
 
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { readPng, writePng, type Rgba } from './png.ts';
 
 interface AssetConfig {
@@ -23,9 +34,21 @@ interface AssetConfig {
   columns?: [number, number][];
   height?: number;
   width?: number;
-  alignX?: 'left' | 'center' | 'right';
-  alignY?: 'bottom' | 'center';
+  alignX?: 'left' | 'center' | 'right' | 'mass';
+  alignY?: 'bottom' | 'center' | 'top';
   minRowPixels?: number;
+  clean?: boolean;
+  rows?: [number, number];
+  detect?: number;
+  standing?: number;
+}
+
+interface Config {
+  outDir: string;
+  /** Optional: JSON file (relative to the config) with every strip's frame size, for the client. */
+  manifest?: string;
+  standingHeight?: number;
+  assets: AssetConfig[];
 }
 
 interface Box {
@@ -40,9 +63,9 @@ function isBackground(d: Uint8Array, i: number): boolean {
   return d[i + 3]! < 20 || (d[i]! - d[i + 1]! > 70 && d[i + 2]! - d[i + 1]! > 70);
 }
 
-function boundingBox(img: Rgba, x0: number, x1: number): Box {
+function boundingBox(img: Rgba, x0: number, x1: number, rows: [number, number]): Box {
   let left = Infinity, top = Infinity, right = -1, bottom = -1;
-  for (let y = 0; y < img.height; y++) {
+  for (let y = rows[0]; y < rows[1]; y++) {
     for (let x = x0; x < x1; x++) {
       if (isBackground(img.data, (y * img.width + x) * 4)) continue;
       left = Math.min(left, x);
@@ -82,20 +105,113 @@ function vote(img: Rgba, sx: number, sy: number, s: number): [number, number, nu
   return [Math.round(best[1] / best[0]), Math.round(best[2] / best[0]), Math.round(best[3] / best[0])];
 }
 
-function pixelate(img: Rgba, asset: AssetConfig): { strip: Rgba; frameWidth: number; frameHeight: number } {
+/** Lines (rows or columns) with fewer solid pixels than this are empty: JPG specks don't count. */
+const DETECT_MIN_SOLID = 3;
+/** Empty lines that separate two frames (shorter gaps are inside one frame). */
+const DETECT_MIN_GAP = 25;
+/** Runs thinner than this are leftovers, not frames. */
+const DETECT_MIN_SIZE = 40;
+
+/** [start, end) runs of lines with solid pixels, merging runs closer than DETECT_MIN_GAP. */
+function solidRuns(length: number, solidAt: (line: number) => number): [number, number][] {
+  const runs: [number, number][] = [];
+  let start = -1, lastSolid = -Infinity;
+  for (let i = 0; i < length; i++) {
+    if (solidAt(i) < DETECT_MIN_SOLID) continue;
+    if (start < 0 || i - lastSolid > DETECT_MIN_GAP) {
+      if (start >= 0) runs.push([start, lastSolid + 1]);
+      start = i;
+    }
+    lastSolid = i;
+  }
+  if (start >= 0) runs.push([start, lastSolid + 1]);
+  return runs.filter(([a, b]) => b - a >= DETECT_MIN_SIZE);
+}
+
+function countSolid(img: Rgba, xs: [number, number], ys: [number, number]): number {
+  let n = 0;
+  for (let y = ys[0]; y < ys[1]; y++) for (let x = xs[0]; x < xs[1]; x++) if (!isBackground(img.data, (y * img.width + x) * 4)) n++;
+  return n;
+}
+
+/** Frames found by the empty space around them: rows of frames top to bottom, each left to right. */
+function detectFrames(img: Rgba, expected: number, rows: [number, number]): Box[] {
+  const bands = solidRuns(rows[1] - rows[0], (j) => countSolid(img, [0, img.width], [rows[0] + j, rows[0] + j + 1]))
+    .map(([a, b]): [number, number] => [rows[0] + a, rows[0] + b]);
+  const boxes = bands.flatMap((band) =>
+    solidRuns(img.width, (x) => countSolid(img, [x, x + 1], band)).map(([a, b]) => boundingBox(img, a, b, band)));
+  if (boxes.length !== expected) throw new Error(`found ${boxes.length} frames, expected ${expected}`);
+  return boxes;
+}
+
+function frameBoxes(img: Rgba, asset: AssetConfig): Box[] {
+  const rows = asset.rows ?? [0, img.height];
+  if (asset.detect) return detectFrames(img, asset.detect, rows);
   const count = asset.columns?.length ?? asset.frames ?? 1;
   const columns = asset.columns ?? Array.from({ length: count }, (_, f): [number, number] =>
     [Math.round((f * img.width) / count), Math.round(((f + 1) * img.width) / count)]);
-  const boxes = columns.map(([a, b]) => boundingBox(img, a, b));
+  return columns.map(([a, b]) => boundingBox(img, a, b, rows));
+}
+
+/** Source pixels per game pixel. */
+function scaleOf(boxes: Box[], asset: AssetConfig, standingHeight: number | undefined): number {
+  if (asset.standing) {
+    if (!standingHeight) throw new Error(`${asset.name}: "standing" needs "standingHeight" in the config`);
+    return asset.standing / standingHeight;
+  }
   const maxW = Math.max(...boxes.map((b) => b.w));
   const maxH = Math.max(...boxes.map((b) => b.h));
-  const s = asset.height ? maxH / asset.height : maxW / (asset.width ?? maxW);
+  return asset.height ? maxH / asset.height : maxW / (asset.width ?? maxW);
+}
+
+/** Loose bits smaller than this share of the biggest shape are dropped by `clean`. */
+const CLEAN_MIN_SHARE = 0.05;
+
+/** Clears every 8-connected group of solid pixels much smaller than the biggest one. */
+function dropLooseBits(px: unknown[], w: number, h: number): void {
+  const group = new Int32Array(w * h).fill(-1);
+  const sizes: number[] = [];
+  for (let start = 0; start < px.length; start++) {
+    if (!px[start] || group[start]! >= 0) continue;
+    const id = sizes.length;
+    const stack = [start];
+    group[start] = id;
+    let size = 0;
+    while (stack.length) {
+      const k = stack.pop()!;
+      size++;
+      const x = k % w, y = (k - x) / w;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx, ny = y + dy, n = ny * w + nx;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h || !px[n] || group[n]! >= 0) continue;
+        group[n] = id;
+        stack.push(n);
+      }
+    }
+    sizes.push(size);
+  }
+  const keep = Math.max(...sizes) * CLEAN_MIN_SHARE;
+  for (let k = 0; k < px.length; k++) if (group[k]! >= 0 && sizes[group[k]!]! < keep) px[k] = null;
+}
+
+/** Mean x of the solid pixels, in frame pixels. */
+function massCenterX(frame: { w: number; h: number; get: (i: number, j: number) => unknown }): number {
+  let sum = 0, n = 0;
+  for (let j = 0; j < frame.h; j++) for (let i = 0; i < frame.w; i++) if (frame.get(i, j)) { sum += i + 0.5; n++; }
+  return n ? sum / n : frame.w / 2;
+}
+
+function pixelate(img: Rgba, asset: AssetConfig, standingHeight?: number): { strip: Rgba; frameWidth: number; frameHeight: number; count: number } {
+  const boxes = frameBoxes(img, asset);
+  const count = boxes.length;
+  const s = scaleOf(boxes, asset, standingHeight);
 
   // Each frame scaled on its own, then trimmed of thin rows if asked.
   const frames = boxes.map((box) => {
     const w = Math.ceil(box.w / s), h = Math.ceil(box.h / s);
     const px: ([number, number, number] | null)[] = [];
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px.push(vote(img, box.x + i * s, box.y + j * s, s));
+    if (asset.clean) dropLooseBits(px, w, h);
     let rows = Array.from({ length: h }, (_, j) => j);
     if (asset.minRowPixels) {
       const solid = (j: number) => px.slice(j * w, (j + 1) * w).filter(Boolean).length >= asset.minRowPixels!;
@@ -107,12 +223,20 @@ function pixelate(img: Rgba, asset: AssetConfig): { strip: Rgba; frameWidth: num
     return { w, h: rows.length, get: (i: number, j: number) => px[rows[j]! * w + i] ?? null };
   });
 
-  const frameWidth = Math.max(...frames.map((f) => f.w));
+  const centers = frames.map(massCenterX);
+  const frameWidth = asset.alignX === 'mass'
+    ? Math.ceil(2 * Math.max(...frames.map((f, k) => Math.max(centers[k]!, f.w - centers[k]!))))
+    : Math.max(...frames.map((f) => f.w));
   const frameHeight = Math.max(...frames.map((f) => f.h));
   const strip: Rgba = { width: frameWidth * count, height: frameHeight, data: new Uint8Array(frameWidth * count * frameHeight * 4) };
   frames.forEach((frame, f) => {
-    const ox = asset.alignX === 'left' ? 0 : asset.alignX === 'right' ? frameWidth - frame.w : Math.floor((frameWidth - frame.w) / 2);
-    const oy = asset.alignY === 'center' ? Math.floor((frameHeight - frame.h) / 2) : frameHeight - frame.h;
+    const ox = asset.alignX === 'left' ? 0
+      : asset.alignX === 'right' ? frameWidth - frame.w
+      : asset.alignX === 'mass' ? Math.round(frameWidth / 2 - centers[f]!)
+      : Math.floor((frameWidth - frame.w) / 2);
+    const oy = asset.alignY === 'center' ? Math.floor((frameHeight - frame.h) / 2)
+      : asset.alignY === 'top' ? 0
+      : frameHeight - frame.h;
     for (let j = 0; j < frame.h; j++) {
       for (let i = 0; i < frame.w; i++) {
         const c = frame.get(i, j);
@@ -122,17 +246,43 @@ function pixelate(img: Rgba, asset: AssetConfig): { strip: Rgba; frameWidth: num
       }
     }
   });
-  return { strip, frameWidth, frameHeight };
+  return { strip, frameWidth, frameHeight, count };
+}
+
+/**
+ * PNG directly. JPG (what Gemini exports) is converted to a temporary PNG with
+ * Windows' built-in System.Drawing through PowerShell: no npm dependency for a
+ * full JPEG decoder. This only runs on Windows, like the rest of our art workflow.
+ */
+function readImage(path: string): Rgba {
+  if (/\.png$/i.test(path)) return readPng(readFileSync(path));
+  const dir = mkdtempSync(join(tmpdir(), 'pixelate-'));
+  const png = join(dir, 'source.png');
+  try {
+    // Paths go in environment variables: -Command does not pass arguments to the script.
+    const script = `Add-Type -AssemblyName System.Drawing; $i = [System.Drawing.Image]::FromFile($env:PIXELATE_IN); $i.Save($env:PIXELATE_OUT, [System.Drawing.Imaging.ImageFormat]::Png); $i.Dispose()`;
+    execFileSync('powershell', ['-NoProfile', '-Command', script], { env: { ...process.env, PIXELATE_IN: resolve(path), PIXELATE_OUT: png } });
+    return readPng(readFileSync(png));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 const configPath = process.argv[2];
 if (!configPath) throw new Error('usage: node tools/pixelate.ts <sprites.json>');
-const config = JSON.parse(readFileSync(configPath, 'utf8')) as { outDir: string; assets: AssetConfig[] };
+const config = JSON.parse(readFileSync(configPath, 'utf8')) as Config;
 const base = dirname(configPath);
 const outDir = join(base, config.outDir);
-mkdirSync(outDir, { recursive: true });
+const manifest: Record<string, { frameWidth: number; frameHeight: number; frames: number }> = {};
 for (const asset of config.assets) {
-  const { strip, frameWidth, frameHeight } = pixelate(readPng(readFileSync(join(base, asset.file))), asset);
-  writeFileSync(join(outDir, `${asset.name}.png`), writePng(strip));
+  const { strip, frameWidth, frameHeight, count } = pixelate(readImage(join(base, asset.file)), asset, config.standingHeight);
+  const out = join(outDir, `${asset.name}.png`);
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, writePng(strip));
+  manifest[asset.name] = { frameWidth, frameHeight, frames: count };
   console.log(`${asset.name}.png  ${strip.width}×${strip.height}  frame ${frameWidth}×${frameHeight}`);
+}
+if (config.manifest) {
+  writeFileSync(join(base, config.manifest), JSON.stringify(manifest, null, 2) + '\n');
+  console.log(`manifest: ${config.manifest}`);
 }
