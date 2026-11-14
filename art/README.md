@@ -69,4 +69,15 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 
 **Al pedir tiras a Gemini:** añadir "no motion blur, no speed lines, no afterimages" al prompt; la estela es lo que más estropea.
 
-**Falta por generar:** las tiras de animación de Samu y Chachin (de pie, correr, saltar, caer, golpes, recibir, escudo, rodar, borde) y el efecto de corte de la navaja (v1.1).
+**Samu**: 25 de 26 tiras en el juego (15 nov); falta `dodge` (usa `fall`). Llegaron como `samu_ (1…25).jpg`; renombradas mirando cada una. Columnas sacadas de las manchas conectadas de cada imagen y `standing` estimado con la misma pose de Robert, revisado a escala de juego.
+
+| Ojo con | Qué pasa |
+| --- | --- |
+| `run.jpg` | Estela de movimiento en 5 de 7 fotogramas. `run-built.png` = zancada (1.º) → en el aire (7.º) → zancada con tonos de pierna intercambiados → en el aire. El beige separa peor las piernas que el oliva de Robert: se nota poco. **Mejor repetir** (una zancada y un paso, sin estela) |
+| `heavy-side.jpg`, `heavy-down.jpg` | El 2.º fotograma sale duplicado (estela): se sustituye por el 1.º |
+| `light-up.jpg` | Arcos azules de barrido en los fotogramas 2 y 3; se dejan (se leen como el arco del golpe) |
+| `special-up.jpg` | Línea de suelo: se recorta con `rows` |
+| `ledge.jpg` | 2 fotogramas; se usa el 1.º |
+| `roll.jpg` | Algo de estela morada en los fotogramas 2 y 3 |
+
+**Falta por generar:** las tiras de animación de Chachin (de pie, correr, saltar, caer, golpes, recibir, escudo, rodar, borde) y el efecto de corte de la navaja (v1.1).
