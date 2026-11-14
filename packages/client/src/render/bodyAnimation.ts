@@ -22,6 +22,11 @@ const HURT_LAUNCH_SPEED = 400;
 /** Shield: raising frames, then this one is held. */
 const SHIELD_HOLD_FRAME = 2;
 const SHIELD_RAISE_FRAME_MS = 50;
+/**
+ * Share of the recovery that still shows the hit frame. The active phase lasts
+ * 1–3 ticks: without this the strike pose flashes for ~30 ms and nobody sees it.
+ */
+const HIT_HOLD_SHARE = 0.4;
 
 const ATTACK_ANIM: Record<AttackId, AnimName> = {
   jab1: 'jab', jab2: 'jab', jab3: 'jab', dash: 'dash-attack',
@@ -106,7 +111,7 @@ function progress(ticksLeft: number, total: number): number {
   return 1 - ticksLeft / total;
 }
 
-/** Wind-up frames over the startup, the hit frame while active, follow-through over the recovery. */
+/** Wind-up frames over the startup, the hit frame while active (and a while after), follow-through over the rest of the recovery. */
 function attackFrame(player: Player, anim: AnimName, last: number): number {
   if (player.attackId === 'none') return 0;
   const hit = Math.min(HIT_FRAME[anim] ?? 1, last);
@@ -118,8 +123,9 @@ function attackFrame(player: Player, anim: AnimName, last: number): number {
     case 'active': return hit;
     default: {
       const after = last - hit;
-      if (after === 0 || recovery <= 0) return hit;
-      return Math.min(last, hit + 1 + Math.floor(((t - startup - active) / recovery) * after));
+      const held = (t - startup - active) / recovery - HIT_HOLD_SHARE;
+      if (after === 0 || recovery <= 0 || held < 0) return hit;
+      return Math.min(last, hit + 1 + Math.floor((held / (1 - HIT_HOLD_SHARE)) * after));
     }
   }
 }
