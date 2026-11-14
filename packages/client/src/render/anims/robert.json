@@ -1,4 +1,9 @@
 {
+  "idle": {
+    "frameWidth": 40,
+    "frameHeight": 74,
+    "frames": 7
+  },
   "run": {
     "frameWidth": 58,
     "frameHeight": 68,

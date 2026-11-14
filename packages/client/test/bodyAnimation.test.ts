@@ -24,3 +24,11 @@ test('the strike pose stays on screen for a while after the hit, not just its 2 
   player.attackTick = startup + active + recovery - 1;
   assert.equal(frameFor(player, 'jab', frames, 0, 0), frames - 1, 'ends on the follow-through');
 });
+
+test('an idle with a rest holds its first frame, then plays once through', () => {
+  const player = createPlayer(SPAWNS[0], 'robert');
+  const restMs = 3000;
+  assert.equal(frameFor(player, 'idle', 7, 0, 1000, restMs), 0);
+  assert.equal(frameFor(player, 'idle', 7, 0, 2999, restMs), 0);
+  assert.notEqual(frameFor(player, 'idle', 7, 0, 3500, restMs), 0);
+});

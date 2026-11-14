@@ -87,14 +87,14 @@ export function resolveAnim(name: AnimName, has: (name: AnimName) => boolean): A
  * Which frame of `anim` (with `frames` frames) to show. `stateMs`: time since
  * this animation started; `clockMs`: a free-running clock for loops.
  */
-export function frameFor(player: Player, anim: AnimName, frames: number, stateMs: number, clockMs: number): number {
+export function frameFor(player: Player, anim: AnimName, frames: number, stateMs: number, clockMs: number, idleRestMs = 0): number {
   const last = frames - 1;
   const clamp = (f: number) => Math.max(0, Math.min(last, Math.floor(f)));
   if (player.holdTicks > 0) return last;
   if (player.attackId !== 'none') return attackFrame(player, anim, last);
   switch (anim) {
     case 'run': return Math.floor(clockMs / RUN_FRAME_MS) % frames;
-    case 'idle': return Math.floor(clockMs / IDLE_FRAME_MS) % frames;
+    case 'idle': return idleFrame(frames, clockMs, idleRestMs);
     case 'jump': return player.grounded ? 0 : last;
     case 'fall': return Math.abs(player.vy) < APEX_SPEED ? 0 : last;
     case 'hurt': return Math.hypot(player.vx, player.vy) > HURT_LAUNCH_SPEED ? last : 0;
@@ -104,6 +104,15 @@ export function frameFor(player: Player, anim: AnimName, frames: number, stateMs
     case 'dodge': return clamp(progress(player.dodgeTicks, player.dodgeKind === 'air' ? AIR_DODGE_TICKS : SPOT_DODGE_TICKS) * frames);
     default: return 0;
   }
+}
+
+/**
+ * Idle loop. With `restMs`, the first frame is held that long before each
+ * play-through: an action (a drag on a cigarette) every few seconds instead of non-stop.
+ */
+function idleFrame(frames: number, clockMs: number, restMs: number): number {
+  const t = clockMs % (restMs + frames * IDLE_FRAME_MS);
+  return t < restMs ? 0 : Math.floor((t - restMs) / IDLE_FRAME_MS);
 }
 
 /** 0 when `ticksLeft` is the whole duration, close to 1 at the end. */

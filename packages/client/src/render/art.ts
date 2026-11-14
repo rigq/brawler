@@ -61,6 +61,8 @@ export interface CharacterArt {
   body: Sheet;
   /** Body animations by name (see bodyAnimation.ts); missing ones fall back to a similar one or the still pose. */
   anims?: Partial<Record<AnimName, AnimSheet>>;
+  /** Hold the first idle frame this long between play-throughs (an idle that is an action, not breathing). */
+  idleRestMs?: number;
   /** Shown behind the character during the neutral special (frames: arrive, fire, after the shot). */
   neutralProp?: Sheet;
   /** Shown on the ground where the up special started (frames: startup, active, recovery). */
@@ -77,9 +79,13 @@ export interface CharacterArt {
   flag?: { plant: Sheet; wave: Sheet };
 }
 
+/** ~1.5 s drag, then ~3.5 s standing still. */
+const ROBERT_IDLE_REST_MS = 3500;
+
 export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
   donate: { body: SHEETS.donateBody, anims: animSheets('donate'), neutralProp: SHEETS.donateTank, parachute: SHEETS.donateParachute },
-  robert: { body: SHEETS.robertBody, anims: animSheets('robert'), upProp: SHEETS.robertRapper },
+  // His idle is a drag on the cigarette: one every few seconds, not non-stop.
+  robert: { body: SHEETS.robertBody, anims: animSheets('robert'), idleRestMs: ROBERT_IDLE_REST_MS, upProp: SHEETS.robertRapper },
   samu: {
     body: SHEETS.samuBody,
     anims: animSheets('samu'),

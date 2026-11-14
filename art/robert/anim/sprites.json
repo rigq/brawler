@@ -4,6 +4,47 @@
   "standingHeight": 74,
   "assets": [
     {
+      "name": "idle",
+      "file": "idle.jpg",
+      "columns": [
+        [
+          795,
+          1147
+        ],
+        [
+          1402,
+          1806
+        ],
+        [
+          1998,
+          2401
+        ],
+        [
+          2630,
+          3041
+        ],
+        [
+          3271,
+          3654
+        ],
+        [
+          3900,
+          4272
+        ],
+        [
+          4520,
+          4879
+        ]
+      ],
+      "rows": [
+        0,
+        770
+      ],
+      "standing": 750,
+      "alignX": "mass",
+      "clean": false
+    },
+    {
       "name": "run",
       "file": "run.jpg",
       "standing": 920,
