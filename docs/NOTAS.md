@@ -8,6 +8,18 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Animaciones de Robert (14 nov)** — Las 26 tiras en el juego (`heavy-up`, `light-down` y `air-down` rehechas por Riga y procesadas después; el 2.º fotograma de `heavy-up` traía estela y se sustituye por el 1.º) (`art/robert/anim/`, `sprites/robert/anim/`, `render/anims/robert.json`), sin tocar código del personaje. Identificadas a mano entre los 27 archivos subidos y medido el `standing` de cada una (detalles y defectos en `art/README.md`). `pixelate.ts` admite `cleanMinShare` por tira para fotogramas que se solapan. `bodyAnimation.ts`: `heavy-up` tira de `light-up` y `air-down` de `fall`; `resolveAnim` ya no puede entrar en bucle con respaldos cruzados (test en `client/test/bodyAnimation.test.ts`). Comprobado en el navegador (entrenamiento con Robert): idle, correr, jab, carga, fuerte arriba, escudo, especial (calada → soplido con el humo), salto y caída.
+
+- **Revisión del proyecto y mejoras de base (14 nov)** — Tras un análisis completo del repo:
+  - **Red sin techo de campos**: `Player` iba por 62 de los 63 campos que admite un esquema de Colyseus. Ahora viaja partido en bloques de hasta 40 campos (`PLAYER_PARTS`, `writeSyncedPlayer`/`readSyncedPlayer` en `shared/net/protocol.ts`; `PlayerState` con `part0`, `part1` en el servidor). El cliente lo convierte en un `Player` normal al llegar cada estado (`toPlayer` en `OnlineScene`), así que el resto del código no cambia. Añadir campos a `Player` ya no rompe nada. Comprobado con un test que codifica en el servidor y decodifica como el SDK, y con un servidor real y dos clientes.
+  - **Tests de verdad** (`npm test`, `node:test`, sin dependencias): 15 en `shared` (determinismo con los 16 cruces de personajes durante 50 s de botones aleatorios con semilla; el estado se puede reconstruir solo con lo que viaja por la red; caer, saltar, knockback según daño y peso, zona de muerte, fin de partida; proyectiles), 2 en `server` (bloques bajo el límite y viaje de ida y vuelta) y 2 en `client` (interpolación de proyectiles). Comprobado que el de determinismo falla si se mete un `Math.random()` en el knockback. El typecheck incluye los tests (con su propio `test/tsconfig.json`: el código de `shared/src` sigue sin poder usar Node).
+  - **Proyectiles contra la isla**: si un proyectil toca un sólido, explota (desde un lado o desde abajo). Las plataformas finas se siguen atravesando y la pelota de Samu sigue botando encima.
+  - **Proyectiles suaves online**: se guardan en el `SnapshotBuffer` y se dibujan interpolados por id, en la misma línea de tiempo que el rival (~100 ms en el pasado), en vez de a saltos de 30 Hz.
+  - **Phaser en su propio chunk** (`packages/client/vite.config.ts`): el código del juego pasa a 238 kB y Phaser (1,19 MB) queda aparte, cacheado entre versiones. El aviso de tamaño sube a 1300 kB porque Phaser no se puede partir.
+  - **CI** (`.github/workflows/ci.yml`): Node 24, `npm ci`, typecheck, tests y build en cada push.
+  - **Deploy preparado** (`docs/DEPLOY.md`): `Dockerfile` del servidor (Node 24, solo sus dependencias, 51 MB de `node_modules`, sin Phaser), puerto por `PORT`, y metaetiquetas para la vista previa del enlace en Discord. El Dockerfile se comprobó repitiendo sus pasos a mano (aquí no hay daemon de Docker).
+  - **Animaciones sin tocar código**: `render/art.ts` carga cualquier `anims/<personaje>.json` que exista. Robert, Samu y Chachin usarán sus tiras en cuanto se procesen. `tools/pixelate.ts` lee JPG también en Linux/Mac con ImageMagick; con las 26 tiras de Donate sale idéntico a Windows (0 píxeles distintos).
+
 - **Tinte para el P2 con el mismo personaje (13 nov)** — Si dos jugadores llevan el mismo personaje (Donate contra Donate), el segundo se dibuja con un tinte azul claro (`MIRROR_TINT` en `render/palette.ts`, una versión suave del azul de P2): boina granate, piel y ropa más frías. Con personajes distintos no se tiñe nada. El destello al recibir un golpe y el tinte del dash siguen por encima. Vale en local y online (allí se decide al llegar el primer estado). Comprobado en el navegador: P1 sin tinte y P2 con `9fd8ff`.
 - **Panel de controles en el juego (13 nov)** — Pestaña "Controles H" arriba a la derecha, en todos los modos (local, entrenamiento, online). Se despliega y se contrae con un clic o con **H**, y recuerda en el navegador si lo dejaste abierto. Dentro, secciones plegables: Botones (P1, P1 compartido, P2 y mando), Movimiento, Ataques, Colgado del borde y Teclas del juego. Las teclas de la tabla de botones salen de `P1_BINDINGS`/`P2_BINDINGS`: si se cambia una tecla, el panel cambia solo. Es HTML encima del lienzo (`ui/ControlsPanel.ts`, `ui/controlsContent.ts`, `ui/controlsPanel.css`): texto nítido a cualquier zoom y con barra de desplazamiento si no cabe. Al pulsarlo con el ratón no se queda con el foco, para que Espacio siga saltando en vez de pulsar el botón. Comprobado en el navegador: abrir y cerrar con clic y con H, que se recuerde al recargar, que la tabla saque bien las teclas y que el foco no se quede en el panel.
 - **Personajes elegidos también online (13 nov)** — Quien crea la sala manda su alineación (`?online&p1=donate&p2=donate`); quien entra con el código juega con la que eligió el creador. Sin `p1`/`p2`, Donate contra Robert. **Arreglo**: el servidor reiniciaba a cada jugador con `createPlayer(spawn)` sin personaje, así que online todos acababan siendo Donate. Ahora conserva el de su asiento (`resetPlayer`). La lista llega como opción de la sala y se valida con `parseLineup` (en `shared/net/protocol.ts`: lo desconocido o ausente pasa al personaje por defecto). El cliente dibuja la partida al llegar el primer estado del servidor, cuando ya sabe quién es cada uno (antes la creaba con la alineación por defecto y P2 podía verse como Robert siendo Donate). Comprobado con dos pestañas: sala Donate contra Donate en las dos, con sus animaciones, y sala sin parámetros Donate contra Robert.
@@ -51,6 +63,9 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 - **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. Repo en https://github.com/rigq/brawler.
 
 ### Decisiones
+
+- **El jugador se parte en bloques en la red, no se recortan campos** (14 nov): recortar campos (p. ej. calcular `width`/`height` desde el personaje) solo daba aire para 1–2 campos más; los bloques valen para siempre y el cliente sigue trabajando con un `Player` plano.
+- **Los proyectiles se dibujan con el retraso del rival, no al instante** (14 nov): así el proyectil y el rival al que golpea coinciden en pantalla. Los tuyos también salen ~100 ms tarde; lo decide el servidor igualmente.
 
 - **El panel de controles es HTML, no Phaser**: es texto y tablas, que el navegador ya sabe maquetar, desplazar y hacer accesible; dibujado en el lienzo habría que hacerlo a mano y se vería borroso con el zoom de la cámara. El menú del bloque I podrá reutilizar `controlsContent.ts`.
 - **Las animaciones se eligen solo en el cliente, a partir del estado que ya existe** (`attackId`, `attackTick`, `dodgeTicks`, `hitstunTicks`…): no añaden campos a `Player` ni a la red, y online se ven igual porque el estado llega del servidor.
@@ -154,43 +169,40 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Bugs conocidos
 
-- `npm run build` avisa de que el bundle pesa ~1,2 MB (casi todo es Phaser). No es un fallo; se mira en F5 si hace falta.
+
+- **La suavidad de los proyectiles online no se ha visto en un navegador normal**: el navegador sin pantalla de las pruebas va a ~15 FPS con dos pestañas. Probar con `?online&p1=donate` y `&lag=150`.
+
 - **El mando llega 1 frame tarde (~16 ms)**: Phaser actualiza el estado del mando después de que `GameScene.update` lea los controles. El teclado no tiene este retraso. Es imperceptible; se puede corregir leyendo el mando en el evento `preupdate` de la escena si alguna vez molesta.
 - **Si el servidor se queda sin inputs tuyos unos ticks (red irregular), repite el último** y tu predicción puede desviarse un poco; se corrige suavemente con el siguiente estado.
 - **Si el servidor se reinicia, las salas abiertas se pierden** (viven en memoria): los clientes muestran "Reconectando…" y, al agotar los reintentos, "Desconectado"; hay que crear sala nueva. Normal para el MVP.
 - **Durante el calentamiento (esperando rival), el hueco vacío es un muñeco quieto** al que se puede pegar; no cuenta para nada porque la partida empieza de cero al llegar el rival.
-- **Los scripts de prueba temporales de F1–F2 usan coordenadas del mapa antiguo** (x 240–1040, spawns 420/820) y algunos casos ya no cuadran. No son fallos del juego; razón de más para el pendiente de pasar las pruebas a `node:test` usando las constantes en vez de números fijos.
 - **El modo `--watch` del servidor puede quedarse parado** si se guarda un archivo a medias ("Failed running… Waiting for file changes"): basta con guardar otra vez o reiniciar `npm run dev:server`.
-- El bundle del cliente pasa de ~1,2 MB a ~1,4 MB con el SDK de Colyseus (sigue siendo casi todo Phaser).
 - `npm install` avisa de que no ejecuta el script de `msgpackr-extract` (acelerador nativo opcional); msgpackr funciona igual con su versión en JavaScript.
 - **Online, tu propio golpe se nota un instante más tarde**: el cliente no predice golpes, así que tu hitstop llega con el estado del servidor y la predicción te devuelve unos píxeles atrás (corrección suave). Con lag alto puede verse un pequeño tirón al acertar.
 - **El navegador integrado de Claude a veces limita el juego a ~1 FPS** (requestAnimationFrame estrangulado); en las pruebas se avanza a mano con `__game.step(time, 16.67)`. No pasa en un navegador normal.
-- **`Player` sincroniza 62 campos de 63 posibles** (`MAX_FIELDS` de `@colyseus/schema`; `prevX`/`prevY` ya no se envían). Si se pasa, el servidor falla al arrancar con un error claro. Para el próximo campo: agrupar estado o dejar de enviar lo que el cliente no necesita.
 - **Agarre, lanzamientos y borde no se han probado online con dos jugadores**, solo en local. En el agarre el jugador sujetado lo mueve el servidor y puede verse alguna corrección de posición con lag.
 - **Donate: defectos de las tiras** (patada lateral hacia atrás, barra en el borde, restos en `heavy-down` y `shield`) en `art/README.md`.
 - **Las escalas de las tiras (`standing`) son a ojo**: si una animación se ve más grande o más pequeña que el resto, se ajusta ese número en `art/donate/anim/sprites.json` y se vuelve a procesar.
 - **El salto de mortero no tiene dibujo de explosión** al despegar; solo se ve el paracaídas al bajar.
-- **Online, los proyectiles no se interpolan**: llegan a 30 Hz y pueden verse a saltitos con lag.
-- **El proyectil atraviesa el escenario**: no choca con la isla ni con las plataformas.
 - **El mando no se ha probado con uno físico**, solo simulado desde la consola. Probar con un mando real cuando haya uno a mano.
 
 ### Siguiente tarea
 
-- Pendiente de F1: validar su criterio ("moverte 5 minutos seguidos es divertido sin pegarse") jugando a dos.
-- Validar el hito de F2 ("una partida 1v1 local completa con alguien de clase, y quiere repetir") y el criterio de F1 (moverse es divertido). Ajustar constantes según lo que se note.
-- **D: animaciones de Robert, Samu y Chachin** (Donate ya tiene las 26). Con sus tiras en `art/<personaje>/anim/` basta un `sprites.json` como el de Donate y una línea en `CHARACTER_ART`. Después, efectos comunes (chispa y polvo, ya procesados en `sprites/common/`). Antes conviene **jugar con los cuatro** para ajustar números: nadie ha jugado aún a Samu ni a Chachin a velocidad real. Para cada uno hacen falta sus sprites (hoja de referencia + objetos de sus especiales, con los prompts que se dieron el 10 nov) y pasarlos por `tools/pixelate.ts`. Después P3 con los otros dos y quitar los provisionales (`balanced`, `rushdown`, `heavy`, `zoner`) y el ↑+K como recovery. E4 (paredes) queda aparcado: Riga lo deja para más adelante (30 oct).
-- Antes de D1: confirmar el estilo gráfico (propuesta: muñecos articulados dibujados con formas en código; alternativa: pixel art a mano).
-- L3 (antes F3.6) Desplegar servidor y cliente; prueba con alguien en otra casa. **Necesita decisiones y cuentas tuyas**: hosting del cliente (Netlify o Vercel) y del servidor (Fly.io o VPS Hetzner), que exigen crear cuenta y, en el caso del servidor, posiblemente pago. El cliente necesitará `VITE_SERVER_URL` apuntando al servidor (`wss://…`).
+- **Playtest (adelantar L1)**: nadie ha jugado aún a los cuatro a velocidad real, ni se han validado los criterios de F1 ("moverse 5 minutos es divertido") y F2 ("una partida 1v1 con alguien de clase, y quiere repetir"). 2 compañeros, 30 min, local o LAN; apuntar 5 cosas y ajustar constantes. Antes de invertir en arte.
+- **D1: animaciones de Samu y Chachin** (Robert hecho). Riga las genera con Gemini (`docs/PROMPTS_ANIMACIONES.md`), **en JPG** (la web de GitHub no admite más de 25 MB por archivo) y, a ser posible, **ya con el nombre de la tabla**. Añadir al prompt "no motion blur, no speed lines, no afterimages": la estela de movimiento no se puede limpiar. `standingHeight`: Samu 72, Chachin 54 (alto de sus hojas).
+- **L3 deploy**: todo listo en `docs/DEPLOY.md`; faltan las cuentas de Riga (Fly.io o Hetzner para el servidor, Netlify o Vercel para el cliente). Conviene hacerlo pronto para probar con lag real y con amigos por Discord.
+- E4 (paredes) sigue aparcado.
 
 ### Pendientes v2
 
-- **Paletas alternativas por personaje** (en vez del tinte del P2 en espejo): una segunda versión de los colores de cada uno, como las skins de color de los juegos de lucha. Necesita recolorear sus sprites.
 Ideas que surgen durante las sesiones y quedan fuera de la tarea actual o del MVP.
+
+- **Paletas alternativas por personaje** (en vez del tinte del P2 en espejo): una segunda versión de los colores de cada uno, como las skins de color de los juegos de lucha. Necesita recolorear sus sprites.
+- **Actividad de Discord** (v1.1, tras el MVP): el juego dentro de la llamada de voz con el Embedded App SDK (dependencia nueva), login OAuth en el servidor, URL mappings del proxy de Discord y sala = `instanceId` de la llamada. ~8–10 h. Antes basta con pasar el enlace por Discord.
+- **Personajes de la clase anterior** (Guille, Suli, Pablo, Juan, Héctor…; ojo, ya hay un Samu): por packs de 2 después del 14 de marzo, con su permiso. ~2–3 semanas por personaje con sus 26 tiras.
 
 - Que el escudo gastado deje partes del cuerpo sin cubrir, como en Smash (hoy encoge solo el dibujo).
 - Golpear al rival sujetado antes de lanzarlo, y que el sujetado pueda soltarse machacando botones.
-- (F5) Separar Phaser en su propio chunk para quitar el aviso de tamaño del build.
-- Convertir los scripts de prueba de la física (hasta ahora temporales) en tests de verdad con `node:test`, que viene con Node 24 y no añade dependencias: `npm test` en `shared`. Sirve para detectar regresiones cuando se ajusten las constantes.
 - (F5 o después del lanzamiento) **Versión de escritorio (.exe)** empaquetando el cliente web, sin reescribir el juego. Opción preferida: **Tauri** (~5–10 MB, usa el WebView2 de Windows); alternativa: Electron (~100 MB). Son dependencias nuevas: preguntar antes. Para no tener que firmar el ejecutable, publicar en **itch.io** la versión web jugable más la descarga. Decidido el 28 oct: la web sigue siendo la versión principal (portfolio, cero instalación, encaja con DAW).
 
 ---

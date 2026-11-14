@@ -43,6 +43,8 @@ const HIT_FRAME: Partial<Record<AnimName, number>> = {
 /** A missing animation borrows the closest one; with none, the character's still pose is drawn. */
 const FALLBACK: Partial<Record<AnimName, AnimName>> = {
   'light-up': 'heavy-up',
+  'heavy-up': 'light-up',
+  'air-down': 'fall',
   'dash-attack': 'light-side',
   'air-neutral': 'fall',
   dodge: 'fall',
@@ -67,7 +69,12 @@ export function animFor(player: Player): AnimName {
 
 /** The animation to draw among the ones this character has, or null for its still pose. */
 export function resolveAnim(name: AnimName, has: (name: AnimName) => boolean): AnimName | null {
-  for (let n: AnimName | undefined = name; n; n = FALLBACK[n]) if (has(n)) return n;
+  // Fallbacks may point at each other (light-up ↔ heavy-up): stop once one repeats.
+  const tried = new Set<AnimName>();
+  for (let n: AnimName | undefined = name; n && !tried.has(n); n = FALLBACK[n]) {
+    if (has(n)) return n;
+    tried.add(n);
+  }
   return null;
 }
 

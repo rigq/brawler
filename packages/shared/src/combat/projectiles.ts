@@ -26,7 +26,7 @@ export interface Projectile {
   vx: number;
   vy: number;
   gravity: number;
-  /** Bounces left on the stage; -1 = ignores the stage. */
+  /** Bounces left on tops of the stage; -1 = never bounces. Either way it bursts against solid ground. */
   bouncesLeft: number;
   width: number;
   height: number;
@@ -56,8 +56,8 @@ export function createProjectile(): Projectile {
 
 /**
  * Runs once per step after hits: fires new projectiles, moves them, and lets
- * them hit. A projectile that has used up its hits, runs out of time or leaves
- * the stage is removed.
+ * them hit. A projectile that has used up its hits, runs out of time, hits
+ * solid ground or leaves the stage is removed.
  */
 export function stepProjectiles(world: ProjectileWorld): void {
   world.players.forEach((player, slot) => fireIfReady(world, player, slot));
@@ -68,6 +68,8 @@ export function stepProjectiles(world: ProjectileWorld): void {
     projectile.vy += projectile.gravity * FIXED_DT;
     projectile.y += projectile.vy * FIXED_DT;
     if (projectile.bouncesLeft >= 0) bounce(projectile, world);
+    // Platforms are thin and one-way: shots fly through them. The island is solid: they burst on it.
+    if (world.solids.some((solid) => overlaps(projectile as Rect, solid))) projectile.ticksLeft = 0;
     projectile.ticksLeft -= 1;
     if (projectile.hitCooldown > 0) projectile.hitCooldown -= 1;
     const owner = world.players[projectile.owner];

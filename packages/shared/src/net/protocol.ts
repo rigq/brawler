@@ -63,8 +63,8 @@ export type EndReason = '' | 'ko' | 'forfeit';
 export interface NetMatchState {
   /** Server simulation tick. Keeps counting across rematches. */
   tick: number;
-  /** players[slot]: same order as World.players. */
-  players: ArrayLike<Player>;
+  /** players[slot]: same order as World.players, split into parts (readSyncedPlayer). */
+  players: ArrayLike<SyncedPlayer>;
   /** Which slot each connected client controls, keyed by session id. */
   seats: ReadonlyMap<string, number>;
   /** acks[slot]: seq of the last input from that slot the server has simulated (-1 = none). */
@@ -95,7 +95,6 @@ export function copyProjectile(target: Projectile, source: Projectile): void {
  * Player fields that never travel over the network: where the body was at the
  * start of the last step, only used to smooth the drawing. Each client sets them
  * itself (prediction steps them, the interpolation of other players overwrites them).
- * Leaving them out keeps the synced schema under its limit of 63 fields.
  */
 const LOCAL_ONLY_FIELDS: readonly (keyof Player)[] = ['prevX', 'prevY'];
 
@@ -104,11 +103,50 @@ export const PLAYER_FIELDS = (Object.keys(createPlayer(SPAWNS[0])) as (keyof Pla
   (field) => !LOCAL_ONLY_FIELDS.includes(field),
 );
 
-/** Copies every Player field from `source` into `target` (plain object or synced schema). */
+/** Copies every synced Player field from `source` into `target` (both plain Players). */
 export function copyPlayer(target: Player, source: Player): void {
   const to = target as unknown as Record<string, unknown>;
   const from = source as unknown as Record<string, unknown>;
   for (const field of PLAYER_FIELDS) to[field] = from[field];
+}
+
+/**
+ * A synced schema can hold at most 63 fields, and a Player has more. So on the
+ * network a player travels split into parts (part0, part1…) of at most
+ * PLAYER_PART_SIZE fields each. Adding a field to Player just grows the parts.
+ */
+export const PLAYER_PART_SIZE = 40;
+
+/** PLAYER_FIELDS cut into parts: PLAYER_PARTS[i] are the fields of `part${i}`. */
+export const PLAYER_PARTS: readonly (readonly (keyof Player)[])[] = Array.from(
+  { length: Math.ceil(PLAYER_FIELDS.length / PLAYER_PART_SIZE) },
+  (_, i) => PLAYER_FIELDS.slice(i * PLAYER_PART_SIZE, (i + 1) * PLAYER_PART_SIZE),
+);
+
+/** Name of part `index` inside a synced player. */
+export function playerPartKey(index: number): string {
+  return `part${index}`;
+}
+
+/** A player as it travels: { part0: {…fields}, part1: {…fields} }. */
+export type SyncedPlayer = Readonly<Record<string, Record<string, unknown> | undefined>>;
+
+/** Server side: spreads a simulated Player over the parts of its synced copy. */
+export function writeSyncedPlayer(target: SyncedPlayer, source: Player): void {
+  const from = source as unknown as Record<string, unknown>;
+  PLAYER_PARTS.forEach((fields, i) => {
+    const part = target[playerPartKey(i)];
+    if (part) for (const field of fields) part[field] = from[field];
+  });
+}
+
+/** Client side: gathers the parts of a synced player back into a plain Player. */
+export function readSyncedPlayer(target: Player, source: SyncedPlayer): void {
+  const to = target as unknown as Record<string, unknown>;
+  PLAYER_PARTS.forEach((fields, i) => {
+    const part = source[playerPartKey(i)];
+    if (part) for (const field of fields) to[field] = part[field];
+  });
 }
 
 /**

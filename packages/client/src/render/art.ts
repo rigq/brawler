@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import type { CharacterId } from '@brawler/shared';
 import { ANIM_NAMES, type AnimName } from './bodyAnimation.ts';
-import donateAnims from './anims/donate.json';
 
 /** A sprite strip in public/sprites: frames side by side, all the same size. */
 interface Sheet {
@@ -39,8 +38,15 @@ export interface AnimSheet extends Sheet {
   frames: number;
 }
 
+/**
+ * Every manifest in anims/, by file name. A character gets its animations as soon
+ * as tools/pixelate.ts writes anims/<character>.json: no code to touch.
+ */
+const ANIM_MANIFESTS = import.meta.glob<AnimManifest>('./anims/*.json', { eager: true, import: 'default' });
+
 /** The strips in public/sprites/<character>/anim/ listed in its manifest. Unknown names are ignored. */
-function animSheets(character: CharacterId, manifest: AnimManifest): Partial<Record<AnimName, AnimSheet>> {
+function animSheets(character: CharacterId): Partial<Record<AnimName, AnimSheet>> {
+  const manifest = ANIM_MANIFESTS[`./anims/${character}.json`] ?? {};
   const sheets: Partial<Record<AnimName, AnimSheet>> = {};
   for (const name of ANIM_NAMES) {
     const size = manifest[name];
@@ -72,14 +78,15 @@ export interface CharacterArt {
 }
 
 export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
-  donate: { body: SHEETS.donateBody, anims: animSheets('donate', donateAnims), neutralProp: SHEETS.donateTank, parachute: SHEETS.donateParachute },
-  robert: { body: SHEETS.robertBody, upProp: SHEETS.robertRapper },
+  donate: { body: SHEETS.donateBody, anims: animSheets('donate'), neutralProp: SHEETS.donateTank, parachute: SHEETS.donateParachute },
+  robert: { body: SHEETS.robertBody, anims: animSheets('robert'), upProp: SHEETS.robertRapper },
   samu: {
     body: SHEETS.samuBody,
+    anims: animSheets('samu'),
     teleport: SHEETS.samuTeleport,
     flag: { plant: SHEETS.samuFlagPlant, wave: SHEETS.samuFlag },
   },
-  chachin: { body: SHEETS.chachinBody, neutralAura: SHEETS.chachinScream, upBlast: SHEETS.chachinRocket },
+  chachin: { body: SHEETS.chachinBody, anims: animSheets('chachin'), neutralAura: SHEETS.chachinScream, upBlast: SHEETS.chachinRocket },
 };
 
 /**

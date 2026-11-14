@@ -10,6 +10,7 @@ import {
   STOCKS,
   copyPlayer,
   copyProjectile,
+  writeSyncedPlayer,
   createPlayer,
   createWorld,
   matchResult,
@@ -19,11 +20,11 @@ import {
   type CreateRoomOptions,
   type EndReason,
   type MatchPhase,
-  type Player,
   type Projectile,
+  type SyncedPlayer,
 } from '@brawler/shared';
 import { InputQueue } from '../net/InputQueue.ts';
-import { MatchState, PlayerState, ProjectileState } from '../state/MatchState.ts';
+import { MatchState, ProjectileState, createPlayerState, type PlayerState } from '../state/MatchState.ts';
 import { claimRoomCode, releaseRoomCode } from './roomCodes.ts';
 
 /**
@@ -55,9 +56,9 @@ export class MatchRoom extends Room<{ state: MatchState }> {
     // Only reachable by code: never handed out to someone looking for any match.
     void this.setPrivate(true);
     for (const player of this.world.players) {
-      const synced = new PlayerState();
-      copyPlayer(synced as unknown as Player, player);
-      this.state.players.push(synced);
+      const synced = createPlayerState();
+      writeSyncedPlayer(synced, player);
+      this.state.players.push(synced as unknown as PlayerState);
       this.state.acks.push(-1);
       this.state.away.push(false);
       this.state.rematchVotes.push(false);
@@ -196,7 +197,7 @@ export class MatchRoom extends Room<{ state: MatchState }> {
     this.state.tick = this.world.tick;
     this.world.players.forEach((player, slot) => {
       const synced = this.state.players[slot];
-      if (synced) copyPlayer(synced as unknown as Player, player);
+      if (synced) writeSyncedPlayer(synced as unknown as SyncedPlayer, player);
       this.state.acks[slot] = this.inputQueues[slot]?.lastProcessedSeq ?? -1;
     });
     this.syncProjectiles();

@@ -3,7 +3,15 @@
 // Colyseus only sends the fields that changed since the last patch.
 
 import { schema, t, type SchemaType } from '@colyseus/schema';
-import { PLAYER_FIELDS, PROJECTILE_FIELDS, SPAWNS, createPlayer, createProjectile } from '@brawler/shared';
+import {
+  PLAYER_PARTS,
+  PROJECTILE_FIELDS,
+  SPAWNS,
+  createPlayer,
+  createProjectile,
+  playerPartKey,
+  type SyncedPlayer,
+} from '@brawler/shared';
 
 /**
  * One synced field per Player field, generated from a real Player so the two can
@@ -21,9 +29,25 @@ function schemaFields(template: Record<string, unknown>, fields: readonly string
   );
 }
 
-const playerFields = () => schemaFields(createPlayer(SPAWNS[0]) as unknown as Record<string, unknown>, PLAYER_FIELDS);
+const playerTemplate = createPlayer(SPAWNS[0]) as unknown as Record<string, unknown>;
 
-export const PlayerState = schema(playerFields(), 'PlayerState');
+/** One schema per part of the player (see PLAYER_PARTS): each stays under the 63-field limit. */
+const PlayerPartStates = PLAYER_PARTS.map((fields, i) => schema(schemaFields(playerTemplate, fields), `PlayerPart${i}`));
+
+/** A synced player: { part0, part1… }, each part a schema of up to PLAYER_PART_SIZE fields. */
+export const PlayerState = schema(
+  Object.fromEntries(PlayerPartStates.map((Part, i) => [playerPartKey(i), Part])),
+  'PlayerState',
+);
+
+/** A synced player with every part created, ready for writeSyncedPlayer. */
+export function createPlayerState(): SyncedPlayer {
+  const synced = new PlayerState() as unknown as Record<string, unknown>;
+  PlayerPartStates.forEach((Part, i) => {
+    synced[playerPartKey(i)] = new Part();
+  });
+  return synced as SyncedPlayer;
+}
 
 /** One synced field per Projectile field, the same way. */
 export const ProjectileState = schema(
