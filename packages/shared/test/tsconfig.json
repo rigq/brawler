@@ -1,0 +1,10 @@
+{
+  // Tests only: they may use Node (node:test, node:assert). The game code in src
+  // keeps "types": [] so it cannot touch Node, the DOM or Phaser by accident.
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": [".", "../src"]
+}

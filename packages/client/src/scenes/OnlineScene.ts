@@ -8,16 +8,20 @@ import {
   MATCH_ROOM,
   REMATCH_MESSAGE,
   SERVER_PORT,
+  SPAWNS,
   copyProjectile,
+  createPlayer,
   createProjectile,
   createWorld,
   normalizeRoomCode,
+  readSyncedPlayer,
   type CharacterId,
   type CreateRoomOptions,
   type InputMessage,
   type MatchResult,
   type NetMatchState,
   type Player,
+  type SyncedPlayer,
 } from '@brawler/shared';
 import { GamepadInput } from '../input/GamepadInput.ts';
 import { CombinedInput, type InputSource } from '../input/InputSource.ts';
@@ -161,19 +165,20 @@ export class OnlineScene extends Phaser.Scene {
    * reconciles your own player (server version + replay of unconfirmed inputs).
    */
   private applyServerState(room: MatchRoom, mySlot: number | undefined): void {
-    const { players, tick, acks } = room.state;
-    if (!players || !acks || tick === this.lastServerTick) return;
+    const { tick, acks } = room.state;
+    if (!room.state.players || !acks || tick === this.lastServerTick) return;
+    const players = Array.from(room.state.players, toPlayer);
     if (!this.view) this.buildView(players);
     this.lastServerTick = tick;
     this.mirror.tick = tick;
-    this.snapshots.push(tick, players);
-    this.clock.onServerTick(tick);
     // Projectiles come straight from the server (no prediction): only the server decides hits.
-    this.mirror.projectiles = Array.from(room.state.projectiles ?? [], (synced) => {
+    const projectiles = Array.from(room.state.projectiles ?? [], (synced) => {
       const copy = createProjectile();
       copyProjectile(copy, synced);
       return copy;
     });
+    this.snapshots.push(tick, players, projectiles);
+    this.clock.onServerTick(tick);
 
     if (mySlot === undefined) return;
     const me = this.mirror.players[mySlot];
@@ -197,7 +202,7 @@ export class OnlineScene extends Phaser.Scene {
   }
 
   /**
-   * Everyone except you is shown INTERP_DELAY_MS in the past, blended between
+   * Everyone except you, and every projectile, is shown INTERP_DELAY_MS in the past, blended between
    * two states that already arrived: smooth motion at the cost of a small delay.
    */
   private drawOthers(mySlot: number | undefined, frameMs: number): void {
@@ -206,6 +211,8 @@ export class OnlineScene extends Phaser.Scene {
     this.mirror.players.forEach((player, slot) => {
       if (slot !== mySlot) this.snapshots.sample(renderTick, slot, player);
     });
+    // Drawn on the same timeline as the rival, so a shot and the rival it hits stay in sync.
+    this.mirror.projectiles = this.snapshots.sampleProjectiles(renderTick);
   }
 
   /** One numbered input per fixed tick: sent to the server and applied locally at once. */
@@ -277,6 +284,13 @@ function serverResult(room: MatchRoom | null): MatchResult {
   if (!room || room.state.phase !== 'over') return { over: false };
   const winner = room.state.winner;
   return { over: true, winner: winner < 0 ? null : winner };
+}
+
+/** A synced player (split into parts on the network) as a plain Player. */
+function toPlayer(synced: SyncedPlayer, slot: number): Player {
+  const player = createPlayer(SPAWNS[slot] ?? SPAWNS[0]);
+  readSyncedPlayer(player, synced);
+  return player;
 }
 
 /** Same host as the page (works from another device on the LAN), unless VITE_SERVER_URL says otherwise. */

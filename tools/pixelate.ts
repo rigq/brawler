@@ -5,7 +5,7 @@
 //
 // The JSON lists the assets; paths are relative to the JSON file. Each asset:
 //   name     output file name (no extension), written to `outDir`
-//   file     source PNG or JPG (JPG goes through Windows' own decoder, see readImage)
+//   file     source PNG or JPG (JPG goes through Windows' own decoder, or ImageMagick elsewhere: see readImage)
 //   frames   number of frames, laid out left to right in equal columns of the source
 //            (or `columns`: explicit [x0, x1] source ranges, one per frame)
 //            (or `detect`: find this many frames by the empty space around them, row by row)
@@ -19,6 +19,8 @@
 //   minRowPixels     optional: drop rows with fewer solid pixels (thin cords, stray specks)
 //   clean    optional: drop loose bits much smaller than the frame's main shape
 //            (a neighbour's fist or heel that reached into this frame's columns)
+//   cleanMinShare    optional: with `clean`, how big a bit must be to stay, as a share of
+//            the main shape (default 0.05). Raise it when frames overlap and bigger pieces sneak in
 //   rows     optional [y0, y1]: only use this horizontal band of the source (skip a bad row of frames)
 
 import { execFileSync } from 'node:child_process';
@@ -38,6 +40,7 @@ interface AssetConfig {
   alignY?: 'bottom' | 'center' | 'top';
   minRowPixels?: number;
   clean?: boolean;
+  cleanMinShare?: number;
   rows?: [number, number];
   detect?: number;
   standing?: number;
@@ -168,7 +171,7 @@ function scaleOf(boxes: Box[], asset: AssetConfig, standingHeight: number | unde
 const CLEAN_MIN_SHARE = 0.05;
 
 /** Clears every 8-connected group of solid pixels much smaller than the biggest one. */
-function dropLooseBits(px: unknown[], w: number, h: number): void {
+function dropLooseBits(px: unknown[], w: number, h: number, minShare = CLEAN_MIN_SHARE): void {
   const group = new Int32Array(w * h).fill(-1);
   const sizes: number[] = [];
   for (let start = 0; start < px.length; start++) {
@@ -190,7 +193,7 @@ function dropLooseBits(px: unknown[], w: number, h: number): void {
     }
     sizes.push(size);
   }
-  const keep = Math.max(...sizes) * CLEAN_MIN_SHARE;
+  const keep = Math.max(...sizes) * minShare;
   for (let k = 0; k < px.length; k++) if (group[k]! >= 0 && sizes[group[k]!]! < keep) px[k] = null;
 }
 
@@ -211,7 +214,7 @@ function pixelate(img: Rgba, asset: AssetConfig, standingHeight?: number): { str
     const w = Math.ceil(box.w / s), h = Math.ceil(box.h / s);
     const px: ([number, number, number] | null)[] = [];
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px.push(vote(img, box.x + i * s, box.y + j * s, s));
-    if (asset.clean) dropLooseBits(px, w, h);
+    if (asset.clean) dropLooseBits(px, w, h, asset.cleanMinShare);
     let rows = Array.from({ length: h }, (_, j) => j);
     if (asset.minRowPixels) {
       const solid = (j: number) => px.slice(j * w, (j + 1) * w).filter(Boolean).length >= asset.minRowPixels!;
@@ -259,13 +262,33 @@ function readImage(path: string): Rgba {
   const dir = mkdtempSync(join(tmpdir(), 'pixelate-'));
   const png = join(dir, 'source.png');
   try {
-    // Paths go in environment variables: -Command does not pass arguments to the script.
-    const script = `Add-Type -AssemblyName System.Drawing; $i = [System.Drawing.Image]::FromFile($env:PIXELATE_IN); $i.Save($env:PIXELATE_OUT, [System.Drawing.Imaging.ImageFormat]::Png); $i.Dispose()`;
-    execFileSync('powershell', ['-NoProfile', '-Command', script], { env: { ...process.env, PIXELATE_IN: resolve(path), PIXELATE_OUT: png } });
+    if (process.platform === 'win32') convertWithWindows(resolve(path), png);
+    else convertWithImageMagick(resolve(path), png);
     return readPng(readFileSync(png));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+/** Windows' own image decoder, through PowerShell: nothing to install. */
+function convertWithWindows(input: string, output: string): void {
+  // Paths go in environment variables: -Command does not pass arguments to the script.
+  const script = `Add-Type -AssemblyName System.Drawing; $i = [System.Drawing.Image]::FromFile($env:PIXELATE_IN); $i.Save($env:PIXELATE_OUT, [System.Drawing.Imaging.ImageFormat]::Png); $i.Dispose()`;
+  execFileSync('powershell', ['-NoProfile', '-Command', script], { env: { ...process.env, PIXELATE_IN: input, PIXELATE_OUT: output } });
+}
+
+/** Linux and macOS: ImageMagick (`magick` in version 7, `convert` before). */
+function convertWithImageMagick(input: string, output: string): void {
+  for (const command of ['magick', 'convert']) {
+    try {
+      // PNG32: always RGBA 8-bit, the only kind tools/png.ts reads.
+      execFileSync(command, [input, `PNG32:${output}`], { stdio: 'ignore' });
+      return;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+  }
+  throw new Error('Reading JPG outside Windows needs ImageMagick (apt install imagemagick / brew install imagemagick)');
 }
 
 const configPath = process.argv[2];

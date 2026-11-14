@@ -12,5 +12,7 @@ const server = defineServer({
   },
 });
 
-await server.listen(SERVER_PORT);
-console.log(`[${GAME_TITLE} server] listening on port ${SERVER_PORT}`);
+// Hosting services (Fly.io, Render…) say which port to use through PORT.
+const port = Number(process.env.PORT) || SERVER_PORT;
+await server.listen(port);
+console.log(`[${GAME_TITLE} server] listening on port ${port}`);

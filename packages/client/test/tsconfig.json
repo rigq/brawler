@@ -1,0 +1,9 @@
+{
+  // Tests only: plain Node (node:test). They cover the network helpers, which do not use Phaser.
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["."]
+}

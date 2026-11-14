@@ -38,6 +38,8 @@ brawler/
 - **Todos los números ajustables** (gravedad, velocidades, knockback, frames de ataque) en `shared/src/constants.ts`. Nada de números mágicos sueltos.
 - Personajes definidos **por datos** (`shared/src/characters/*.ts`), no con clases distintas por personaje.
 - Hitboxes/hurtboxes rectangulares (AABB). Modo debug con tecla `F1` que las dibuje.
+- Online, el jugador viaja partido en bloques de campos (`PLAYER_PARTS` en `shared/net/protocol.ts`): un esquema de Colyseus admite 63 campos como mucho. Añadir campos a `Player` no requiere tocar nada más.
+- Cambios en `shared` → `npm test`. El test de determinismo falla si se cuela algo aleatorio, de reloj o dependiente del orden.
 
 ## Online (fase F3)
 - Servidor autoritativo con Colyseus a 60 Hz; difusión de estado a 20–30 Hz.
@@ -56,11 +58,13 @@ brawler/
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
 - http://localhost:5173/?training — modo entrenamiento contra un muñeco (R reinicia, 8 activa su escudo, 9/0 cambian su %)
 - `?p1=samu&p2=chachin` — (hasta I2) elige personajes: `donate`, `robert`, `samu`, `chachin` (sin elegir: Donate contra Robert). Online vale la del que crea la sala: `?online&p1=donate&p2=donate`
-- `node tools/pixelate.ts art/<personaje>/sprites.json` — limpia los sprites generados con IA y los deja en `packages/client/public/sprites/`
+- `node tools/pixelate.ts art/<personaje>/sprites.json` — limpia los sprites generados con IA y los deja en `packages/client/public/sprites/` (JPG: Windows lo lee solo; Linux/Mac necesitan ImageMagick). Con `art/<personaje>/anim/sprites.json` el personaje usa sus animaciones sin tocar código
 - http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
 - `npm run build` — build de producción del cliente (incluye typecheck)
-- `npm run typecheck` — comprobar tipos en los tres paquetes
+- `npm run typecheck` — comprobar tipos en los tres paquetes (tests incluidos)
+- `npm test` — tests con `node:test` (determinismo, reglas, proyectiles, red); el CI de GitHub pasa typecheck + tests + build en cada push
+- `docs/DEPLOY.md` — cómo desplegar (L3): `Dockerfile` del servidor, `VITE_SERVER_URL` para el cliente
 
 ## Plan (marcar al completar)
 **F0 · Setup** (2–8 nov)
@@ -117,7 +121,7 @@ brawler/
 - [x] P3 Samu y Chachin con especial neutral y arriba (el especial arriba es la recovery de todos; ↑+K ya no)
 
 **D · Diseño gráfico** (ene)
-- [ ] D1 Muñecos articulados con formas y poses por estado (sustituyen a los rectángulos)
+- [ ] D1 Animaciones pixel art por personaje (26 tiras, `docs/PROMPTS_ANIMACIONES.md`): Donate ✔ · Robert ✔ · faltan Samu y Chachin
 - [ ] D2 Efectos: polvo al aterrizar/dash, arco de los golpes, destello de KO
 - [ ] D3 Escenario vivo (nubes, faroles que parpadean)
 
@@ -130,7 +134,7 @@ brawler/
 **L · Pulido y lanzamiento** (feb – 14 mar)
 - [ ] L1 Playtest con 6–8 compañeros
 - [ ] L2 Corregir los 5 fallos principales
-- [ ] L3 Deploy (cliente Netlify/Vercel, servidor Fly.io/Hetzner) — antes F3.6
+- [ ] L3 Deploy (cliente Netlify/Vercel, servidor Fly.io/Hetzner) — antes F3.6. Preparado en `docs/DEPLOY.md`; faltan las cuentas
 - [ ] L4 Ping en pantalla y ajustes de red — antes F3.7
 - [ ] L5 README con GIF, enlace en el portfolio
 

@@ -6,26 +6,29 @@ import {
   copyPlayer,
   createPlayer,
   type Player,
+  type Projectile,
 } from '@brawler/shared';
 
 interface Snapshot {
   tick: number;
   /** Full copies, players[slot]. */
   players: Player[];
+  /** Copies of every projectile in flight. */
+  projectiles: Projectile[];
 }
 
 const KEEP_TICKS = SNAPSHOT_BUFFER_MS / FIXED_DT_MS;
 
 /**
- * Recent server states, so other players can be drawn slightly in the past by
+ * Recent server states, so other players (and projectiles) can be drawn slightly in the past by
  * blending two states that both already arrived, instead of jumping from one
  * state to the next 30 times per second.
  */
 export class SnapshotBuffer {
   private readonly snapshots: Snapshot[] = [];
 
-  /** Stores a copy of every player as of `tick` (states must arrive in tick order). */
-  push(tick: number, players: ArrayLike<Player>): void {
+  /** Stores a copy of every player and projectile as of `tick` (states must arrive in tick order). */
+  push(tick: number, players: ArrayLike<Player>, projectiles: readonly Projectile[]): void {
     const last = this.snapshots.at(-1);
     if (last && tick <= last.tick) return;
     const copies = Array.from(players, (source, slot) => {
@@ -33,7 +36,7 @@ export class SnapshotBuffer {
       copyPlayer(copy, source);
       return copy;
     });
-    this.snapshots.push({ tick, players: copies });
+    this.snapshots.push({ tick, players: copies, projectiles: projectiles.map((p) => ({ ...p })) });
     while (this.snapshots.length > 2 && this.snapshots[0]!.tick < tick - KEEP_TICKS) this.snapshots.shift();
   }
 
@@ -65,6 +68,23 @@ export class SnapshotBuffer {
     target.prevX = target.x;
     target.prevY = target.y;
     return true;
+  }
+
+  /**
+   * Every projectile as it was at `renderTick`, each one blended between the two
+   * states by its id. One that only exists in the later state has not been fired
+   * yet at that moment, so it is left out; it shows up a moment later.
+   */
+  sampleProjectiles(renderTick: number): Projectile[] {
+    const [from, to, t] = this.bracket(renderTick);
+    if (!from) return [];
+    return from.projectiles.map((a) => {
+      const b = to?.projectiles.find((p) => p.id === a.id) ?? a;
+      const x = a.x + (b.x - a.x) * t;
+      const y = a.y + (b.y - a.y) * t;
+      // Already at its final drawn position: no extra interpolation by the renderer.
+      return { ...a, x, y, prevX: x, prevY: y };
+    });
   }
 
   /** The two snapshots around `tick` and how far between them (0–1). */

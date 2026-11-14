@@ -27,6 +27,7 @@ LAYOUT (very important)
 
 STYLE
 - 16-bit era pixel art like the reference: hard square pixels on one exact grid, no anti-aliasing, no blur, no gradients, no motion blur, no glow.
+- NO speed lines, NO afterimages, NO ghost copies of limbs or heads: every pixel is either the character or flat magenta.
 - Flat pure magenta #FF00FF background, nothing else on it: no ground, no shadow, no speed lines, no text, no numbers, no frame borders.
 - Clear, readable key poses with strong silhouettes; exaggerate anticipation and follow-through like a fighting game.
 
