@@ -52,7 +52,7 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 | `light-up.jpg` | El arco de estela del fotograma 2 se quita al procesar; queda una motita junto al puño |
 | `ledge.jpg` | Colgado de una barra dibujada (no del borde) |
 
-**Robert**: las 26 tiras en el juego (14 nov); falta repetir `run`. Llegaron como `robert_ (1…27).jpg` y se renombraron mirando cada una; `robert_ (24)` era una copia exacta de la 23 y se borró. `heavy-up`, `light-down` y `air-down` se rehicieron después (llegaron por el chat). El `standing` de cada tira se midió: en las poses de pie, el fotograma más alto; en el resto, por el área de la sudadera negra (crece con la escala al cuadrado), calibrada con las de pie (±7 %), o a mano si no cuadraba.
+**Robert**: las 26 tiras en el juego (completo el 15 nov). Llegaron como `robert_ (1…27).jpg` y se renombraron mirando cada una; `robert_ (24)` era una copia exacta de la 23 y se borró. `heavy-up`, `light-down` y `air-down` se rehicieron después (llegaron por el chat). El `standing` de cada tira se midió: en las poses de pie, el fotograma más alto; en el resto, por el área de la sudadera negra (crece con la escala al cuadrado), calibrada con las de pie (±7 %), o a mano si no cuadraba.
 
 | Ojo con | Qué pasa |
 | --- | --- |
@@ -61,7 +61,8 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 | `run.jpg`, `heavy-side.jpg`, `heavy-down.jpg`, `light-down.jpg` | Fotogramas solapados: columnas a mano y `cleanMinShare` 0.25 para quitar trozos del vecino |
 | `heavy-side.jpg` | Cabezas fantasma encima: se recortan con `rows` |
 | `heavy-down.jpg` | El puño del 3.er fotograma sale algo recortado (más allá entra la bota del 4.º) |
-| `run.jpg` | **Repetir**: no es un ciclo de carrera (dos fotogramas con las rodillas recogidas, como saltando; la cabeza sube y baja; capucha solo en dos) |
+| `run.png` | Montada a partir de `run-v3.jpg` (Gemini, 15 nov): zancada, paso, **zancada con los tonos de las piernas intercambiados** (la pierna adelantada pasa a ser la oscura, la lejana, así que se lee como la zancada contraria) y paso. En `run-v3` los fotogramas 3–5 repetían la misma zancada |
+| `run-v1.jpg`, `run-v2.png` | Intentos anteriores, no se usan (v1 a saltos; v2 con la misma pose en los 4 fotogramas) |
 | `idle.jpg` | La calada (subida por Riga, 8 fotogramas). Se usan los 7 de perfil: el 1.º está de frente. Lleva línea de suelo (se recorta con `rows`) y `clean: false` para no perder el humo. En el juego se queda quieto 3,5 s entre calada y calada (`idleRestMs`) |
 | `guard-unused.jpg` | Pose de guardia que se tomó por idle; no se usa |
 | `ledge.jpg` | Colgado de una barra, como Donate |

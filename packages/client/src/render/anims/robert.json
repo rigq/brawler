@@ -5,9 +5,9 @@
     "frames": 7
   },
   "run": {
-    "frameWidth": 58,
-    "frameHeight": 68,
-    "frames": 5
+    "frameWidth": 68,
+    "frameHeight": 67,
+    "frames": 4
   },
   "jump": {
     "frameWidth": 42,

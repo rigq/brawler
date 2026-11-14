@@ -8,6 +8,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Robert completo: carrera nueva (15 nov)** — `art/robert/anim/run.png`, montada desde la tira de Riga `run-v3.jpg`: zancada → paso → zancada invertida → paso. La zancada invertida es la misma con los dos tonos de oliva del pantalón intercambiados (truco clásico de pixel art: la pierna oscura se lee como la lejana). Comprobado en el navegador.
+
 - **Idle de Robert: la calada (14 nov)** — Tira nueva de Riga (`art/robert/anim/idle.jpg`): 7 fotogramas de perfil, con la brasa que se enciende y la bocanada de humo. `idleRestMs` en `CharacterArt` (`render/art.ts`): el primer fotograma se mantiene 3,5 s entre pasadas, así que da una calada cada ~5 s en vez de sin parar. Donate sigue con su respiración continua. Test en `client/test/bodyAnimation.test.ts`; comprobado en el navegador.
 
 - **Animaciones: arreglos tras verlas en movimiento (14 nov)** — Riga vio a Robert "corriendo a saltitos", un idle "empujando" y golpes que no se veían. Tres fallos del procesado/dibujo, no de los sprites: (1) `pixelate.ts` recorta cada fotograma a su contenido **después** de `clean` (antes, el hueco de un trozo quitado dejaba el cuerpo flotando sobre el suelo); (2) el "idle" era una pose de guardia mal identificada: fuera, vuelve la pose fija; (3) `bodyAnimation.ts` mantiene el fotograma del golpe durante el 40 % inicial de la recuperación (`HIT_HOLD_SHARE`): antes solo se veía en la fase activa (~30 ms). Vale para todos los personajes; test en `client/test/bodyAnimation.test.ts`. Lo que sí es del sprite: `run` no es un ciclo de carrera → repetir.
@@ -195,8 +197,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 ### Siguiente tarea
 
 - **Playtest (adelantar L1)**: nadie ha jugado aún a los cuatro a velocidad real, ni se han validado los criterios de F1 ("moverse 5 minutos es divertido") y F2 ("una partida 1v1 con alguien de clase, y quiere repetir"). 2 compañeros, 30 min, local o LAN; apuntar 5 cosas y ajustar constantes. Antes de invertir en arte.
-- **Robert: repetir `run`** con el prompt reforzado de `docs/PROMPTS_ANIMACIONES.md` (6 fotogramas). Truco que funcionó con el idle: pedir los fotogramas editando el anterior en vez de la tira de golpe.
-- **D1: animaciones de Samu y Chachin** (Robert casi hecho). Riga las genera con Gemini (`docs/PROMPTS_ANIMACIONES.md`), **en JPG** (la web de GitHub no admite más de 25 MB por archivo) y, a ser posible, **ya con el nombre de la tabla**. Añadir al prompt "no motion blur, no speed lines, no afterimages": la estela de movimiento no se puede limpiar. `standingHeight`: Samu 72, Chachin 54 (alto de sus hojas).
+- **D1: animaciones de Samu y Chachin** (Donate y Robert hechos). Truco que funcionó con Robert: pedir los fotogramas editando el anterior en vez de la tira de golpe; en la carrera basta una zancada y un paso (la otra zancada se saca intercambiando los tonos de las piernas). Riga las genera con Gemini (`docs/PROMPTS_ANIMACIONES.md`), **en JPG** (la web de GitHub no admite más de 25 MB por archivo) y, a ser posible, **ya con el nombre de la tabla**. Añadir al prompt "no motion blur, no speed lines, no afterimages": la estela de movimiento no se puede limpiar. `standingHeight`: Samu 72, Chachin 54 (alto de sus hojas).
 - **L3 deploy**: todo listo en `docs/DEPLOY.md`; faltan las cuentas de Riga (Fly.io o Hetzner para el servidor, Netlify o Vercel para el cliente). Conviene hacerlo pronto para probar con lag real y con amigos por Discord.
 - E4 (paredes) sigue aparcado.
 

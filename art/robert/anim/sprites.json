@@ -46,33 +46,28 @@
     },
     {
       "name": "run",
-      "file": "run.jpg",
-      "standing": 920,
-      "alignX": "mass",
-      "clean": true,
+      "file": "run.png",
       "columns": [
         [
-          32,
-          712
+          0,
+          768
         ],
         [
-          712,
-          1248
+          968,
+          1612
         ],
         [
-          1096,
-          1680
+          1812,
+          2580
         ],
         [
-          1688,
-          2100
-        ],
-        [
-          1984,
-          2500
+          2780,
+          3424
         ]
       ],
-      "cleanMinShare": 0.25
+      "standing": 920,
+      "alignX": "mass",
+      "clean": true
     },
     {
       "name": "jump",
