@@ -11,6 +11,7 @@ Juego de lucha 2D estilo Brawlhalla, jugable en navegador y online 1v1, con pers
 - Explícame **1 concepto nuevo por sesión** (físicas, netcode, etc.) en lenguaje claro. Quiero entender el código, no solo tenerlo.
 - Al cerrar cada tarea, actualiza `docs/NOTAS.md` (hecho, decisiones, bugs conocidos, siguiente tarea).
 - **Commit al final del día**, uno con todo lo del día, cuando Riga lo pida. No commitear ni hacer push después de cada tarea.
+- **Los commits van directo a `main`** (decidido el 15 nov): sin ramas ni pull requests. Antes de subir: `npm run typecheck`, `npm test` y `npm run build` en verde.
 - Responde en español. Código, nombres de variables y commits en inglés.
 
 ## Stack

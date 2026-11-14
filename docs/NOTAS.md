@@ -68,6 +68,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Decisiones
 
+- **Commits directos a `main`** (15 nov): Riga es el único que toca el repo; los pull requests solo añadían pasos. El CI sigue comprobando cada push.
+
 - **El jugador se parte en bloques en la red, no se recortan campos** (14 nov): recortar campos (p. ej. calcular `width`/`height` desde el personaje) solo daba aire para 1–2 campos más; los bloques valen para siempre y el cliente sigue trabajando con un `Player` plano.
 - **Los proyectiles se dibujan con el retraso del rival, no al instante** (14 nov): así el proyectil y el rival al que golpea coinciden en pantalla. Los tuyos también salen ~100 ms tarde; lo decide el servidor igualmente.
 
