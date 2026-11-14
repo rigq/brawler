@@ -167,6 +167,25 @@ function scaleOf(boxes: Box[], asset: AssetConfig, standingHeight: number | unde
   return asset.height ? maxH / asset.height : maxW / (asset.width ?? maxW);
 }
 
+type Pixel = [number, number, number] | null;
+
+/**
+ * Cuts a frame down to its solid pixels. Needed after `clean`: a removed bit
+ * (a neighbour's foot under this frame) must not leave empty rows below the
+ * feet, or bottom alignment would leave the character floating.
+ */
+function trimmed(w: number, lines: Pixel[][]): { w: number; h: number; get: (i: number, j: number) => Pixel } {
+  const solidRows = lines.flatMap((line, j) => (line.some(Boolean) ? [j] : []));
+  const solidCols = Array.from({ length: w }, (_, i) => i).filter((i) => lines.some((line) => line[i]));
+  const top = solidRows[0] ?? 0, bottom = solidRows.at(-1) ?? -1;
+  const left = solidCols[0] ?? 0, right = solidCols.at(-1) ?? -1;
+  return {
+    w: right - left + 1,
+    h: bottom - top + 1,
+    get: (i, j) => lines[top + j]?.[left + i] ?? null,
+  };
+}
+
 /** Loose bits smaller than this share of the biggest shape are dropped by `clean`. */
 const CLEAN_MIN_SHARE = 0.05;
 
@@ -223,7 +242,7 @@ function pixelate(img: Rgba, asset: AssetConfig, standingHeight?: number): { str
       while (last + 1 < h && solid(last + 1)) last++;
       rows = rows.slice(first, last + 1);
     }
-    return { w, h: rows.length, get: (i: number, j: number) => px[rows[j]! * w + i] ?? null };
+    return trimmed(w, rows.map((j) => px.slice(j * w, (j + 1) * w)));
   });
 
   const centers = frames.map(massCenterX);

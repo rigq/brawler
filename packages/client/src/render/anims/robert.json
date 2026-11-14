@@ -1,12 +1,7 @@
 {
-  "idle": {
-    "frameWidth": 63,
-    "frameHeight": 73,
-    "frames": 1
-  },
   "run": {
     "frameWidth": 58,
-    "frameHeight": 83,
+    "frameHeight": 68,
     "frames": 5
   },
   "jump": {
@@ -15,12 +10,12 @@
     "frames": 2
   },
   "fall": {
-    "frameWidth": 57,
+    "frameWidth": 55,
     "frameHeight": 81,
     "frames": 2
   },
   "hurt": {
-    "frameWidth": 64,
+    "frameWidth": 62,
     "frameHeight": 73,
     "frames": 2
   },
@@ -30,32 +25,32 @@
     "frames": 3
   },
   "light-side": {
-    "frameWidth": 72,
+    "frameWidth": 70,
     "frameHeight": 73,
     "frames": 3
   },
   "light-up": {
     "frameWidth": 48,
-    "frameHeight": 93,
+    "frameHeight": 92,
     "frames": 3
   },
   "light-down": {
-    "frameWidth": 62,
+    "frameWidth": 60,
     "frameHeight": 63,
     "frames": 3
   },
   "dash-attack": {
     "frameWidth": 65,
-    "frameHeight": 64,
+    "frameHeight": 63,
     "frames": 3
   },
   "air-neutral": {
-    "frameWidth": 84,
-    "frameHeight": 69,
+    "frameWidth": 83,
+    "frameHeight": 68,
     "frames": 3
   },
   "air-forward": {
-    "frameWidth": 78,
+    "frameWidth": 76,
     "frameHeight": 67,
     "frames": 3
   },
@@ -71,11 +66,11 @@
   },
   "air-down": {
     "frameWidth": 58,
-    "frameHeight": 74,
+    "frameHeight": 73,
     "frames": 3
   },
   "heavy-side": {
-    "frameWidth": 60,
+    "frameWidth": 58,
     "frameHeight": 73,
     "frames": 4
   },
@@ -96,7 +91,7 @@
   },
   "roll": {
     "frameWidth": 57,
-    "frameHeight": 69,
+    "frameHeight": 68,
     "frames": 4
   },
   "dodge": {
@@ -105,7 +100,7 @@
     "frames": 2
   },
   "grab": {
-    "frameWidth": 71,
+    "frameWidth": 69,
     "frameHeight": 73,
     "frames": 2
   },
@@ -115,18 +110,18 @@
     "frames": 4
   },
   "ledge": {
-    "frameWidth": 31,
-    "frameHeight": 83,
+    "frameWidth": 29,
+    "frameHeight": 82,
     "frames": 1
   },
   "special-neutral": {
-    "frameWidth": 65,
+    "frameWidth": 63,
     "frameHeight": 73,
     "frames": 2
   },
   "special-up": {
     "frameWidth": 41,
-    "frameHeight": 78,
+    "frameHeight": 77,
     "frames": 2
   }
 }

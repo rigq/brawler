@@ -68,8 +68,8 @@ Con el **lote 1** el juego ya se siente vivo: andar, saltar y recibir golpes. De
 
 | Archivo | N | `ANIMATION` |
 | --- | --- | --- |
-| `idle.jpg` | 4 | Idle fighting stance, ready to fight, a subtle breathing loop (frame 4 flows back into frame 1). |
-| `run.jpg` | 6 | Fast running cycle, leaning forward, arms pumping, loopable. |
+| `idle.jpg` | 4 | Relaxed idle stance standing still, fists loosely raised near the chest (NOT punching or pushing forward), feet shoulder-width apart, a subtle breathing loop: only the shoulders and chest move a little (frame 4 flows back into frame 1). |
+| `run.jpg` | 6 | Running cycle, leaning forward, arms pumping, loopable: legs alternate (left leg forward, passing, right leg forward, passing…), one foot always touching or nearly touching the ground, the head at the same height in every frame. A run, NOT a hop: never both knees tucked up together. Same clothes in every frame. |
 | `jump.jpg` | 2 | Jump: (1) crouched take-off, knees bent, (2) rising in the air, knees tucked, arms up. |
 | `fall.jpg` | 2 | Falling: (1) at the top of the jump, (2) falling down, legs stretched to land, arms out for balance. |
 | `hurt.jpg` | 2 | Getting hit: (1) recoiling backwards, eyes shut, (2) knocked back, body bent, limbs flailing. |

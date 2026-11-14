@@ -121,7 +121,7 @@ brawler/
 - [x] P3 Samu y Chachin con especial neutral y arriba (el especial arriba es la recovery de todos; ↑+K ya no)
 
 **D · Diseño gráfico** (ene)
-- [ ] D1 Animaciones pixel art por personaje (26 tiras, `docs/PROMPTS_ANIMACIONES.md`): Donate ✔ · Robert ✔ · faltan Samu y Chachin
+- [ ] D1 Animaciones pixel art por personaje (26 tiras, `docs/PROMPTS_ANIMACIONES.md`): Donate ✔ · Robert ✔ (salvo `idle` y `run`, a repetir) · faltan Samu y Chachin
 - [ ] D2 Efectos: polvo al aterrizar/dash, arco de los golpes, destello de KO
 - [ ] D3 Escenario vivo (nubes, faroles que parpadean)
 

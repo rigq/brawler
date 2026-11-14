@@ -52,7 +52,7 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 | `light-up.jpg` | El arco de estela del fotograma 2 se quita al procesar; queda una motita junto al puño |
 | `ledge.jpg` | Colgado de una barra dibujada (no del borde) |
 
-**Robert**: las 26 tiras en el juego (14 nov). Llegaron como `robert_ (1…27).jpg` y se renombraron mirando cada una; `robert_ (24)` era una copia exacta de la 23 y se borró. `heavy-up`, `light-down` y `air-down` se rehicieron después (llegaron por el chat). El `standing` de cada tira se midió: en las poses de pie, el fotograma más alto; en el resto, por el área de la sudadera negra (crece con la escala al cuadrado), calibrada con las de pie (±7 %), o a mano si no cuadraba.
+**Robert**: 25 tiras en el juego (14 nov); faltan un `idle` de verdad y repetir `run`. Llegaron como `robert_ (1…27).jpg` y se renombraron mirando cada una; `robert_ (24)` era una copia exacta de la 23 y se borró. `heavy-up`, `light-down` y `air-down` se rehicieron después (llegaron por el chat). El `standing` de cada tira se midió: en las poses de pie, el fotograma más alto; en el resto, por el área de la sudadera negra (crece con la escala al cuadrado), calibrada con las de pie (±7 %), o a mano si no cuadraba.
 
 | Ojo con | Qué pasa |
 | --- | --- |
@@ -61,7 +61,8 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 | `run.jpg`, `heavy-side.jpg`, `heavy-down.jpg`, `light-down.jpg` | Fotogramas solapados: columnas a mano y `cleanMinShare` 0.25 para quitar trozos del vecino |
 | `heavy-side.jpg` | Cabezas fantasma encima: se recortan con `rows` |
 | `heavy-down.jpg` | El puño del 3.er fotograma sale algo recortado (más allá entra la bota del 4.º) |
-| `idle.jpg` | Un solo fotograma: sin respiración |
+| `run.jpg` | **Repetir**: no es un ciclo de carrera (dos fotogramas con las rodillas recogidas, como saltando; la cabeza sube y baja; capucha solo en dos) |
+| `idle` | **Falta**: lo que parecía el idle era una pose de guardia con los puños delante (`guard-unused.jpg`). Mientras, se ve la pose fija |
 | `ledge.jpg` | Colgado de una barra, como Donate |
 
 **Al pedir tiras a Gemini:** añadir "no motion blur, no speed lines, no afterimages" al prompt; la estela es lo que más estropea.

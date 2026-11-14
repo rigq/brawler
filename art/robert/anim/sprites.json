@@ -4,14 +4,6 @@
   "standingHeight": 74,
   "assets": [
     {
-      "name": "idle",
-      "file": "idle.jpg",
-      "detect": 1,
-      "standing": 1427,
-      "alignX": "mass",
-      "clean": true
-    },
-    {
       "name": "run",
       "file": "run.jpg",
       "standing": 920,
