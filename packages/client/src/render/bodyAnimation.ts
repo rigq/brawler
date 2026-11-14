@@ -94,7 +94,8 @@ export function frameFor(player: Player, anim: AnimName, frames: number, stateMs
   if (player.attackId !== 'none') return attackFrame(player, anim, last);
   switch (anim) {
     case 'run': return Math.floor(clockMs / RUN_FRAME_MS) % frames;
-    case 'idle': return idleFrame(frames, clockMs, idleRestMs);
+    // Counted from when the player stopped, so a rest always comes before the first play-through.
+    case 'idle': return idleFrame(frames, stateMs, idleRestMs);
     case 'jump': return player.grounded ? 0 : last;
     case 'fall': return Math.abs(player.vy) < APEX_SPEED ? 0 : last;
     case 'hurt': return Math.hypot(player.vx, player.vy) > HURT_LAUNCH_SPEED ? last : 0;
@@ -110,8 +111,8 @@ export function frameFor(player: Player, anim: AnimName, frames: number, stateMs
  * Idle loop. With `restMs`, the first frame is held that long before each
  * play-through: an action (a drag on a cigarette) every few seconds instead of non-stop.
  */
-function idleFrame(frames: number, clockMs: number, restMs: number): number {
-  const t = clockMs % (restMs + frames * IDLE_FRAME_MS);
+function idleFrame(frames: number, idleMs: number, restMs: number): number {
+  const t = idleMs % (restMs + frames * IDLE_FRAME_MS);
   return t < restMs ? 0 : Math.floor((t - restMs) / IDLE_FRAME_MS);
 }
 

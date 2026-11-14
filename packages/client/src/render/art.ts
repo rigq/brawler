@@ -79,12 +79,12 @@ export interface CharacterArt {
   flag?: { plant: Sheet; wave: Sheet };
 }
 
-/** ~1.5 s drag, then ~3.5 s standing still. */
-const ROBERT_IDLE_REST_MS = 3500;
+/** 1 s standing still, then a ~1.5 s drag: one every ~2.5 s, and the first 1 s after stopping. */
+const ROBERT_IDLE_REST_MS = 1000;
 
 export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
   donate: { body: SHEETS.donateBody, anims: animSheets('donate'), neutralProp: SHEETS.donateTank, parachute: SHEETS.donateParachute },
-  // His idle is a drag on the cigarette: one every few seconds, not non-stop.
+  // His idle is a drag on the cigarette, with a short pause between drags.
   robert: { body: SHEETS.robertBody, anims: animSheets('robert'), idleRestMs: ROBERT_IDLE_REST_MS, upProp: SHEETS.robertRapper },
   samu: {
     body: SHEETS.samuBody,

@@ -63,7 +63,7 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 | `heavy-down.jpg` | El puño del 3.er fotograma sale algo recortado (más allá entra la bota del 4.º) |
 | `run.png` | Montada a partir de `run-v3.jpg` (Gemini, 15 nov): zancada, paso, **zancada con los tonos de las piernas intercambiados** (la pierna adelantada pasa a ser la oscura, la lejana, así que se lee como la zancada contraria) y paso. En `run-v3` los fotogramas 3–5 repetían la misma zancada |
 | `run-v1.jpg`, `run-v2.png` | Intentos anteriores, no se usan (v1 a saltos; v2 con la misma pose en los 4 fotogramas) |
-| `idle.jpg` | La calada (subida por Riga, 8 fotogramas). Se usan los 7 de perfil: el 1.º está de frente. Lleva línea de suelo (se recorta con `rows`) y `clean: false` para no perder el humo. En el juego se queda quieto 3,5 s entre calada y calada (`idleRestMs`) |
+| `idle.jpg` | La calada (subida por Riga, 8 fotogramas). Se usan los 7 de perfil: el 1.º está de frente. Lleva línea de suelo (se recorta con `rows`) y `clean: false` para no perder el humo. En el juego: primera calada 1 s después de pararse y luego una cada ~2,5 s (`idleRestMs`) |
 | `guard-unused.jpg` | Pose de guardia que se tomó por idle; no se usa |
 | `ledge.jpg` | Colgado de una barra, como Donate |
 
