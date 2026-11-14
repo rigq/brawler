@@ -8,6 +8,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Calada de Robert más rápida (15 nov)** — Riga notaba lag al hacerla en el aire: el especial empezaba al instante, pero tardaba 14 ticks en soltar el humo y Robert solo pasa ~35 ticks en el aire, así que salía al aterrizar. Arranque 14 → 8 ticks (`characters/robert.ts`); enfriamiento igual (100).
+
 - **Robert completo: carrera nueva (15 nov)** — `art/robert/anim/run.png`, montada desde la tira de Riga `run-v3.jpg`: zancada → paso → zancada invertida → paso. La zancada invertida es la misma con los dos tonos de oliva del pantalón intercambiados (truco clásico de pixel art: la pierna oscura se lee como la lejana). Comprobado en el navegador.
 
 - **Idle de Robert: la calada (14 nov)** — Tira nueva de Riga (`art/robert/anim/idle.jpg`): 7 fotogramas de perfil, con la brasa que se enciende y la bocanada de humo. `idleRestMs` en `CharacterArt` (`render/art.ts`): el primer fotograma se mantiene 1 s entre pasadas (cuenta desde que se para), así que da la primera calada 1 s después de quedarse quieto y luego una cada ~2,5 s. Donate sigue con su respiración continua. Test en `client/test/bodyAnimation.test.ts`; comprobado en el navegador.

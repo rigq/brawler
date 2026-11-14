@@ -13,7 +13,7 @@ export const robert: CharacterDefinition = {
      * it lasts. Weak hits that keep the rival inside it; it also wears shields down.
      */
     specialNeutral: {
-      startup: 14, active: 1, recovery: 24, cooldownTicks: 100,
+      startup: 8, active: 1, recovery: 24, cooldownTicks: 100,
       projectile: {
         kind: 'smoke', speed: 70, width: 40, height: 50, offsetX: -6, offsetY: 4,
         lifetimeTicks: 80, hits: 4, hitIntervalTicks: 14,
