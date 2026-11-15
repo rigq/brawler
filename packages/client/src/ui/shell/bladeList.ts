@@ -4,8 +4,6 @@ export interface BladeItem {
   label: string;
   note?: string;
   run: () => void;
-  /** Shown greyed out; can't be chosen. */
-  disabled?: boolean;
 }
 
 /**
@@ -24,7 +22,6 @@ export function bladeList(items: BladeItem[], numbered = false) {
       item.note ? h('span', 'blade__note', item.note) : null,
     );
     button.type = 'button';
-    button.disabled = item.disabled ?? false;
     button.addEventListener('mouseenter', () => select(i));
     button.addEventListener('click', () => item.run());
     return button;
@@ -36,20 +33,9 @@ export function bladeList(items: BladeItem[], numbered = false) {
   select(0);
   return {
     el: h('ol', 'menu-list', ...buttons.map((button) => h('li', '', button))),
-    move: (step: number) => {
-      // Skip greyed-out items.
-      let next = selected;
-      for (let n = 0; n < items.length; n++) {
-        next = (next + step + items.length) % items.length;
-        if (!items[next]?.disabled) break;
-      }
-      select(next);
-    },
+    move: (step: number) => select((selected + step + items.length) % items.length),
     /** Nothing highlighted (e.g. while typing a code). */
     clear: () => select(-1),
-    run: () => {
-      const item = items[selected];
-      if (item && !item.disabled) item.run();
-    },
+    run: () => items[selected]?.run(),
   };
 }

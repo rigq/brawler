@@ -1,9 +1,0 @@
-# Netlify: builds the client from the repo root (npm workspaces) and serves its dist/.
-# Online needs a game server: set VITE_SERVER_URL in Netlify's environment variables
-# (see docs/DEPLOY.md). Without it the published game offers Local and Training only.
-[build]
-  command = "npm run build"
-  publish = "packages/client/dist"
-
-[build.environment]
-  NODE_VERSION = "24"
