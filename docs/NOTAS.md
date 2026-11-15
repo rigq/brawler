@@ -8,6 +8,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Pausa con ratón y HUD de depuración fuera (15 nov)** — En la pausa, pasar el ratón por una opción reconstruía la lista y el clic no llegaba nunca; ahora los botones se crean una vez y solo se mueve el resaltado (`ui/shell/bladeList.ts`, también en el menú principal). La J ya no confirma en la pausa (es ataque): ratón, W/S + Enter, Esc continúa. El texto verde de depuración (sim, tick, vx, vy…) se ha quitado: queda solo el FPS, discreto, y la línea de la sala online.
+
 - **I1–I3: menú principal, selección de personaje, HUD y pausa (15 nov)** — Interfaz en HTML/CSS sobre el lienzo, con estilo "templo flotante de noche" (azul noche, luna, ámbar de farol como acento; P1 naranja, P2 azul; tipografía condensada en cursiva con Impact y alternativas del sistema, sin fuentes externas).
   - `app/App.ts`: máquina de pantallas (menú → selección → partida → pausa/sala → menú). Las escenas de partida se añaden al empezar y se quitan al salir; detrás de los menús, `BackdropScene` dibuja el escenario vacío con la cámara meciéndose.
   - **Menú** (`ui/shell/MainMenu.ts`): Local / Entrenamiento / Online (Crear sala · Unirse con código) / Controles, con teclado de los dos jugadores o ratón, y los cuatro personajes haciendo su idle (CSS sobre sus propias tiras, `ui/shell/sprites.ts`).

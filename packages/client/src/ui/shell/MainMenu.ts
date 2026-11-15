@@ -1,5 +1,6 @@
 import { CHARACTER_IDS, GAME_TITLE, characterOf, normalizeRoomCode } from '@brawler/shared';
 import { setControlsPanelOpen } from '../ControlsPanel.ts';
+import { bladeList, type BladeItem } from './bladeList.ts';
 import { h, hint } from './dom.ts';
 import { listenMenuKeys, type MenuAction } from './menuInput.ts';
 import { idleSprite } from './sprites.ts';
@@ -7,12 +8,6 @@ import type { Screen } from './Shell.ts';
 
 /** What the player picked in the main menu. */
 export type MenuChoice = { mode: 'versus' } | { mode: 'training' } | { mode: 'online'; code: string | null };
-
-interface Item {
-  label: string;
-  note: string;
-  run: () => void;
-}
 
 /** Scale of the fighters lined up on the right (screen px per art px). */
 const SHOWCASE_SCALE = 3;
@@ -22,40 +17,16 @@ const SHOWCASE_SCALE = 3;
  * players' keys) or mouse. Online opens a second list (create or join with a code).
  */
 export function mainMenu(onChoose: (choice: MenuChoice) => void): Screen {
-  const list = h('ol', 'menu-list');
+  const nav = h('nav');
   const extra = h('div');
-  let items: Item[] = [];
-  let selected = 0;
+  let list = bladeList([]);
   let back: (() => void) | null = null;
 
-  const render = () => {
-    list.replaceChildren(
-      ...items.map((item, i) => {
-        const button = h(
-          'button',
-          `blade${i === selected ? ' is-selected' : ''}`,
-          h('span', 'blade__index', String(i + 1).padStart(2, '0')),
-          h('span', 'blade__label', item.label),
-          h('span', 'blade__note', item.note),
-        );
-        button.type = 'button';
-        button.addEventListener('mouseenter', () => select(i));
-        button.addEventListener('click', () => item.run());
-        return h('li', '', button);
-      }),
-    );
-  };
-  const select = (i: number) => {
-    if (i === selected) return;
-    selected = i;
-    render();
-  };
-  const show = (next: Item[], onBack: (() => void) | null) => {
-    items = next;
-    selected = 0;
+  const show = (items: BladeItem[], onBack: (() => void) | null) => {
+    list = bladeList(items, true);
     back = onBack;
     extra.replaceChildren();
-    render();
+    nav.replaceChildren(list.el, extra);
   };
 
   const showMain = () =>
@@ -79,15 +50,14 @@ export function mainMenu(onChoose: (choice: MenuChoice) => void): Screen {
     );
   const showJoin = () => {
     show([{ label: 'Volver', note: '', run: showOnline }], showOnline);
-    selected = -1;
-    render();
+    list.clear();
     extra.replaceChildren(codeEntry((code) => onChoose({ mode: 'online', code })));
   };
 
   const onAction = (_player: number, action: MenuAction) => {
-    if (action === 'up') select((selected - 1 + items.length) % items.length);
-    else if (action === 'down') select((selected + 1) % items.length);
-    else if (action === 'confirm') items[selected]?.run();
+    if (action === 'up') list.move(-1);
+    else if (action === 'down') list.move(1);
+    else if (action === 'confirm' && !(document.activeElement instanceof HTMLInputElement)) list.run();
     else if (action === 'back') back?.();
   };
 
@@ -99,7 +69,7 @@ export function mainMenu(onChoose: (choice: MenuChoice) => void): Screen {
       'div',
       'main-menu__left',
       h('div', 'title', h('span', 'kicker', 'Lucha 1v1 · local u online'), h('span', 'display title__word', GAME_TITLE), h('span', 'title__rule')),
-      h('nav', '', list, extra),
+      nav,
     ),
     showcase(),
     h('footer', 'hint-bar', hint(['W', 'S'], 'Moverse'), hint(['J', 'Enter'], 'Elegir'), hint(['Esc'], 'Volver'), hint(['H'], 'Controles')),

@@ -98,7 +98,7 @@ export class MatchView {
       onScreen.map((view) => view.drawnBounds),
       frameMs,
     );
-    this.hud.update(frameMs, world);
+    this.hud.update(frameMs);
     this.playerHud.update(world.players);
     this.resultOverlay.update(result, frameMs);
   }

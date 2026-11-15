@@ -13,7 +13,12 @@ const SHARED_KEYS: Record<string, MenuAction> = { Enter: 'confirm', Escape: 'bac
  * Listens to the keyboard for a menu screen and reports `(player, action)`.
  * While typing in a text field only Enter and Escape count. Returns a function that stops listening.
  */
-export function listenMenuKeys(onAction: (player: number, action: MenuAction) => void): () => void {
+export function listenMenuKeys(
+  onAction: (player: number, action: MenuAction) => void,
+  /** Pause menu: the attack keys must not confirm (J would hit as the match resumes); Enter and the mouse still do. */
+  options: { attackConfirms?: boolean } = {},
+): () => void {
+  const attackConfirms = options.attackConfirms ?? true;
   const onKey = (event: KeyboardEvent) => {
     if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
     const typing = event.target instanceof HTMLInputElement;
@@ -27,7 +32,7 @@ export function listenMenuKeys(onAction: (player: number, action: MenuAction) =>
     if (typing) return;
     PLAYER_KEYS.forEach((keys, player) => {
       const action = keys[key];
-      if (!action) return;
+      if (!action || (action === 'confirm' && !attackConfirms)) return;
       event.preventDefault();
       onAction(player, action);
     });

@@ -51,7 +51,7 @@ type MatchRoom = Room<unknown, NetMatchState>;
 type Connection = 'connecting' | 'connected' | 'reconnecting' | 'closed';
 
 const STATUS_STYLE = { fontFamily: 'monospace', fontSize: '18px', color: '#c9d1e0', lineSpacing: 6 } as const;
-const STATUS_POS = { x: 12, y: 150 } as const;
+const STATUS_POS = { x: 12, y: 34 } as const;
 
 /**
  * Online match. `?online` creates a room and shows its 4-letter code;
