@@ -8,6 +8,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Curl de Samu más limpio (15 nov)** — El curl anterior (3 poses generadas por separado) se veía raro: cambiaban más cosas que el brazo. Ahora usa dos imágenes que Riga sacó editando una sobre otra (`idle-src/curl-down.webp`, `curl-up.webp`): solo cambia el brazo. Cada posición se repite dos veces para que el curl vaya pausado.
+
 - **Carrera de Samu reordenada (15 nov)** — Se veía mal porque los fotogramas iban en el orden de los archivos: el 3.º (apoyado en la pierna clara) venía antes del 4.º (pisando con ella). Orden 1-2-4-3 en `build-strips.py`. Comprobado que ritmo y velocidad cuadran (378 px/s, ~60 px por paso).
 
 - **Samu: idle de curls, carrera nueva y esquiva (15 nov)** — Idle montado desde 5 poses (`art/samu/anim/build-strips.py`): guardia, coge la mancuerna de la mochila, dos curls, la guarda; `IdleTiming` de 1,5 s de pausa y 170 ms por fotograma. Carrera de 4 fotogramas que ya alternan piernas (sin trucos). `dodge.jpg` resultó ser la imagen que se había tomado por `throw`: ahora `throw` falta y tira de `grab` (respaldo nuevo en `bodyAnimation.ts`, con test). Comprobado en el navegador.
@@ -81,6 +83,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 - **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. Repo en https://github.com/rigq/brawler.
 
 ### Decisiones
+
+- **Con Gemini, un cambio por edición**: pedirle dos a la vez (subir un brazo y bajar el otro) no funciona; encadenar ediciones de un solo cambio sí, y además da fotogramas de transición.
 
 - **Al montar un ciclo de carrera, ordenar por lo que hace cada pierna** (pisa → se apoya → la otra pasa delante → pisa la otra), no por el orden de los archivos: Gemini no los entrega en orden.
 
