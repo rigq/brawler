@@ -5,7 +5,7 @@ import { chachin } from './chachin.ts';
 import { donate } from './donate.ts';
 import { robert } from './robert.ts';
 import { samu } from './samu.ts';
-import type { Character } from './types.ts';
+import type { Character, CharacterStats } from './types.ts';
 
 export type { Character, CharacterDefinition, CharacterStats } from './types.ts';
 
@@ -24,6 +24,11 @@ const CHARACTERS = Object.fromEntries(
 /** The character of a player. An id received from outside that does not exist counts as the default. */
 export function characterOf(player: { characterId: string }): Character {
   return isCharacterId(player.characterId) ? CHARACTERS[player.characterId] : CHARACTERS[DEFAULT_CHARACTER];
+}
+
+/** A character's 1–5 ratings, as written in its file (for menus). */
+export function characterStats(id: CharacterId): CharacterStats {
+  return DEFINITIONS[id].stats;
 }
 
 export function isCharacterId(id: string | null): id is CharacterId {

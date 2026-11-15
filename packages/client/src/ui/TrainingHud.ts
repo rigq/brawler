@@ -3,6 +3,8 @@ import { WORLD_WIDTH } from '@brawler/shared';
 import type { ComboStats } from '../training/ComboTracker.ts';
 
 const MARGIN = 16;
+/** Starts below the "Controles" tab, which sits over the top-right corner. */
+const TOP = 56;
 /** Dark outline so the text stays readable over the moon and the sky. */
 const FONT = { fontFamily: 'monospace', fontStyle: 'bold', stroke: '#0b1026', strokeThickness: 4 } as const;
 const TITLE_COLOR = '#ffd166';
@@ -21,11 +23,11 @@ export class TrainingHud {
   constructor(scene: Phaser.Scene) {
     const x = WORLD_WIDTH - MARGIN;
     const title = scene.add
-      .text(x, MARGIN, 'ENTRENAMIENTO', { ...FONT, fontSize: '20px', color: TITLE_COLOR })
+      .text(x, TOP, 'ENTRENAMIENTO', { ...FONT, fontSize: '20px', color: TITLE_COLOR })
       .setOrigin(1, 0);
-    this.combo = scene.add.text(x, MARGIN + 30, '', { ...FONT, fontSize: '34px', color: LIVE_COLOR }).setOrigin(1, 0);
-    this.best = scene.add.text(x, MARGIN + 74, '', { ...FONT, fontSize: '16px', color: HELP_COLOR }).setOrigin(1, 0);
-    const help = scene.add.text(x, MARGIN + 98, HELP_TEXT, { ...FONT, fontSize: '14px', color: HELP_COLOR }).setOrigin(1, 0);
+    this.combo = scene.add.text(x, TOP + 30, '', { ...FONT, fontSize: '34px', color: LIVE_COLOR }).setOrigin(1, 0);
+    this.best = scene.add.text(x, TOP + 74, '', { ...FONT, fontSize: '16px', color: HELP_COLOR }).setOrigin(1, 0);
+    const help = scene.add.text(x, TOP + 98, HELP_TEXT, { ...FONT, fontSize: '14px', color: HELP_COLOR }).setOrigin(1, 0);
     this.objects = [title, this.combo, this.best, help];
   }
 

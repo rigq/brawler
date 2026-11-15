@@ -39,6 +39,7 @@ brawler/
 - **Todos los números ajustables** (gravedad, velocidades, knockback, frames de ataque) en `shared/src/constants.ts`. Nada de números mágicos sueltos.
 - Personajes definidos **por datos** (`shared/src/characters/*.ts`), no con clases distintas por personaje.
 - Hitboxes/hurtboxes rectangulares (AABB). Modo debug con tecla `F1` que las dibuje.
+- Interfaz (menús, selección, pausa, HUD) en **HTML/CSS sobre el lienzo** (`client/src/ui/shell/`, `ui/hud/`), no en Phaser: texto nítido y fácil de animar. `app/App.ts` es la máquina de pantallas; las partidas son escenas que se añaden al empezar y se quitan al salir.
 - Online, el jugador viaja partido en bloques de campos (`PLAYER_PARTS` en `shared/net/protocol.ts`): un esquema de Colyseus admite 63 campos como mucho. Añadir campos a `Player` no requiere tocar nada más.
 - Cambios en `shared` → `npm test`. El test de determinismo falla si se cuela algo aleatorio, de reloj o dependiente del orden.
 
@@ -55,12 +56,11 @@ brawler/
 
 ## Comandos
 - `npm install` — instalar todo
-- `npm run dev` — cliente (http://localhost:5173; partida local a 2 jugadores). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
+- `npm run dev` — cliente (http://localhost:5173: menú principal → selección de personaje → partida; Esc pausa). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
-- http://localhost:5173/?training — modo entrenamiento contra un muñeco (R reinicia, 8 activa su escudo, 9/0 cambian su %)
-- `?p1=samu&p2=chachin` — (hasta I2) elige personajes: `donate`, `robert`, `samu`, `chachin` (sin elegir: Donate contra Robert). Online vale la del que crea la sala: `?online&p1=donate&p2=donate`
+- Atajos de desarrollo (se saltan los menús): `?local`, `?training` (R reinicia, 8 escudo del muñeco, 9/0 cambian su %), `?online` (crea sala), con `?p1=samu&p2=chachin`
 - `node tools/pixelate.ts art/<personaje>/sprites.json` — limpia los sprites generados con IA y los deja en `packages/client/public/sprites/` (JPG: Windows lo lee solo; Linux/Mac necesitan ImageMagick). Con `art/<personaje>/anim/sprites.json` el personaje usa sus animaciones sin tocar código
-- http://localhost:5173/?online — crea una sala online (necesita el servidor); comparte el enlace `?online=CÓDIGO` que aparece
+- Online (necesita `npm run dev:server`): Online → Crear sala; el enlace `?online=CÓDIGO` lleva a la selección de personaje y entra en esa sala. Cada jugador elige su personaje
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
 - `npm run build` — build de producción del cliente (incluye typecheck)
 - `npm run typecheck` — comprobar tipos en los tres paquetes (tests incluidos)
@@ -127,9 +127,9 @@ brawler/
 - [ ] D3 Escenario vivo (nubes, faroles que parpadean)
 
 **I · Interfaz** (feb)
-- [ ] I1 Menú principal (Local / Entrenamiento / Online / Controles)
-- [ ] I2 Selección de personaje para 2 jugadores
-- [ ] I3 HUD nuevo (retrato, vidas en iconos, % que tiembla) y pausa con Esc
+- [x] I1 Menú principal (Local / Entrenamiento / Online / Controles)
+- [x] I2 Selección de personaje para 2 jugadores
+- [x] I3 HUD nuevo (retrato, vidas en iconos, % que tiembla) y pausa con Esc
 - [ ] I4 Sonidos sintetizados con Web Audio, música y volumen
 
 **L · Pulido y lanzamiento** (feb – 14 mar)

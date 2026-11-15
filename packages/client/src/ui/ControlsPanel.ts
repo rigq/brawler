@@ -13,6 +13,9 @@ const OPEN_SECTIONS = new Set(['Botones']);
  * small tab and unfolds with a click or H; each section folds on its own too.
  * Plain HTML on top of the canvas: crisp text, scrolls, no effect on the game.
  */
+/** Opens or closes the panel from elsewhere (the menus' "Controles" option). Set once mounted. */
+export let setControlsPanelOpen: (open: boolean) => void = () => {};
+
 export function mountControlsPanel(parent: HTMLElement): void {
   const panel = element('aside', 'controls-panel');
   panel.setAttribute('aria-label', 'Controles');
@@ -35,6 +38,7 @@ export function mountControlsPanel(parent: HTMLElement): void {
     save(open);
   };
   setOpen(load());
+  setControlsPanelOpen = setOpen;
   keepFocusOnGame(panel);
   toggle.addEventListener('click', () => setOpen(!panel.classList.contains('is-open')));
   window.addEventListener('keydown', (event) => {

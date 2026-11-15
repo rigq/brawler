@@ -35,6 +35,17 @@ export interface CreateRoomOptions {
   lineup?: CharacterId[];
 }
 
+/** What each client sends when creating or joining a room: the character it chose. */
+export interface JoinOptions {
+  character?: CharacterId;
+}
+
+/** The character from untrusted join options, or null if missing or unknown. */
+export function parseCharacter(raw: unknown): CharacterId | null {
+  const id = typeof raw === 'object' && raw !== null ? (raw as { character?: unknown }).character : undefined;
+  return typeof id === 'string' && isCharacterId(id) ? id : null;
+}
+
 /** The lineup from untrusted room options: unknown or missing seats get the default character. */
 export function parseLineup(raw: unknown): CharacterId[] {
   const asked = Array.isArray(raw) ? raw : [];

@@ -14,7 +14,7 @@ export type AnimName = (typeof ANIM_NAMES)[number];
 /** Moving faster than this on the ground plays the run cycle. */
 const RUN_MIN_SPEED = 40;
 const RUN_FRAME_MS = 80;
-const IDLE_FRAME_MS = 220;
+export const IDLE_FRAME_MS = 220;
 /** Slower than this vertically counts as the top of a jump (first frame of the fall). */
 const APEX_SPEED = 150;
 /** Flying faster than this when hit: the "knocked back" frame instead of the flinch. */

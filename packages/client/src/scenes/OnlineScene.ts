@@ -4,6 +4,7 @@ import {
   FIXED_DT_MS,
   FixedStepAccumulator,
   INPUT_MESSAGE,
+  DEFAULT_LINEUP,
   INTERP_DELAY_MS,
   MATCH_ROOM,
   REMATCH_MESSAGE,
@@ -17,6 +18,7 @@ import {
   readSyncedPlayer,
   type CharacterId,
   type CreateRoomOptions,
+  type JoinOptions,
   type InputMessage,
   type MatchResult,
   type NetMatchState,
@@ -36,6 +38,14 @@ import { preloadArt } from '../render/art.ts';
 import { MatchView } from '../render/MatchView.ts';
 import type { VisualOffset } from '../render/PlayerView.ts';
 import { exposeForDebugging } from './GameScene.ts';
+import type { SceneHooks } from './hooks.ts';
+
+/** Who you play and which room: `code` null creates one. `lineup`: both seats' characters (dev URLs). */
+export interface OnlineOptions {
+  character: CharacterId;
+  code: string | null;
+  lineup?: CharacterId[];
+}
 
 type MatchRoom = Room<unknown, NetMatchState>;
 type Connection = 'connecting' | 'connected' | 'reconnecting' | 'closed';
@@ -73,13 +83,14 @@ export class OnlineScene extends Phaser.Scene {
   private controls!: InputSource;
   /** Created with the first server state, when we know each seat's character. */
   private view: MatchView | null = null;
-  /** Characters asked for when creating a room (?p1=…&p2=…). */
-  private readonly lineup: CharacterId[];
+  private readonly options: OnlineOptions;
+  private readonly hooks: SceneHooks;
   private status!: Phaser.GameObjects.Text;
 
-  constructor(lineup: CharacterId[]) {
+  constructor(options: OnlineOptions, hooks: SceneHooks = {}) {
     super('OnlineScene');
-    this.lineup = lineup;
+    this.options = options;
+    this.hooks = hooks;
   }
 
   preload(): void {
@@ -90,7 +101,11 @@ export class OnlineScene extends Phaser.Scene {
     this.status = this.add.text(STATUS_POS.x, STATUS_POS.y, '', STATUS_STYLE);
     this.controls = this.createInput();
     new RematchInput(this, () => this.askRematch());
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => void this.room?.leave());
+    // Online nothing pauses: Esc only opens the menu (to leave the room).
+    this.input.keyboard?.on('keydown-ESC', () => this.hooks.onPause?.({ resume: () => {} }));
+    for (const event of [Phaser.Scenes.Events.SHUTDOWN, Phaser.Scenes.Events.DESTROY]) {
+      this.events.once(event, () => void this.room?.leave());
+    }
     void this.connect();
   }
 
@@ -113,20 +128,22 @@ export class OnlineScene extends Phaser.Scene {
 
   // --- Connection ---------------------------------------------------------
 
-  /** Creates a room, or joins the one whose code is in the URL. */
+  /** Creates a room, or joins the one with the given code, bringing the chosen character. */
   private async connect(): Promise<void> {
     const client = new Client(serverUrl());
-    const requested = new URLSearchParams(location.search).get('online') ?? '';
+    const requested = this.options.code ?? '';
+    const join: JoinOptions = { character: this.options.character };
     try {
       let room: MatchRoom;
       if (requested === '') {
-        const options: CreateRoomOptions = { lineup: this.lineup };
+        const lineup = this.options.lineup ?? [this.options.character, DEFAULT_LINEUP[1]!];
+        const options: CreateRoomOptions & JoinOptions = { ...join, lineup };
         room = await client.create<NetMatchState>(MATCH_ROOM, options);
         showCodeInUrl(room.roomId);
       } else {
         const code = normalizeRoomCode(requested);
         if (!code) return this.fail(`"${requested}" no es un código de sala válido (4 letras).`);
-        room = await client.joinById<NetMatchState>(code);
+        room = await client.joinById<NetMatchState>(code, join);
       }
       this.listen(room);
     } catch (error) {
@@ -157,7 +174,7 @@ export class OnlineScene extends Phaser.Scene {
 
   /** You only send and predict while you are seated, connected and the match isn't paused. */
   private canPlay(room: MatchRoom, mySlot: number | undefined): mySlot is number {
-    return mySlot !== undefined && this.connection === 'connected' && !isPaused(room);
+    return mySlot !== undefined && this.view !== null && this.connection === 'connected' && !isPaused(room);
   }
 
   /**
@@ -168,7 +185,15 @@ export class OnlineScene extends Phaser.Scene {
     const { tick, acks } = room.state;
     if (!room.state.players || !acks || tick === this.lastServerTick) return;
     const players = Array.from(room.state.players, toPlayer);
-    if (!this.view) this.buildView(players);
+    if (!this.view) {
+      // Each player brings their character when joining: wait until both are in to draw them.
+      if (room.state.seats.size < SPAWNS.length && room.state.phase === 'waiting') {
+        this.hooks.onWaiting?.(room.roomId);
+        return;
+      }
+      this.buildView(players);
+      this.hooks.onWaitingEnd?.();
+    }
     this.lastServerTick = tick;
     this.mirror.tick = tick;
     // Projectiles come straight from the server (no prediction): only the server decides hits.
@@ -245,8 +270,9 @@ export class OnlineScene extends Phaser.Scene {
     const lag = this.lagMs > 0 ? ` · lag simulado ${this.lagMs} ms` : '';
     const header = `Sala ${code} · ${you}${debug}${lag}`;
 
+    if (room.state.phase === 'waiting' && this.hooks.onWaiting) return ''; // the lobby screen says it
     if (room.state.phase === 'waiting') {
-      return `${header}\nEsperando rival… Comparte el código ${code} o este enlace:\n${shareLink(code)}\n(Mientras, puedes practicar.)`;
+      return `${header}\nEsperando rival… Comparte el código ${code} o este enlace:\n${shareLink(code)}`;
     }
     if (isPaused(room)) return `${header}\nEl rival se ha desconectado. Esperando a que vuelva…`;
     return header;
@@ -262,7 +288,7 @@ export class OnlineScene extends Phaser.Scene {
     const iVoted = mySlot !== undefined && state.rematchVotes[mySlot];
     const rivalVoted = Array.from(state.rematchVotes).some((vote, slot) => vote && slot !== mySlot);
     if (iVoted) return 'Revancha pedida. Esperando al rival…';
-    return rivalVoted ? '¡Tu rival quiere la revancha! Enter, R o Start' : 'Revancha: Enter, R o Start';
+    return rivalVoted ? '¡Tu rival quiere la revancha! Enter, R o Start' : 'Revancha: Enter, R o Start · Menú: Esc';
   }
 
   /** Online you control one player, so both keyboard halves and the first gamepad all work. */
@@ -299,7 +325,7 @@ function serverUrl(): string {
   return configured ?? `${location.protocol}//${location.hostname}:${SERVER_PORT}`;
 }
 
-function shareLink(code: string): string {
+export function shareLink(code: string): string {
   return `${location.origin}${location.pathname}?online=${code}`;
 }
 

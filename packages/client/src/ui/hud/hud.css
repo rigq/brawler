@@ -1,0 +1,122 @@
+/* In-game HUD (Hud.ts). Sized in em: 1 em follows the canvas width (see layer.ts). */
+
+.hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.6em;
+  display: flex;
+  justify-content: center;
+  gap: 7em;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.hud-card {
+  --side: #f2a541;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  min-width: 13.5em;
+  padding: 0.45em 1.6em 0.45em 0.6em;
+  border-bottom: 0.25em solid var(--side);
+  background: linear-gradient(90deg, rgba(11, 16, 38, 0.88), rgba(28, 37, 65, 0.7));
+  box-shadow: 0 0.5em 1.4em rgba(0, 0, 0, 0.45);
+  transform: skewX(-10deg);
+}
+
+.hud-card > * {
+  transform: skewX(10deg);
+}
+
+.hud-card--p2 { --side: #4fc3f7; }
+
+.hud-card__portrait {
+  width: 3.6em;
+  height: 3.6em;
+  border: 0.18em solid var(--side);
+  border-radius: 50%;
+  background-color: #050816;
+}
+
+.hud-card__info {
+  display: grid;
+  gap: 0.15em;
+}
+
+.hud-card__name {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: #9aa5c4;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hud-card__slot {
+  color: var(--side);
+}
+
+.hud-card__percent {
+  --shake: 0.3em;
+  font: 3.1em/0.95 Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0.04em 0.04em 0 #050816,
+    -0.04em 0.04em 0 #050816,
+    0.04em -0.04em 0 #050816,
+    -0.04em -0.04em 0 #050816,
+    0 0.12em 0 rgba(5, 8, 22, 0.6);
+}
+
+.hud-card__percent small {
+  font-size: 0.55em;
+}
+
+/* A hit: the number jolts (harder for bigger hits) and pops. */
+.hud-card__percent.is-hit {
+  animation: hud-hit 340ms cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+
+@keyframes hud-hit {
+  0% { transform: translate(0, 0) scale(1.25); }
+  15% { transform: translate(calc(var(--shake) * -1), calc(var(--shake) * 0.4)) scale(1.18); }
+  30% { transform: translate(var(--shake), calc(var(--shake) * -0.4)) scale(1.1); }
+  45% { transform: translate(calc(var(--shake) * -0.6), 0) scale(1.05); }
+  60% { transform: translate(calc(var(--shake) * 0.4), 0); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.hud-card__percent.is-out {
+  color: #6b7280;
+}
+
+.hud-card__stocks {
+  display: flex;
+  gap: 0.25em;
+}
+
+.hud-card__stocks .head-portrait {
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.1em var(--side);
+  background-color: #050816;
+}
+
+.hud-card__stocks .is-lost {
+  filter: grayscale(1);
+  opacity: 0.25;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-card__percent.is-hit { animation: none; }
+}
+
+.hud .pixel-sprite {
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+}

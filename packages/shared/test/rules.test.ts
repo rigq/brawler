@@ -92,3 +92,11 @@ test('the match ends when only one player has lives left', () => {
   players[0]!.stocks = 0;
   assert.deepEqual(matchResult(players), { over: true, winner: null });
 });
+
+test('join options only accept real characters', async () => {
+  const { parseCharacter } = await import('../src/net/protocol.ts');
+  assert.equal(parseCharacter({ character: 'samu' }), 'samu');
+  assert.equal(parseCharacter({ character: 'nobody' }), null);
+  assert.equal(parseCharacter({ character: 42 }), null);
+  assert.equal(parseCharacter(undefined), null);
+});

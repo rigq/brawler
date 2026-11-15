@@ -12,7 +12,8 @@ import {
   type MatchResult,
   type World,
 } from '@brawler/shared';
-import { DamageHud } from '../ui/DamageHud.ts';
+import { Hud } from '../ui/hud/Hud.ts';
+import { gameLayer } from '../ui/layer.ts';
 import { ResultOverlay } from '../ui/ResultOverlay.ts';
 import { StatsHud } from '../ui/StatsHud.ts';
 import { drawBackdrop } from './Backdrop.ts';
@@ -37,7 +38,7 @@ export class MatchView {
   private readonly projectileView: ProjectileView;
   private readonly hitEffects: HitEffects;
   private readonly hud: StatsHud;
-  private readonly damageHud: DamageHud;
+  private readonly playerHud: Hud;
   private readonly resultOverlay: ResultOverlay;
 
   constructor(scene: Phaser.Scene, world: World, rematchHint: string) {
@@ -55,11 +56,15 @@ export class MatchView {
     worldObjects.push(this.debugOverlay.gameObject);
 
     this.hud = new StatsHud(scene);
-    this.damageHud = new DamageHud(scene, PLAYER_COLORS);
+    // HTML over the canvas: removed with the scene (back to the menu, rematch online…).
+    this.playerHud = new Hud(gameLayer(scene.game.canvas), world.players.map((p) => p.characterId));
+    for (const event of [Phaser.Scenes.Events.SHUTDOWN, Phaser.Scenes.Events.DESTROY]) {
+      scene.events.once(event, () => this.playerHud.destroy());
+    }
     this.resultOverlay = new ResultOverlay(scene, PLAYER_COLORS, rematchHint);
 
     this.cameraRig = new CameraRig(scene.cameras.main);
-    this.addUi([this.hud.gameObject, ...this.damageHud.gameObjects, ...this.resultOverlay.gameObjects]);
+    this.addUi([this.hud.gameObject, ...this.resultOverlay.gameObjects]);
     // A second, fixed camera draws only the UI, so text stays put whatever the zoom.
     const uiCamera = scene.cameras.add(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     uiCamera.ignore(worldObjects);
@@ -94,7 +99,7 @@ export class MatchView {
       frameMs,
     );
     this.hud.update(frameMs, world);
-    this.damageHud.update(world.players);
+    this.playerHud.update(world.players);
     this.resultOverlay.update(result, frameMs);
   }
 

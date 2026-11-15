@@ -1,0 +1,649 @@
+/*
+ * Menus over the game (main menu, character select, pause, online lobby).
+ * Look: "floating temple at night", like the stage — deep night blue, moonlight,
+ * and one warm accent, the amber of the lanterns. P1 orange, P2 sky blue.
+ */
+
+:root {
+  --night-950: #050816;
+  --night-900: #0b1026;
+  --night-800: #121a3a;
+  --night-700: #1c2541;
+  --line: #2b3a67;
+  --line-soft: rgba(154, 165, 196, 0.18);
+  --moon: #f4f1de;
+  --text: #e6e9f2;
+  --muted: #9aa5c4;
+  --lantern: #ffb703;
+  --lantern-soft: #ffd166;
+  --p1: #f2a541;
+  --p2: #4fc3f7;
+  --danger: #ff5a5a;
+  --font-display: Impact, Haettenschweiler, 'Arial Narrow Bold', 'Franklin Gothic Heavy', sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --skew: -10deg;
+}
+
+.pixel-sprite {
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  flex: none;
+}
+
+/* ---------- Full-screen layer ---------- */
+
+.shell {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  color: var(--text);
+  font-family: var(--font-body);
+  /* The stage is drawn behind (BackdropScene): darken it, keep the moon showing at the top. */
+  background:
+    radial-gradient(ellipse 70% 55% at 72% 18%, rgba(244, 241, 222, 0.08), transparent 70%),
+    linear-gradient(90deg, rgba(5, 8, 22, 0.92) 0%, rgba(5, 8, 22, 0.55) 55%, rgba(5, 8, 22, 0.35) 100%);
+  overflow: hidden;
+  user-select: none;
+}
+
+.shell[hidden] {
+  display: none;
+}
+
+.shell--over {
+  background: none;
+}
+
+.screen {
+  grid-area: 1 / 1;
+  display: grid;
+  min-height: 0;
+  animation: screen-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes screen-in {
+  from { opacity: 0; transform: translateX(-24px); }
+}
+
+/* ---------- Shared pieces ---------- */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 0.9;
+}
+
+.kicker {
+  font: 700 12px/1 var(--font-body);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--lantern-soft);
+}
+
+.keycap {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  background: var(--night-800);
+  color: var(--text);
+  font: 700 11px/1 ui-monospace, monospace;
+}
+
+.hint-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hint-bar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A slanted button, the menus' main control. */
+.blade {
+  --blade-color: var(--lantern);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 24px 12px 20px;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(90deg, rgba(28, 37, 65, 0.85), rgba(28, 37, 65, 0.35));
+  color: var(--text);
+  transform: skewX(var(--skew));
+  cursor: pointer;
+  text-align: left;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.blade > * {
+  transform: skewX(calc(var(--skew) * -1));
+}
+
+.blade__index {
+  font: 700 12px/1 ui-monospace, monospace;
+  color: var(--muted);
+  min-width: 22px;
+}
+
+.blade__label {
+  font-family: var(--font-display);
+  font-size: 32px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.blade__note {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.blade.is-selected,
+.blade:hover {
+  border-color: transparent;
+  background: linear-gradient(90deg, var(--blade-color), color-mix(in srgb, var(--blade-color) 55%, transparent));
+  color: var(--night-950);
+  transform: skewX(var(--skew)) translateX(14px);
+}
+
+.blade.is-selected .blade__index,
+.blade.is-selected .blade__note,
+.blade:hover .blade__index,
+.blade:hover .blade__note {
+  color: rgba(5, 8, 22, 0.7);
+}
+
+.blade.is-selected::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 50%;
+  border: 8px solid transparent;
+  border-left-color: var(--lantern);
+  transform: translateY(-50%) skewX(calc(var(--skew) * -1));
+}
+
+.blade:focus-visible {
+  outline: 2px solid var(--moon);
+  outline-offset: 3px;
+}
+
+/* ---------- Main menu ---------- */
+
+.main-menu {
+  grid-template-columns: minmax(340px, 520px) 1fr;
+  grid-template-rows: 1fr auto;
+  padding: clamp(24px, 6vh, 64px) clamp(24px, 6vw, 88px);
+  gap: 24px 48px;
+}
+
+.main-menu__left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 36px;
+}
+
+.title {
+  position: relative;
+}
+
+.title__word {
+  display: block;
+  font-size: clamp(72px, 12vw, 148px);
+  color: var(--moon);
+  transform: skewX(var(--skew));
+  text-shadow:
+    0 4px 0 #2b3a67,
+    0 8px 0 #1c2541,
+    0 0 48px rgba(255, 183, 3, 0.25);
+}
+
+.title__rule {
+  display: block;
+  width: 62%;
+  height: 6px;
+  margin-top: 14px;
+  background: linear-gradient(90deg, var(--lantern), transparent);
+  transform: skewX(var(--skew));
+  box-shadow: 0 0 18px rgba(255, 183, 3, 0.6);
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 0 26px;
+  list-style: none;
+}
+
+.roster-show {
+  align-self: end;
+  justify-self: center;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(12px, 3vw, 40px);
+  padding-bottom: 6vh;
+}
+
+.roster-show__fighter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55));
+}
+
+.roster-show__fighter .display {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.main-menu .hint-bar {
+  grid-column: 1 / -1;
+}
+
+/* Join-with-code panel (online). */
+.code-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 0 0 26px;
+}
+
+.code-entry__input {
+  width: 220px;
+  padding: 10px 16px;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: var(--night-900);
+  color: var(--moon);
+  font: 40px/1 var(--font-display);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+.code-entry__input:focus {
+  outline: none;
+  border-color: var(--lantern);
+  box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.2);
+}
+
+.code-entry__error {
+  min-height: 1.2em;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+/* ---------- Character select ---------- */
+
+.select {
+  grid-template-rows: auto 1fr auto;
+  gap: 18px;
+  padding: clamp(18px, 4vh, 40px) clamp(18px, 4vw, 56px);
+  background: linear-gradient(180deg, rgba(5, 8, 22, 0.55), rgba(5, 8, 22, 0.85));
+}
+
+.select__head {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+
+.select__title {
+  font-size: clamp(40px, 6vw, 72px);
+  color: var(--moon);
+  transform: skewX(var(--skew));
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--lantern-soft);
+  font: 700 12px/1 var(--font-body);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.select__body {
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 380px) 1fr;
+  gap: clamp(16px, 3vw, 40px);
+  min-height: 0;
+}
+
+.roster {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  align-content: center;
+}
+
+.card {
+  --cursor-a: transparent;
+  --cursor-b: transparent;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 12px;
+  border: 0;
+  background: linear-gradient(160deg, var(--night-700), var(--night-900));
+  color: var(--text);
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: inherit;
+  /* Cursor outlines: left half P1's colour, right half P2's (both when both are here). */
+  background:
+    linear-gradient(90deg, var(--cursor-a) 50%, var(--cursor-b) 50%) top / 100% 4px no-repeat,
+    linear-gradient(90deg, var(--cursor-a) 50%, var(--cursor-b) 50%) bottom / 100% 4px no-repeat;
+  pointer-events: none;
+}
+
+.card .head-portrait {
+  border-radius: 50%;
+  background-color: var(--night-950);
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+
+.card__name {
+  font-size: 24px;
+}
+
+.card.has-p1 { --cursor-a: var(--p1); --cursor-b: var(--p1); transform: translateY(-4px); }
+.card.has-p2 { --cursor-a: var(--p2); --cursor-b: var(--p2); transform: translateY(-4px); }
+.card.has-p1.has-p2 { --cursor-a: var(--p1); --cursor-b: var(--p2); }
+
+.card__tags {
+  position: absolute;
+  top: 6px;
+  right: 14%;
+  display: flex;
+  gap: 4px;
+}
+
+.tag {
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--night-950);
+  font: 700 11px/1.2 var(--font-body);
+}
+
+.tag--p1 { background: var(--p1); }
+.tag--p2 { background: var(--p2); }
+
+/* One side panel per player. */
+.fighter {
+  --side: var(--p1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 22px 16px;
+  border-top: 4px solid var(--side);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--side) 16%, transparent), rgba(11, 16, 38, 0.6) 40%);
+  overflow: hidden;
+}
+
+.fighter--p2 { --side: var(--p2); text-align: right; }
+
+.fighter__slot {
+  font-size: 56px;
+  color: var(--side);
+  transform: skewX(var(--skew));
+}
+
+.fighter__stage {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  /* Tall enough for the tallest fighter at ×3 (Robert, 74 px of art). */
+  height: 226px;
+}
+
+/* The glowing disc the fighter stands on. */
+.fighter__stage::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 70%;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--side) 55%, transparent), transparent);
+  transform: translateX(-50%);
+}
+
+.fighter__stage .pixel-sprite {
+  position: relative;
+  z-index: 1;
+  animation: fighter-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.fighter--p2 .fighter__stage .pixel-sprite {
+  transform: scaleX(-1);
+}
+
+@keyframes fighter-in {
+  from { opacity: 0; translate: 0 12px; }
+}
+
+.fighter__name {
+  margin-top: 16px;
+  font-size: clamp(36px, 4vw, 52px);
+  color: var(--moon);
+}
+
+.fighter__tagline {
+  margin: 6px 0 12px;
+  min-height: 2.8em;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  align-items: center;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.fighter--p2 .stats { direction: rtl; }
+
+.stats__bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+}
+
+.stats__bar i {
+  height: 8px;
+  background: var(--night-700);
+  transform: skewX(var(--skew));
+}
+
+.stats__bar i.on { background: var(--side); }
+
+.specials {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.specials b {
+  color: var(--side);
+  font-weight: 700;
+}
+
+.fighter__status {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ready-stamp {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  z-index: 2;
+  padding: 6px 22px;
+  border: 4px solid var(--side);
+  color: var(--side);
+  font: 48px/1 var(--font-display);
+  text-transform: uppercase;
+  background: rgba(5, 8, 22, 0.8);
+  transform: translate(-50%, -50%) rotate(-8deg);
+  animation: stamp 240ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+@keyframes stamp {
+  from { opacity: 0; transform: translate(-50%, -50%) rotate(-8deg) scale(1.8); }
+}
+
+.fighter.is-idle .fighter__stage,
+.fighter.is-idle .fighter__info {
+  opacity: 0.35;
+}
+
+.fight-banner {
+  grid-area: 1 / 1;
+  place-self: center;
+  z-index: 3;
+  font-size: clamp(80px, 14vw, 180px);
+  color: var(--lantern);
+  transform: skewX(var(--skew));
+  text-shadow: 0 6px 0 #7f5539, 0 0 60px rgba(255, 183, 3, 0.6);
+  animation: banner 600ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes banner {
+  from { opacity: 0; transform: skewX(var(--skew)) scale(2.2); }
+}
+
+/* ---------- Pause and lobby cards ---------- */
+
+.overlay {
+  place-items: center;
+  background: rgba(5, 8, 22, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: min(440px, 90vw);
+  padding: 28px 34px 30px 46px;
+  border-left: 6px solid var(--lantern);
+  background: linear-gradient(135deg, rgba(28, 37, 65, 0.96), rgba(11, 16, 38, 0.96));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.panel__title {
+  font-size: 64px;
+  color: var(--moon);
+  transform: skewX(var(--skew));
+}
+
+.room-code {
+  display: flex;
+  gap: 10px;
+}
+
+.room-code span {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 80px;
+  border: 2px solid var(--line);
+  border-bottom: 5px solid var(--lantern);
+  background: var(--night-950);
+  color: var(--moon);
+  font: 56px/1 var(--font-display);
+}
+
+.link-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.link-row code {
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--night-950);
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.small-button {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--lantern);
+  color: var(--night-950);
+  font: 700 13px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.waiting {
+  color: var(--muted);
+}
+
+.waiting::after {
+  content: '';
+  animation: dots 1.2s steps(4) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+@media (max-width: 900px) {
+  .main-menu { grid-template-columns: 1fr; }
+  .roster-show { display: none; }
+  .select__body { grid-template-columns: 1fr; overflow: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}

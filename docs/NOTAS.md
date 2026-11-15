@@ -8,6 +8,15 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **I1–I3: menú principal, selección de personaje, HUD y pausa (15 nov)** — Interfaz en HTML/CSS sobre el lienzo, con estilo "templo flotante de noche" (azul noche, luna, ámbar de farol como acento; P1 naranja, P2 azul; tipografía condensada en cursiva con Impact y alternativas del sistema, sin fuentes externas).
+  - `app/App.ts`: máquina de pantallas (menú → selección → partida → pausa/sala → menú). Las escenas de partida se añaden al empezar y se quitan al salir; detrás de los menús, `BackdropScene` dibuja el escenario vacío con la cámara meciéndose.
+  - **Menú** (`ui/shell/MainMenu.ts`): Local / Entrenamiento / Online (Crear sala · Unirse con código) / Controles, con teclado de los dos jugadores o ratón, y los cuatro personajes haciendo su idle (CSS sobre sus propias tiras, `ui/shell/sprites.ts`).
+  - **Selección** (`ui/shell/CharacterSelect.ts`): P1 (A/D, J; L deshace) y P2 (←/→, `,`; `-` deshace) a la vez; panel por jugador con el luchador animado, descripción, barras de stats y especiales; sello "¡LISTO!" y "¡A PELEAR!". En entrenamiento P1 elige luchador y luego el muñeco; online, cada uno elige el suyo en su pantalla.
+  - **Online**: el personaje viaja al crear o unirse (`JoinOptions`, `parseCharacter` en `shared/net/protocol.ts`; `MatchRoom.onJoin`). La partida se dibuja cuando están los dos; mientras, sala de espera con el código en grande y botón de copiar enlace (`ui/shell/Lobby.ts`). Un enlace `?online=CÓDIGO` lleva a la selección y luego a la sala.
+  - **HUD** (`ui/hud/`): tarjeta por jugador con retrato (cabeza recortada de su sprite), nombre, % grande que se sacude más cuanto más fuerte el golpe y pasa de blanco a amarillo y rojo, y vidas como cabecitas. Capa HTML que sigue al lienzo (`ui/layer.ts`, todo en `em`).
+  - **Pausa** con Esc (`ui/shell/PauseMenu.ts`): Continuar / Reiniciar / Controles / Salir al menú. Online no pausa: Esc abre el menú para salir de la sala.
+  - Atajos de desarrollo: `?local`, `?training`, `?online` (+ `?p1`/`?p2`) se saltan los menús. Comprobado en el navegador: menú, selección local y de entrenamiento, partida con HUD, pausa, código no válido, crear sala → sala de espera → el rival entra por enlace con otro personaje.
+
 - **Curl de Samu más limpio (15 nov)** — El curl anterior (3 poses generadas por separado) se veía raro: cambiaban más cosas que el brazo. Ahora usa dos imágenes que Riga sacó editando una sobre otra (`idle-src/curl-down.webp`, `curl-up.webp`): solo cambia el brazo. Cada posición se repite dos veces para que el curl vaya pausado.
 
 - **Carrera de Samu reordenada (15 nov)** — Se veía mal porque los fotogramas iban en el orden de los archivos: el 3.º (apoyado en la pierna clara) venía antes del 4.º (pisando con ella). Orden 1-2-4-3 en `build-strips.py`. Comprobado que ritmo y velocidad cuadran (378 px/s, ~60 px por paso).
@@ -83,6 +92,9 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 - **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. Repo en https://github.com/rigq/brawler.
 
 ### Decisiones
+
+- **La interfaz es HTML, no Phaser** (15 nov): menús, selección, pausa y HUD necesitan texto nítido a cualquier tamaño, maquetación y animaciones CSS; en el lienzo habría que hacerlo a mano. El HUD va en una capa que sigue el tamaño del lienzo y se mide en `em`.
+- **Online sin calentamiento** (15 nov): antes, quien creaba la sala practicaba contra un hueco vacío; ahora espera en una pantalla de sala con el código. Así cada jugador trae su personaje y la partida se dibuja con los dos ya decididos.
 
 - **Con Gemini, un cambio por edición**: pedirle dos a la vez (subir un brazo y bajar el otro) no funciona; encadenar ediciones de un solo cambio sí, y además da fotogramas de transición.
 
@@ -197,6 +209,10 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Bugs conocidos
 
+- **Los menús no se manejan con mando**, solo con teclado y ratón (el mando lo lee Phaser dentro de las partidas).
+- **Online: si el rival se va y entra otro con un personaje distinto**, la partida sigue dibujando el anterior (la vista se crea una vez). Habría que salir y crear sala nueva.
+- **La fuente Impact** existe en Windows y Mac; en Linux sale una de reserva (más ancha), el diseño aguanta pero luce menos.
+
 
 - **La suavidad de los proyectiles online no se ha visto en un navegador normal**: el navegador sin pantalla de las pruebas va a ~15 FPS con dos pestañas. Probar con `?online&p1=donate` y `&lag=150`.
 
@@ -216,10 +232,9 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Siguiente tarea
 
-- **Playtest (adelantar L1)**: nadie ha jugado aún a los cuatro a velocidad real, ni se han validado los criterios de F1 ("moverse 5 minutos es divertido") y F2 ("una partida 1v1 con alguien de clase, y quiere repetir"). 2 compañeros, 30 min, local o LAN; apuntar 5 cosas y ajustar constantes. Antes de invertir en arte.
-- **D1: cerrar** — solo falta `throw` de Samu (2 fotogramas: balanceo de brazos hacia delante y brazos estirados tras lanzar). Después: D2 efectos. Truco que funcionó con Robert: pedir los fotogramas editando el anterior en vez de la tira de golpe; en la carrera basta una zancada y un paso (la otra zancada se saca intercambiando los tonos de las piernas). Riga las genera con Gemini (`docs/PROMPTS_ANIMACIONES.md`), **en JPG** (la web de GitHub no admite más de 25 MB por archivo) y, a ser posible, **ya con el nombre de la tabla**. Añadir al prompt "no motion blur, no speed lines, no afterimages": la estela de movimiento no se puede limpiar. `standingHeight`: Samu 72, Chachin 54 (alto de sus hojas).
-- **L3 deploy**: todo listo en `docs/DEPLOY.md`; faltan las cuentas de Riga (Fly.io o Hetzner para el servidor, Netlify o Vercel para el cliente). Conviene hacerlo pronto para probar con lag real y con amigos por Discord.
-- E4 (paredes) sigue aparcado.
+- **L3 deploy** (recomendado ya): con menús, cuatro personajes animados y online con elección de personaje, es el momento de publicarlo y probarlo por Discord. Todo en `docs/DEPLOY.md`; faltan las cuentas de Riga.
+- **D1:** `throw` de Samu (2 imágenes).
+- **I4:** sonidos con Web Audio, música y volumen. Después D2 (efectos) y D3 (escenario vivo).
 
 ### Pendientes v2
 

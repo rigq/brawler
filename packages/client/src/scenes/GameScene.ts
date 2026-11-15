@@ -7,6 +7,7 @@ import { RematchInput } from '../input/RematchInput.ts';
 import { preloadArt } from '../render/art.ts';
 import { MatchView } from '../render/MatchView.ts';
 import { DUMMY_SLOT, TrainingMode } from '../training/TrainingMode.ts';
+import type { SceneHooks } from './hooks.ts';
 
 const PLAYER_BINDINGS: KeyBindings[] = [P1_BINDINGS, P2_BINDINGS];
 
@@ -24,11 +25,15 @@ export class GameScene extends Phaser.Scene {
   private inputs: InputSource[] = [];
   private view!: MatchView;
   private training: TrainingMode | null = null;
+  private readonly hooks: SceneHooks;
+  /** While the pause menu is open the simulation does not advance. */
+  private paused = false;
 
-  constructor(mode: LocalMode = 'versus', characters: readonly CharacterId[] = []) {
+  constructor(mode: LocalMode = 'versus', characters: readonly CharacterId[] = [], hooks: SceneHooks = {}) {
     super('GameScene');
     this.mode = mode;
     this.characters = characters;
+    this.hooks = hooks;
   }
 
   preload(): void {
@@ -37,7 +42,8 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.world = createWorld(this.characters);
-    this.view = new MatchView(this, this.world, 'Revancha: Enter, R o Start');
+    this.view = new MatchView(this, this.world, 'Revancha: Enter, R o Start · Menú: Esc');
+    this.input.keyboard?.on('keydown-ESC', () => this.pause());
     if (this.mode === 'training') {
       this.training = new TrainingMode(this, () => this.world, () => this.restart());
       this.view.addUi(this.training.gameObjects);
@@ -51,6 +57,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    if (this.paused) return;
     // Keys are read once per render frame and reused for every step in it.
     const frameInputs = this.inputs.map((input) => input.read());
     const steps = this.accumulator.consume(delta);
@@ -61,6 +68,19 @@ export class GameScene extends Phaser.Scene {
     }
     this.view.render(this.world, this.accumulator.alpha, delta);
     this.training?.render(this.world);
+  }
+
+  private pause(): void {
+    if (this.paused || !this.hooks.onPause) return;
+    this.paused = true;
+    this.hooks.onPause({
+      resume: () => (this.paused = false),
+      restart: () => {
+        this.view.hideResult();
+        this.restart();
+        this.paused = false;
+      },
+    });
   }
 
   /**

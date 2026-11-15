@@ -14,6 +14,7 @@ import {
   createPlayer,
   createWorld,
   matchResult,
+  parseCharacter,
   parseLineup,
   parseInputMessage,
   stepWorld,
@@ -76,8 +77,12 @@ export class MatchRoom extends Room<{ state: MatchState }> {
     this.log('closed');
   }
 
-  onJoin(client: Client): void {
+  onJoin(client: Client, options?: unknown): void {
     const slot = this.freeSlot();
+    // Each player brings the character they picked; without one the seat keeps its default.
+    const character = parseCharacter(options);
+    const player = this.world.players[slot];
+    if (player && character) player.characterId = character;
     this.resetPlayer(slot);
     this.inputQueues[slot]?.reset();
     this.state.seats.set(client.sessionId, slot);
