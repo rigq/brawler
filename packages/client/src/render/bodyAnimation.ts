@@ -56,6 +56,12 @@ const FALLBACK: Partial<Record<AnimName, AnimName>> = {
   'special-neutral': 'jab',
 };
 
+/** How a character's idle plays: `restMs` on the first frame between play-throughs, `frameMs` per frame. */
+export interface IdleTiming {
+  restMs?: number;
+  frameMs?: number;
+}
+
 /** What the player is doing, as an animation name (it may not exist for this character). */
 export function animFor(player: Player): AnimName {
   if (player.ledgeSide !== 0) return 'ledge';
@@ -87,7 +93,14 @@ export function resolveAnim(name: AnimName, has: (name: AnimName) => boolean): A
  * Which frame of `anim` (with `frames` frames) to show. `stateMs`: time since
  * this animation started; `clockMs`: a free-running clock for loops.
  */
-export function frameFor(player: Player, anim: AnimName, frames: number, stateMs: number, clockMs: number, idleRestMs = 0): number {
+export function frameFor(
+  player: Player,
+  anim: AnimName,
+  frames: number,
+  stateMs: number,
+  clockMs: number,
+  idle: IdleTiming = {},
+): number {
   const last = frames - 1;
   const clamp = (f: number) => Math.max(0, Math.min(last, Math.floor(f)));
   if (player.holdTicks > 0) return last;
@@ -95,7 +108,7 @@ export function frameFor(player: Player, anim: AnimName, frames: number, stateMs
   switch (anim) {
     case 'run': return Math.floor(clockMs / RUN_FRAME_MS) % frames;
     // Counted from when the player stopped, so a rest always comes before the first play-through.
-    case 'idle': return idleFrame(frames, stateMs, idleRestMs);
+    case 'idle': return idleFrame(frames, stateMs, idle.restMs ?? 0, idle.frameMs ?? IDLE_FRAME_MS);
     case 'jump': return player.grounded ? 0 : last;
     case 'fall': return Math.abs(player.vy) < APEX_SPEED ? 0 : last;
     case 'hurt': return Math.hypot(player.vx, player.vy) > HURT_LAUNCH_SPEED ? last : 0;
@@ -111,9 +124,9 @@ export function frameFor(player: Player, anim: AnimName, frames: number, stateMs
  * Idle loop. With `restMs`, the first frame is held that long before each
  * play-through: an action (a drag on a cigarette) every few seconds instead of non-stop.
  */
-function idleFrame(frames: number, idleMs: number, restMs: number): number {
-  const t = idleMs % (restMs + frames * IDLE_FRAME_MS);
-  return t < restMs ? 0 : Math.floor((t - restMs) / IDLE_FRAME_MS);
+function idleFrame(frames: number, idleMs: number, restMs: number, frameMs: number): number {
+  const t = idleMs % (restMs + frames * frameMs);
+  return t < restMs ? 0 : Math.floor((t - restMs) / frameMs);
 }
 
 /** 0 when `ticksLeft` is the whole duration, close to 1 at the end. */

@@ -80,4 +80,14 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 | `ledge.jpg` | 2 fotogramas; se usa el 1.º |
 | `roll.jpg` | Algo de estela morada en los fotogramas 2 y 3 |
 
-**Falta por generar:** las tiras de animación de Chachin (de pie, correr, saltar, caer, golpes, recibir, escudo, rodar, borde) y el efecto de corte de la navaja (v1.1).
+**Chachin**: las 26 tiras en el juego (15 nov). Llegaron como `chachin_ (n).webp` (reducidas a 1024 px) y algunos `.jpg` a tamaño original; ojo: **el `.jpg` y el `.webp` con el mismo número no siempre eran la misma imagen** ((1).jpg era el agarre y (1).webp el salto; (2).jpg el escudo y (2).webp la carrera). Los `.webp` se pasaron a PNG con el nombre de la animación; `(19)` era copia exacta de `(17)`.
+
+| Ojo con | Qué pasa |
+| --- | --- |
+| `idle-flip.png` | El mortal, montado con `build-idle-flip.py` desde los 8 fotogramas sueltos de `idle-src/` (Riga los pidió uno a uno). El script pone todos sobre el mismo suelo (Gemini lo subió 160 px desde el 5.º), fija a mano la altura del salto (fotogramas 4–6) y devuelve la piel a su tono (se iba poniendo roja). Se procesa con `alignY: "ground"` para que conserve la altura en el aire |
+| `idle` fotograma 8 | Hace una peineta |
+| `light-up.png` | El arco rosa del barrido se va al limpiar (lo toma por fondo) |
+| `ledge.png` | 2 fotogramas (colgado mirando el móvil); se usa el 1.º |
+| `run.png` | 9 fotogramas pequeños (la imagen era de 1024 px), pero es un ciclo de verdad |
+
+**Pendiente:** `dodge` de Samu y, si se quiere, repetir su `run`. (de pie, correr, saltar, caer, golpes, recibir, escudo, rodar, borde) y el efecto de corte de la navaja (v1.1).

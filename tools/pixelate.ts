@@ -13,7 +13,8 @@
 //            (or `standing`: how tall the character stands in this source, in source pixels;
 //            the config's `standingHeight` is that height in game pixels. One scale for
 //            every strip whatever the pose: a crouch comes out shorter, not bigger)
-//   alignX   left | center | right | mass (default center); alignY bottom | center | top (default bottom)
+//   alignX   left | center | right | mass (default center); alignY bottom | center | top | ground (default bottom)
+//            ground: each frame keeps its height above the strip's lowest feet (a jump or a flip in place)
 //            mass: each frame's centre of mass goes to the middle, so the body stays put
 //            while arms and legs reach out (animation strips)
 //   minRowPixels     optional: drop rows with fewer solid pixels (thin cords, stray specks)
@@ -37,7 +38,7 @@ interface AssetConfig {
   height?: number;
   width?: number;
   alignX?: 'left' | 'center' | 'right' | 'mass';
-  alignY?: 'bottom' | 'center' | 'top';
+  alignY?: 'bottom' | 'center' | 'top' | 'ground';
   minRowPixels?: number;
   clean?: boolean;
   cleanMinShare?: number;
@@ -174,7 +175,7 @@ type Pixel = [number, number, number] | null;
  * (a neighbour's foot under this frame) must not leave empty rows below the
  * feet, or bottom alignment would leave the character floating.
  */
-function trimmed(w: number, lines: Pixel[][]): { w: number; h: number; get: (i: number, j: number) => Pixel } {
+function trimmed(w: number, lines: Pixel[][]): { w: number; h: number; top: number; get: (i: number, j: number) => Pixel } {
   const solidRows = lines.flatMap((line, j) => (line.some(Boolean) ? [j] : []));
   const solidCols = Array.from({ length: w }, (_, i) => i).filter((i) => lines.some((line) => line[i]));
   const top = solidRows[0] ?? 0, bottom = solidRows.at(-1) ?? -1;
@@ -182,6 +183,7 @@ function trimmed(w: number, lines: Pixel[][]): { w: number; h: number; get: (i: 
   return {
     w: right - left + 1,
     h: bottom - top + 1,
+    top,
     get: (i, j) => lines[top + j]?.[left + i] ?? null,
   };
 }
@@ -242,14 +244,21 @@ function pixelate(img: Rgba, asset: AssetConfig, standingHeight?: number): { str
       while (last + 1 < h && solid(last + 1)) last++;
       rows = rows.slice(first, last + 1);
     }
-    return trimmed(w, rows.map((j) => px.slice(j * w, (j + 1) * w)));
+    const frame = trimmed(w, rows.map((j) => px.slice(j * w, (j + 1) * w)));
+    // Where the frame's top sits in the source, in game pixels (for alignY "ground").
+    return { ...frame, sourceTop: box.y / s + (rows[frame.top] ?? 0) };
   });
 
   const centers = frames.map(massCenterX);
   const frameWidth = asset.alignX === 'mass'
     ? Math.ceil(2 * Math.max(...frames.map((f, k) => Math.max(centers[k]!, f.w - centers[k]!))))
     : Math.max(...frames.map((f) => f.w));
-  const frameHeight = Math.max(...frames.map((f) => f.h));
+  // alignY "ground": every frame keeps its height above the lowest feet of the strip (jumps, flips).
+  const groundY = Math.max(...frames.map((f) => f.sourceTop + f.h));
+  const highestY = Math.min(...frames.map((f) => f.sourceTop));
+  const frameHeight = asset.alignY === 'ground'
+    ? Math.ceil(groundY - highestY)
+    : Math.max(...frames.map((f) => f.h));
   const strip: Rgba = { width: frameWidth * count, height: frameHeight, data: new Uint8Array(frameWidth * count * frameHeight * 4) };
   frames.forEach((frame, f) => {
     const ox = asset.alignX === 'left' ? 0
@@ -258,6 +267,7 @@ function pixelate(img: Rgba, asset: AssetConfig, standingHeight?: number): { str
       : Math.floor((frameWidth - frame.w) / 2);
     const oy = asset.alignY === 'center' ? Math.floor((frameHeight - frame.h) / 2)
       : asset.alignY === 'top' ? 0
+      : asset.alignY === 'ground' ? Math.min(frameHeight - frame.h, Math.round(frame.sourceTop - highestY))
       : frameHeight - frame.h;
     for (let j = 0; j < frame.h; j++) {
       for (let i = 0; i < frame.w; i++) {

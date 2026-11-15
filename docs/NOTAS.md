@@ -8,6 +8,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Animaciones de Chachin (15 nov)** — Las 26 tiras en el juego. El idle es un mortal hacia atrás montado desde 8 fotogramas sueltos (`art/chachin/anim/build-idle-flip.py`: suelo común, altura del salto a mano, tono de piel corregido). `pixelate.ts` tiene `alignY: "ground"` para conservar la altura de cada fotograma sobre el suelo. `IdleTiming` en `render/art.ts` (`restMs`, `frameMs`): Chachin rebota 1,5 s en guardia y hace el mortal en ~0,9 s. Comprobado en el navegador.
+
 - **Animaciones de Samu (15 nov)** — 25 de 26 tiras en el juego (falta `dodge`). Detalles y defectos en `art/README.md`: carrera montada con el truco de las piernas (mejor repetirla), y los fotogramas duplicados por estela de `heavy-side` y `heavy-down` sustituidos. Comprobado en el navegador (`?training&p1=samu`).
 
 - **Calada de Robert más rápida (15 nov)** — Riga notaba lag al hacerla en el aire: el especial empezaba al instante, pero tardaba 14 ticks en soltar el humo y Robert solo pasa ~35 ticks en el aire, así que salía al aterrizar. Arranque 14 → 8 ticks (`characters/robert.ts`); enfriamiento igual (100).
@@ -203,7 +205,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 ### Siguiente tarea
 
 - **Playtest (adelantar L1)**: nadie ha jugado aún a los cuatro a velocidad real, ni se han validado los criterios de F1 ("moverse 5 minutos es divertido") y F2 ("una partida 1v1 con alguien de clase, y quiere repetir"). 2 compañeros, 30 min, local o LAN; apuntar 5 cosas y ajustar constantes. Antes de invertir en arte.
-- **D1: animaciones de Chachin** (Donate, Robert y Samu hechos; a Samu le faltan `dodge` y repetir `run`). Truco que funcionó con Robert: pedir los fotogramas editando el anterior en vez de la tira de golpe; en la carrera basta una zancada y un paso (la otra zancada se saca intercambiando los tonos de las piernas). Riga las genera con Gemini (`docs/PROMPTS_ANIMACIONES.md`), **en JPG** (la web de GitHub no admite más de 25 MB por archivo) y, a ser posible, **ya con el nombre de la tabla**. Añadir al prompt "no motion blur, no speed lines, no afterimages": la estela de movimiento no se puede limpiar. `standingHeight`: Samu 72, Chachin 54 (alto de sus hojas).
+- **D1: cerrar** — solo falta `dodge` de Samu (y repetir su `run`, opcional). Después: D2 efectos. Truco que funcionó con Robert: pedir los fotogramas editando el anterior en vez de la tira de golpe; en la carrera basta una zancada y un paso (la otra zancada se saca intercambiando los tonos de las piernas). Riga las genera con Gemini (`docs/PROMPTS_ANIMACIONES.md`), **en JPG** (la web de GitHub no admite más de 25 MB por archivo) y, a ser posible, **ya con el nombre de la tabla**. Añadir al prompt "no motion blur, no speed lines, no afterimages": la estela de movimiento no se puede limpiar. `standingHeight`: Samu 72, Chachin 54 (alto de sus hojas).
 - **L3 deploy**: todo listo en `docs/DEPLOY.md`; faltan las cuentas de Riga (Fly.io o Hetzner para el servidor, Netlify o Vercel para el cliente). Conviene hacerlo pronto para probar con lag real y con amigos por Discord.
 - E4 (paredes) sigue aparcado.
 

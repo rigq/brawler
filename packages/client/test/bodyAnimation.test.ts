@@ -28,8 +28,15 @@ test('the strike pose stays on screen for a while after the hit, not just its 2 
 test('an idle with a rest holds its first frame after stopping, then plays once through', () => {
   const player = createPlayer(SPAWNS[0], 'robert');
   const restMs = 1000;
-  const idleFor = (ms: number) => frameFor(player, 'idle', 7, ms, 0, restMs);
+  const idleFor = (ms: number) => frameFor(player, 'idle', 7, ms, 0, { restMs });
   assert.equal(idleFor(0), 0);
   assert.equal(idleFor(999), 0);
   assert.notEqual(idleFor(1500), 0, 'the drag starts right after the rest');
+});
+
+test('an idle can play faster than the default pace', () => {
+  const player = createPlayer(SPAWNS[0], 'chachin');
+  const timing = { restMs: 0, frameMs: 110 };
+  assert.equal(frameFor(player, 'idle', 8, 115, 0, timing), 1);
+  assert.equal(frameFor(player, 'idle', 8, 115, 0), 0, 'default pace is slower');
 });

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { CharacterId } from '@brawler/shared';
-import { ANIM_NAMES, type AnimName } from './bodyAnimation.ts';
+import { ANIM_NAMES, type AnimName, type IdleTiming } from './bodyAnimation.ts';
 
 /** A sprite strip in public/sprites: frames side by side, all the same size. */
 interface Sheet {
@@ -61,8 +61,8 @@ export interface CharacterArt {
   body: Sheet;
   /** Body animations by name (see bodyAnimation.ts); missing ones fall back to a similar one or the still pose. */
   anims?: Partial<Record<AnimName, AnimSheet>>;
-  /** Hold the first idle frame this long between play-throughs (an idle that is an action, not breathing). */
-  idleRestMs?: number;
+  /** Idle pace: a rest on the first frame between play-throughs (an idle that is an action, not breathing), frame length. */
+  idle?: IdleTiming;
   /** Shown behind the character during the neutral special (frames: arrive, fire, after the shot). */
   neutralProp?: Sheet;
   /** Shown on the ground where the up special started (frames: startup, active, recovery). */
@@ -79,20 +79,23 @@ export interface CharacterArt {
   flag?: { plant: Sheet; wave: Sheet };
 }
 
-/** 1 s standing still, then a ~1.5 s drag: one every ~2.5 s, and the first 1 s after stopping. */
-const ROBERT_IDLE_REST_MS = 1000;
+/** Robert: 1 s standing still, then a ~1.5 s drag (one every ~2.5 s, the first 1 s after stopping). */
+const ROBERT_IDLE: IdleTiming = { restMs: 1000 };
+/** Chachin: 1.5 s bouncing in guard, then a quick ~0.9 s backflip. */
+const CHACHIN_IDLE: IdleTiming = { restMs: 1500, frameMs: 110 };
 
 export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
   donate: { body: SHEETS.donateBody, anims: animSheets('donate'), neutralProp: SHEETS.donateTank, parachute: SHEETS.donateParachute },
   // His idle is a drag on the cigarette, with a short pause between drags.
-  robert: { body: SHEETS.robertBody, anims: animSheets('robert'), idleRestMs: ROBERT_IDLE_REST_MS, upProp: SHEETS.robertRapper },
+  robert: { body: SHEETS.robertBody, anims: animSheets('robert'), idle: ROBERT_IDLE, upProp: SHEETS.robertRapper },
   samu: {
     body: SHEETS.samuBody,
     anims: animSheets('samu'),
     teleport: SHEETS.samuTeleport,
     flag: { plant: SHEETS.samuFlagPlant, wave: SHEETS.samuFlag },
   },
-  chachin: { body: SHEETS.chachinBody, anims: animSheets('chachin'), neutralAura: SHEETS.chachinScream, upBlast: SHEETS.chachinRocket },
+  // His idle is a show-off backflip every couple of seconds.
+  chachin: { body: SHEETS.chachinBody, anims: animSheets('chachin'), idle: CHACHIN_IDLE, neutralAura: SHEETS.chachinScream, upBlast: SHEETS.chachinRocket },
 };
 
 /**

@@ -1,0 +1,571 @@
+{
+  "outDir": "../../../packages/client/public/sprites/chachin/anim",
+  "manifest": "../../../packages/client/src/render/anims/chachin.json",
+  "standingHeight": 54,
+  "assets": [
+    {
+      "name": "idle",
+      "file": "idle-flip.png",
+      "columns": [
+        [
+          372,
+          1128
+        ],
+        [
+          1904,
+          2600
+        ],
+        [
+          3412,
+          4092
+        ],
+        [
+          4724,
+          5776
+        ],
+        [
+          6360,
+          7144
+        ],
+        [
+          7776,
+          8736
+        ],
+        [
+          9140,
+          10364
+        ],
+        [
+          10856,
+          11640
+        ]
+      ],
+      "standing": 1520,
+      "alignX": "mass",
+      "clean": true,
+      "alignY": "ground"
+    },
+    {
+      "name": "run",
+      "file": "run.png",
+      "columns": [
+        [
+          8,
+          114
+        ],
+        [
+          132,
+          230
+        ],
+        [
+          254,
+          348
+        ],
+        [
+          368,
+          458
+        ],
+        [
+          474,
+          568
+        ],
+        [
+          584,
+          670
+        ],
+        [
+          678,
+          784
+        ],
+        [
+          796,
+          900
+        ],
+        [
+          910,
+          1014
+        ]
+      ],
+      "standing": 176,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "jump",
+      "file": "jump.png",
+      "columns": [
+        [
+          146,
+          358
+        ],
+        [
+          636,
+          860
+        ]
+      ],
+      "standing": 393,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "fall",
+      "file": "fall.png",
+      "columns": [
+        [
+          120,
+          296
+        ],
+        [
+          518,
+          888
+        ]
+      ],
+      "standing": 381,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "hurt",
+      "file": "hurt.png",
+      "columns": [
+        [
+          136,
+          370
+        ],
+        [
+          546,
+          980
+        ]
+      ],
+      "standing": 438,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "jab",
+      "file": "jab.png",
+      "columns": [
+        [
+          70,
+          236
+        ],
+        [
+          402,
+          650
+        ],
+        [
+          800,
+          972
+        ]
+      ],
+      "standing": 325,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "light-side",
+      "file": "light-side.png",
+      "columns": [
+        [
+          108,
+          254
+        ],
+        [
+          360,
+          666
+        ],
+        [
+          756,
+          906
+        ]
+      ],
+      "standing": 306,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "light-up",
+      "file": "light-up.png",
+      "columns": [
+        [
+          78,
+          284
+        ],
+        [
+          408,
+          672
+        ],
+        [
+          770,
+          928
+        ]
+      ],
+      "standing": 263,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "light-down",
+      "file": "light-down.png",
+      "columns": [
+        [
+          94,
+          238
+        ],
+        [
+          360,
+          634
+        ],
+        [
+          738,
+          942
+        ]
+      ],
+      "standing": 351,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "dash-attack",
+      "file": "dash-attack.png",
+      "columns": [
+        [
+          44,
+          318
+        ],
+        [
+          364,
+          672
+        ],
+        [
+          724,
+          986
+        ]
+      ],
+      "standing": 336,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "air-neutral",
+      "file": "air-neutral.png",
+      "columns": [
+        [
+          118,
+          246
+        ],
+        [
+          358,
+          652
+        ],
+        [
+          748,
+          954
+        ]
+      ],
+      "standing": 236,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "air-forward",
+      "file": "air-forward.png",
+      "columns": [
+        [
+          106,
+          266
+        ],
+        [
+          364,
+          660
+        ],
+        [
+          714,
+          980
+        ]
+      ],
+      "standing": 319,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "air-back",
+      "file": "air-back.png",
+      "columns": [
+        [
+          106,
+          238
+        ],
+        [
+          360,
+          654
+        ],
+        [
+          766,
+          916
+        ]
+      ],
+      "standing": 297,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "air-up",
+      "file": "air-up.png",
+      "columns": [
+        [
+          114,
+          232
+        ],
+        [
+          456,
+          626
+        ],
+        [
+          740,
+          988
+        ]
+      ],
+      "standing": 227,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "air-down",
+      "file": "air-down.png",
+      "columns": [
+        [
+          134,
+          274
+        ],
+        [
+          446,
+          564
+        ],
+        [
+          764,
+          886
+        ]
+      ],
+      "standing": 315,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "heavy-side",
+      "file": "heavy-side.png",
+      "columns": [
+        [
+          32,
+          180
+        ],
+        [
+          234,
+          376
+        ],
+        [
+          512,
+          778
+        ],
+        [
+          826,
+          1006
+        ]
+      ],
+      "standing": 226,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "heavy-up",
+      "file": "heavy-up.png",
+      "columns": [
+        [
+          48,
+          192
+        ],
+        [
+          358,
+          518
+        ],
+        [
+          622,
+          740
+        ],
+        [
+          854,
+          976
+        ]
+      ],
+      "standing": 215,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "heavy-down",
+      "file": "heavy-down.png",
+      "columns": [
+        [
+          62,
+          208
+        ],
+        [
+          358,
+          470
+        ],
+        [
+          554,
+          746
+        ],
+        [
+          834,
+          996
+        ]
+      ],
+      "standing": 197,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "shield",
+      "file": "shield.jpg",
+      "columns": [
+        [
+          796,
+          1692
+        ]
+      ],
+      "standing": 1557,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "roll",
+      "file": "roll.png",
+      "columns": [
+        [
+          42,
+          186
+        ],
+        [
+          310,
+          452
+        ],
+        [
+          550,
+          740
+        ],
+        [
+          798,
+          1002
+        ]
+      ],
+      "standing": 219,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "dodge",
+      "file": "dodge.png",
+      "columns": [
+        [
+          66,
+          414
+        ],
+        [
+          636,
+          922
+        ]
+      ],
+      "standing": 467,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "grab",
+      "file": "grab.jpg",
+      "columns": [
+        [
+          164,
+          1340
+        ],
+        [
+          1844,
+          2636
+        ]
+      ],
+      "standing": 1352,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "throw",
+      "file": "throw.png",
+      "columns": [
+        [
+          58,
+          480
+        ],
+        [
+          544,
+          950
+        ]
+      ],
+      "standing": 479,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "ledge",
+      "file": "ledge.png",
+      "columns": [
+        [
+          164,
+          368
+        ]
+      ],
+      "standing": 422,
+      "alignX": "mass",
+      "clean": true,
+      "alignY": "top"
+    },
+    {
+      "name": "special-neutral",
+      "file": "special-neutral.png",
+      "columns": [
+        [
+          116,
+          234
+        ],
+        [
+          426,
+          588
+        ],
+        [
+          758,
+          914
+        ]
+      ],
+      "standing": 318,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
+      "name": "special-up",
+      "file": "special-up.png",
+      "columns": [
+        [
+          176,
+          420
+        ],
+        [
+          578,
+          902
+        ]
+      ],
+      "standing": 432,
+      "alignX": "mass",
+      "clean": true
+    }
+  ]
+}
