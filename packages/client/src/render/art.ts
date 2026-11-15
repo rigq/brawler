@@ -81,6 +81,8 @@ export interface CharacterArt {
 
 /** Robert: 1 s standing still, then a ~1.5 s drag (one every ~2.5 s, the first 1 s after stopping). */
 const ROBERT_IDLE: IdleTiming = { restMs: 1000 };
+/** Samu: 1.5 s in guard, then grabs a dumbbell from his backpack, two curls, puts it back (~2 s). */
+const SAMU_IDLE: IdleTiming = { restMs: 1500, frameMs: 170 };
 /** Chachin: 1.5 s bouncing in guard, then a quick ~0.9 s backflip. */
 const CHACHIN_IDLE: IdleTiming = { restMs: 1500, frameMs: 110 };
 
@@ -91,6 +93,7 @@ export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
   samu: {
     body: SHEETS.samuBody,
     anims: animSheets('samu'),
+    idle: SAMU_IDLE,
     teleport: SHEETS.samuTeleport,
     flag: { plant: SHEETS.samuFlagPlant, wave: SHEETS.samuFlag },
   },

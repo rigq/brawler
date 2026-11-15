@@ -5,54 +5,85 @@
   "assets": [
     {
       "name": "idle",
-      "file": "idle.jpg",
+      "file": "idle.png",
       "columns": [
         [
-          156,
-          764
+          0,
+          1024
         ],
         [
-          1404,
-          2008
+          1024,
+          2048
         ],
         [
-          2392,
-          2972
+          2048,
+          3072
         ],
         [
-          3416,
-          3980
+          3072,
+          4096
+        ],
+        [
+          4096,
+          5120
+        ],
+        [
+          5120,
+          6144
+        ],
+        [
+          6144,
+          7168
+        ],
+        [
+          7168,
+          8192
+        ],
+        [
+          8192,
+          9216
+        ],
+        [
+          9216,
+          10240
+        ],
+        [
+          10240,
+          11264
+        ],
+        [
+          11264,
+          12288
         ]
       ],
-      "standing": 929,
+      "standing": 620,
       "alignX": "mass",
       "clean": true
     },
     {
       "name": "run",
-      "file": "run-built.png",
+      "file": "run.png",
       "columns": [
         [
           0,
-          212
+          1024
         ],
         [
-          272,
-          496
+          1024,
+          2048
         ],
         [
-          556,
-          768
+          2048,
+          3072
         ],
         [
-          828,
-          1052
+          3072,
+          4096
         ]
       ],
-      "standing": 247,
+      "standing": 640,
       "alignX": "mass",
-      "clean": true,
-      "cleanMinShare": 0.25
+      "clean": true
     },
     {
       "name": "jump",
@@ -433,6 +464,23 @@
       "clean": true
     },
     {
+      "name": "dodge",
+      "file": "dodge.jpg",
+      "columns": [
+        [
+          224,
+          1180
+        ],
+        [
+          1760,
+          2752
+        ]
+      ],
+      "standing": 1280,
+      "alignX": "mass",
+      "clean": true
+    },
+    {
       "name": "grab",
       "file": "grab.jpg",
       "columns": [
@@ -446,23 +494,6 @@
         ]
       ],
       "standing": 1299,
-      "alignX": "mass",
-      "clean": true
-    },
-    {
-      "name": "throw",
-      "file": "throw.jpg",
-      "columns": [
-        [
-          224,
-          1180
-        ],
-        [
-          1760,
-          2752
-        ]
-      ],
-      "standing": 1279,
       "alignX": "mass",
       "clean": true
     },

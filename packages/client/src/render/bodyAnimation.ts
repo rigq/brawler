@@ -54,6 +54,7 @@ const FALLBACK: Partial<Record<AnimName, AnimName>> = {
   'air-neutral': 'fall',
   dodge: 'fall',
   'special-neutral': 'jab',
+  throw: 'grab',
 };
 
 /** How a character's idle plays: `restMs` on the first frame between play-throughs, `frameMs` per frame. */

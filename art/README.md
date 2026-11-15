@@ -69,11 +69,12 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 
 **Al pedir tiras a Gemini:** añadir "no motion blur, no speed lines, no afterimages" al prompt; la estela es lo que más estropea.
 
-**Samu**: 25 de 26 tiras en el juego (15 nov); falta `dodge` (usa `fall`). Llegaron como `samu_ (1…25).jpg`; renombradas mirando cada una. Columnas sacadas de las manchas conectadas de cada imagen y `standing` estimado con la misma pose de Robert, revisado a escala de juego.
+**Samu**: 25 de 26 tiras en el juego (15 nov); falta `throw` (usa la de `grab`). Llegaron como `samu_ (1…25).jpg`; renombradas mirando cada una. Columnas sacadas de las manchas conectadas de cada imagen y `standing` estimado con la misma pose de Robert, revisado a escala de juego.
 
 | Ojo con | Qué pasa |
 | --- | --- |
-| `run.jpg` | Rehecha por Riga (15 nov): 4 fotogramas sin estela, pero 3 son la misma zancada. `build-run.py` monta `run-built.png`: zancada → en el aire → las dos con los tonos de pierna intercambiados (aquí el beige claro y el marrón se distinguen bien; el intercambio decide por zonas para no dejar motitas) |
+| `idle.png`, `run.png` | Montadas con `build-strips.py` desde los fotogramas sueltos de `idle-src/` (5 poses, llegaron en orden inverso) y `run-src/` (4). El idle: guardia → coge la mancuerna → dos curls → la guarda. La carrera alterna bien las piernas |
+| `dodge.jpg` | Era la imagen que al principio se tomó por `throw` (idénticas, byte a byte): `throw` sigue faltando |
 | `heavy-side.jpg`, `heavy-down.jpg` | El 2.º fotograma sale duplicado (estela): se sustituye por el 1.º |
 | `light-up.jpg` | Arcos azules de barrido en los fotogramas 2 y 3; se dejan (se leen como el arco del golpe) |
 | `special-up.jpg` | Línea de suelo: se recorta con `rows` |
@@ -90,4 +91,4 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 | `ledge.png` | 2 fotogramas (colgado mirando el móvil); se usa el 1.º |
 | `run.png` | 9 fotogramas pequeños (la imagen era de 1024 px), pero es un ciclo de verdad |
 
-**Pendiente:** `dodge` de Samu y, si se quiere, repetir su `run`. (de pie, correr, saltar, caer, golpes, recibir, escudo, rodar, borde) y el efecto de corte de la navaja (v1.1).
+**Pendiente:** `throw` de Samu. (de pie, correr, saltar, caer, golpes, recibir, escudo, rodar, borde) y el efecto de corte de la navaja (v1.1).

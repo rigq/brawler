@@ -7,6 +7,7 @@ test('a missing animation borrows a similar one', () => {
   const has = (name: string) => name === 'light-up' || name === 'fall';
   assert.equal(resolveAnim('heavy-up', has), 'light-up');
   assert.equal(resolveAnim('air-down', has), 'fall');
+  assert.equal(resolveAnim('throw', (name) => name === 'grab'), 'grab');
 });
 
 test('with no animations at all, every name ends in the still pose (no endless loop)', () => {

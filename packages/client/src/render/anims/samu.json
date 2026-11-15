@@ -1,12 +1,12 @@
 {
   "idle": {
-    "frameWidth": 48,
-    "frameHeight": 72,
-    "frames": 4
+    "frameWidth": 52,
+    "frameHeight": 71,
+    "frames": 12
   },
   "run": {
-    "frameWidth": 62,
-    "frameHeight": 66,
+    "frameWidth": 80,
+    "frameHeight": 67,
     "frames": 4
   },
   "jump": {
@@ -99,13 +99,13 @@
     "frameHeight": 66,
     "frames": 4
   },
-  "grab": {
-    "frameWidth": 72,
+  "dodge": {
+    "frameWidth": 56,
     "frameHeight": 71,
     "frames": 2
   },
-  "throw": {
-    "frameWidth": 56,
+  "grab": {
+    "frameWidth": 72,
     "frameHeight": 71,
     "frames": 2
   },
