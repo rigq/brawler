@@ -638,6 +638,11 @@
   75% { content: '...'; }
 }
 
+/* Medium screens: the fighters on the right need the room, the notes go. */
+@media (max-width: 1280px) {
+  .blade__note { display: none; }
+}
+
 @media (max-width: 900px) {
   .main-menu { grid-template-columns: 1fr; }
   .roster-show { display: none; }

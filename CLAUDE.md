@@ -1,7 +1,7 @@
-# CLAUDE.md — Brawler web online
+# CLAUDE.md — Los Vatos (brawler web online)
 
 ## Qué es
-Juego de lucha 2D estilo Brawlhalla, jugable en navegador y online 1v1, con personajes inspirados en compañeros de clase. Proyecto personal y pieza de portfolio de Riga (2.º DAW). MVP público antes del **14 de marzo de 2027**.
+**Los Vatos**: juego de lucha 2D estilo Brawlhalla, jugable en navegador y online 1v1, con personajes inspirados en compañeros de clase. Proyecto personal y pieza de portfolio de Riga (2.º DAW). MVP público antes del **14 de marzo de 2027**.
 
 ## Cómo trabajamos
 - **Se avanza tarea a tarea** del plan (ver "Plan" abajo), en orden. Cuando Riga dice "sigue", encadena la siguiente tarea al terminar la actual.

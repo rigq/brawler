@@ -1,7 +1,7 @@
 // Entry point for game logic shared by client and server.
 // Must stay pure: no DOM, no Phaser, no Node APIs.
 
-export const GAME_TITLE = 'Brawler';
+export const GAME_TITLE = 'Los Vatos';
 
 export * from './constants.ts';
 export * from './characters/index.ts';
