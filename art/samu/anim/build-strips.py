@@ -4,7 +4,8 @@ from PIL import Image
 CANVAS_W = 1024
 # Idle: guard (pause), reach for the dumbbell, two curls, put it back.
 IDLE = [1, 2, 3, 4, 5, 4, 3, 4, 5, 4, 3, 2]
-RUN = [1, 2, 3, 4]
+# Order by what the legs do: dark leg lands, pushes; light leg lands, supports.
+RUN = [1, 2, 4, 3]
 def strip(paths, out):
     frames = [Image.open(p).convert('RGB') for p in paths]
     s = Image.new('RGB', (CANVAS_W * len(frames), frames[0].height), (255, 0, 255))

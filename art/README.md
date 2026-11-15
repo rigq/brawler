@@ -73,7 +73,7 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 
 | Ojo con | Qué pasa |
 | --- | --- |
-| `idle.png`, `run.png` | Montadas con `build-strips.py` desde los fotogramas sueltos de `idle-src/` (5 poses, llegaron en orden inverso) y `run-src/` (4). El idle: guardia → coge la mancuerna → dos curls → la guarda. La carrera alterna bien las piernas |
+| `idle.png`, `run.png` | Montadas con `build-strips.py` desde los fotogramas sueltos de `idle-src/` (5 poses, llegaron en orden inverso) y `run-src/` (4). El idle: guardia → coge la mancuerna → dos curls → la guarda. La carrera va en orden 1-2-4-3 (por lo que hace cada pierna: pisa la oscura, se apoya, la clara pasa delante, aterriza la clara); en el orden de los archivos parecía que patinaba |
 | `dodge.jpg` | Era la imagen que al principio se tomó por `throw` (idénticas, byte a byte): `throw` sigue faltando |
 | `heavy-side.jpg`, `heavy-down.jpg` | El 2.º fotograma sale duplicado (estela): se sustituye por el 1.º |
 | `light-up.jpg` | Arcos azules de barrido en los fotogramas 2 y 3; se dejan (se leen como el arco del golpe) |
