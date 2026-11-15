@@ -242,6 +242,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 Ideas que surgen durante las sesiones y quedan fuera de la tarea actual o del MVP.
 
+- **4 jugadores a la vez** (v1.1, decidido el 15 nov: después del MVP). Todos contra todos; P3 y P4 con mando (no caben 4 en un teclado), así que antes: probar un mando físico y que los menús se manejen con mando. Local ~2–3 sesiones (4 apariciones, cámara, HUD de 4, selección de 4, resultado del último en pie); online +2 (sala de 4 y botón de empezar). Hacerlo si en el playtest lo piden.
+
 - **Paletas alternativas por personaje** (en vez del tinte del P2 en espejo): una segunda versión de los colores de cada uno, como las skins de color de los juegos de lucha. Necesita recolorear sus sprites.
 - **Actividad de Discord** (v1.1, tras el MVP): el juego dentro de la llamada de voz con el Embedded App SDK (dependencia nueva), login OAuth en el servidor, URL mappings del proxy de Discord y sala = `instanceId` de la llamada. ~8–10 h. Antes basta con pasar el enlace por Discord.
 - **Personajes de la clase anterior** (Guille, Suli, Pablo, Juan, Héctor…; ojo, ya hay un Samu): por packs de 2 después del 14 de marzo, con su permiso. ~2–3 semanas por personaje con sus 26 tiras.
