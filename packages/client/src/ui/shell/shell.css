@@ -179,6 +179,12 @@
   transform: translateY(-50%) skewX(calc(var(--skew) * -1));
 }
 
+.blade:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
 .blade:focus-visible {
   outline: 2px solid var(--moon);
   outline-offset: 3px;

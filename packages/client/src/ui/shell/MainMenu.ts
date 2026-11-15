@@ -9,6 +9,12 @@ import type { Screen } from './Shell.ts';
 /** What the player picked in the main menu. */
 export type MenuChoice = { mode: 'versus' } | { mode: 'training' } | { mode: 'online'; code: string | null };
 
+/**
+ * The published build only has a game server if VITE_SERVER_URL was set when
+ * building; in development the server runs next to the page (npm run dev:server, also over the LAN).
+ */
+const ONLINE_AVAILABLE = import.meta.env.DEV || Boolean(import.meta.env.VITE_SERVER_URL);
+
 /** Scale of the fighters lined up on the right (screen px per art px). */
 const SHOWCASE_SCALE = 3;
 
@@ -34,7 +40,9 @@ export function mainMenu(onChoose: (choice: MenuChoice) => void): Screen {
       [
         { label: 'Local', note: '2 jugadores, un teclado', run: () => onChoose({ mode: 'versus' }) },
         { label: 'Entrenamiento', note: 'contra un muñeco', run: () => onChoose({ mode: 'training' }) },
-        { label: 'Online', note: 'con un código de sala', run: showOnline },
+        ONLINE_AVAILABLE
+          ? { label: 'Online', note: 'con un código de sala', run: showOnline }
+          : { label: 'Online', note: 'próximamente', run: () => {}, disabled: true },
         { label: 'Controles', note: 'tecla H', run: () => setControlsPanelOpen(true) },
       ],
       null,

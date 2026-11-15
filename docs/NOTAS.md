@@ -8,6 +8,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Listo para Netlify (15 nov)** — `netlify.toml` en la raíz (build del monorepo, `packages/client/dist`, Node 24). Sin `VITE_SERVER_URL` la versión publicada desactiva Online en el menú ("próximamente"; `bladeList` admite opciones desactivadas que el cursor se salta). Para jugar online en clase: red local con `npm run dev` + `npm run dev:server` (pasos en `docs/DEPLOY.md`).
+
 - **Pausa con ratón y HUD de depuración fuera (15 nov)** — En la pausa, pasar el ratón por una opción reconstruía la lista y el clic no llegaba nunca; ahora los botones se crean una vez y solo se mueve el resaltado (`ui/shell/bladeList.ts`, también en el menú principal). La J ya no confirma en la pausa (es ataque): ratón, W/S + Enter, Esc continúa. El texto verde de depuración (sim, tick, vx, vy…) se ha quitado: queda solo el FPS, discreto, y la línea de la sala online.
 
 - **I1–I3: menú principal, selección de personaje, HUD y pausa (15 nov)** — Interfaz en HTML/CSS sobre el lienzo, con estilo "templo flotante de noche" (azul noche, luna, ámbar de farol como acento; P1 naranja, P2 azul; tipografía condensada en cursiva con Impact y alternativas del sistema, sin fuentes externas).
