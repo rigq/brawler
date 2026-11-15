@@ -73,7 +73,7 @@ Nombres de `docs/PROMPTS_ANIMACIONES.md`. Se procesan con `node tools/pixelate.t
 
 | Ojo con | Qué pasa |
 | --- | --- |
-| `run.jpg` | Estela de movimiento en 5 de 7 fotogramas. `run-built.png` = zancada (1.º) → en el aire (7.º) → zancada con tonos de pierna intercambiados → en el aire. El beige separa peor las piernas que el oliva de Robert: se nota poco. **Mejor repetir** (una zancada y un paso, sin estela) |
+| `run.jpg` | Rehecha por Riga (15 nov): 4 fotogramas sin estela, pero 3 son la misma zancada. `build-run.py` monta `run-built.png`: zancada → en el aire → las dos con los tonos de pierna intercambiados (aquí el beige claro y el marrón se distinguen bien; el intercambio decide por zonas para no dejar motitas) |
 | `heavy-side.jpg`, `heavy-down.jpg` | El 2.º fotograma sale duplicado (estela): se sustituye por el 1.º |
 | `light-up.jpg` | Arcos azules de barrido en los fotogramas 2 y 3; se dejan (se leen como el arco del golpe) |
 | `special-up.jpg` | Línea de suelo: se recorta con `rows` |
