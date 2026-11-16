@@ -82,6 +82,9 @@ export class App {
     if (!this.matchKey) return;
     this.game.scene.remove(this.matchKey);
     this.matchKey = null;
+    // Phaser keeps blocking the game keys (W, A, S, D, J…) after the scene is gone:
+    // let them go, or they can't be typed in the menus (the room code field).
+    this.game.input.keyboard?.clearCaptures();
   }
 
   private exitToMenu(): void {

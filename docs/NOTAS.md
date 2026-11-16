@@ -8,6 +8,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
+
 - **El juego se llama "Los Vatos" (15 nov)** — `GAME_TITLE` en `shared/src/index.ts` (menú, log del servidor) y `<title>`/`og:title` en `index.html`. En el menú sale en dos líneas. En pantallas de menos de 1280 px se ocultan las notas de los botones del menú (se cortaban detrás de los personajes). El repo y los paquetes siguen llamándose `brawler`.
 
 - **Pausa con ratón y HUD de depuración fuera (15 nov)** — En la pausa, pasar el ratón por una opción reconstruía la lista y el clic no llegaba nunca; ahora los botones se crean una vez y solo se mueve el resaltado (`ui/shell/bladeList.ts`, también en el menú principal). La J ya no confirma en la pausa (es ataque): ratón, W/S + Enter, Esc continúa. El texto verde de depuración (sim, tick, vx, vy…) se ha quitado: queda solo el FPS, discreto, y la línea de la sala online.
