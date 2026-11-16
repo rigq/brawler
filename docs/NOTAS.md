@@ -238,6 +238,13 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Siguiente tarea
 
+- **Feedback del primer playtest en clase (16 nov)**, por prioridad:
+  1. **Recovery de Samu chetada** ("muy difícil tirarlo"): el teletransporte a la bandera siempre le salva. Ajuste de datos.
+  2. **Golpes que fallan**: revisar hitboxes contra el dibujo de cada personaje con F1 (las cajas se pensaron para rectángulos de 40×60 y los sprites son más anchos), y si es online, que el cliente no predice golpes.
+  3. **Cambiar de personaje sin salir**: en local, opción en pausa/resultado; online, al pedir revancha (hoy la vista online no se rehace si cambia un personaje).
+  4. **"Sistema de combos"**: los combos ya existen (hitstun, jab encadenado) pero no se ven fuera del entrenamiento; contador de combo en versus y más golpes que enlacen.
+  5. **Especiales lateral y abajo distintos** por personaje: es v1.1 en el plan (8 movimientos nuevos con su arte y equilibrio, ~4–6 sesiones); después del MVP salvo que se decida otra cosa.
+
 - **L3 deploy** (recomendado ya): con menús, cuatro personajes animados y online con elección de personaje, es el momento de publicarlo y probarlo por Discord. Todo en `docs/DEPLOY.md`; faltan las cuentas de Riga.
 - **D1:** `throw` de Samu (2 imágenes).
 - **I4:** sonidos con Web Audio, música y volumen. Después D2 (efectos) y D3 (escenario vivo).
