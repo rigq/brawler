@@ -63,7 +63,7 @@ En el aire no te giras: "adelante" y "atrás" dependen de hacia dónde mirabas a
 | H | Abre o cierra el panel de controles (arriba a la derecha) |
 | F1 | Muestra hurtboxes (verde) y hitboxes (rojo) |
 | Enter, R o Start | Revancha (partida local, al terminar) |
-| Esc | Pausa (online: menú): continuar, cambiar personaje, controles o salir |
+| Esc | Pausa (online: menú): continuar, cambiar personaje, controles, sonido o salir |
 | R | Reiniciar (entrenamiento) |
 | 8 | El muñeco se cubre o deja de cubrirse (entrenamiento) |
 | 9 / 0 | −10 % / +10 % al muñeco (entrenamiento) |

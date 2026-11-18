@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { WORLD_HEIGHT, WORLD_WIDTH, type CharacterId } from '@brawler/shared';
+import { audio } from '../audio/AudioEngine.ts';
+import { music } from '../audio/music.ts';
 import { THEME } from '../render/palette.ts';
 import { BackdropScene } from '../scenes/BackdropScene.ts';
 import { GameScene, type LocalMode } from '../scenes/GameScene.ts';
@@ -10,6 +12,7 @@ import { lobby } from '../ui/shell/Lobby.ts';
 import { mainMenu, type MenuChoice } from '../ui/shell/MainMenu.ts';
 import { pauseMenu } from '../ui/shell/PauseMenu.ts';
 import { Shell } from '../ui/shell/Shell.ts';
+import { soundSettings } from '../ui/shell/SoundSettings.ts';
 
 const BACKDROP = 'BackdropScene';
 
@@ -36,10 +39,12 @@ export class App {
       input: { gamepad: true },
       scene: [BackdropScene],
     });
+    audio.install();
   }
 
   showMenu(): void {
-    this.shell.show(mainMenu((choice) => this.onMenuChoice(choice)));
+    music.play('menu');
+    this.shell.show(mainMenu((choice) => this.onMenuChoice(choice), () => this.shell.show(soundSettings(() => this.showMenu()))));
   }
 
   /** Straight to character select for a room code (someone shared a link). */
@@ -72,6 +77,7 @@ export class App {
 
   private startMatch(key: string, scene: Phaser.Scene, hideBackdrop: boolean): void {
     this.stopMatch();
+    music.play('match');
     this.shell.hide();
     if (hideBackdrop) this.game.scene.sleep(BACKDROP);
     this.game.scene.add(key, scene, true);
@@ -98,6 +104,7 @@ export class App {
   /** Local: back to character select; the picks start a new match. */
   private pickLocalCharacters(mode: LocalMode, lineup: CharacterId[]): void {
     this.stopMatch();
+    music.play('menu');
     this.game.scene.wake(BACKDROP);
     const chip = mode === 'versus' ? 'Local · 2 jugadores' : 'Entrenamiento';
     this.shell.show(characterSelect(mode, chip, (picks) => this.startLocal(mode, picks), () => this.exitToMenu(), lineup));
@@ -127,19 +134,23 @@ export class App {
   private hooks(match: { online: true } | { online: false; mode: LocalMode; lineup: CharacterId[] }): SceneHooks {
     const { online } = match;
     return {
-      onPause: (actions: PauseActions) =>
-        this.shell.show(
-          pauseMenu(
-            {
-              ...actions,
-              online,
-              pickCharacter: match.online ? this.pickOnlineCharacter(actions) : () => this.pickLocalCharacters(match.mode, match.lineup),
-              exit: () => this.exitToMenu(),
-            },
-            () => this.shell.hide(),
-          ),
-          true,
-        ),
+      onPause: (actions: PauseActions) => {
+        const openPause = (): void =>
+          this.shell.show(
+            pauseMenu(
+              {
+                ...actions,
+                online,
+                pickCharacter: match.online ? this.pickOnlineCharacter(actions) : () => this.pickLocalCharacters(match.mode, match.lineup),
+                sound: () => this.shell.show(soundSettings(openPause), true),
+                exit: () => this.exitToMenu(),
+              },
+              () => this.shell.hide(),
+            ),
+            true,
+          );
+        openPause();
+      },
       onWaiting: (code) => {
         if (!this.shell.isShowing('lobby')) this.shell.show(lobby(code, shareLink(code), () => this.exitToMenu()), true);
       },

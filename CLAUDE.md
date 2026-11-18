@@ -132,7 +132,7 @@ brawler/
 - [x] I1 Menú principal (Local / Entrenamiento / Online / Controles)
 - [x] I2 Selección de personaje para 2 jugadores
 - [x] I3 HUD nuevo (retrato, vidas en iconos, % que tiembla) y pausa con Esc
-- [ ] I4 Sonidos sintetizados con Web Audio, música y volumen
+- [x] I4 Sonidos sintetizados con Web Audio, música y volumen (`client/src/audio/`; Sonido en menú y pausa)
 
 **L · Pulido y lanzamiento** (feb – 14 mar)
 - [ ] L1 Playtest con 6–8 compañeros

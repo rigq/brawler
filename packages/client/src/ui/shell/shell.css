@@ -652,3 +652,39 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
+
+/* ---------- Sound settings ---------- */
+
+.volume {
+  display: grid;
+  grid-template-columns: 7em 1fr 4em;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+
+.volume.is-selected {
+  border-left-color: var(--lantern);
+  background: rgba(255, 183, 3, 0.08);
+}
+
+.volume__label {
+  font: 26px/1 var(--font-display);
+  color: var(--moon);
+  text-transform: uppercase;
+}
+
+.volume__value {
+  font: 600 15px/1 var(--font-body);
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.volume__slider {
+  width: 100%;
+  accent-color: var(--lantern);
+  cursor: pointer;
+}

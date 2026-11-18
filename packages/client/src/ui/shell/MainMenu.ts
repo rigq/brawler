@@ -13,10 +13,10 @@ export type MenuChoice = { mode: 'versus' } | { mode: 'training' } | { mode: 'on
 const SHOWCASE_SCALE = 3;
 
 /**
- * The title screen: Local / Entrenamiento / Online / Controles, keyboard (both
+ * The title screen: Local / Entrenamiento / Online / Controles / Sonido, keyboard (both
  * players' keys) or mouse. Online opens a second list (create or join with a code).
  */
-export function mainMenu(onChoose: (choice: MenuChoice) => void): Screen {
+export function mainMenu(onChoose: (choice: MenuChoice) => void, onSound: () => void): Screen {
   const nav = h('nav');
   const extra = h('div');
   let list = bladeList([]);
@@ -36,6 +36,7 @@ export function mainMenu(onChoose: (choice: MenuChoice) => void): Screen {
         { label: 'Entrenamiento', note: 'contra un muñeco', run: () => onChoose({ mode: 'training' }) },
         { label: 'Online', note: 'con un código de sala', run: showOnline },
         { label: 'Controles', note: 'tecla H', run: () => setControlsPanelOpen(true) },
+        { label: 'Sonido', note: 'música y efectos', run: onSound },
       ],
       null,
     );

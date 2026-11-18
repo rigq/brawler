@@ -1,4 +1,5 @@
 import { CHARACTER_IDS, characterOf, characterStats, type CharacterId } from '@brawler/shared';
+import { playSfx } from '../../audio/sfx.ts';
 import { CHARACTER_INFO, STAT_LABELS } from '../characterInfo.ts';
 import { h, hint } from './dom.ts';
 import { listenMenuKeys, type MenuAction } from './menuInput.ts';
@@ -114,6 +115,7 @@ export function characterSelect(
 
   const confirm = (seat: Seat) => {
     seat.ready = true;
+    playSfx('menuConfirm');
     if (mode === 'training' && seat === seats[0]) seats[1]!.cursor = seats[0]!.cursor === 1 ? 0 : 1;
     const needed = mode === 'online' ? [seats[0]!] : seats;
     if (needed.every((s) => s.ready)) start();
@@ -131,6 +133,7 @@ export function characterSelect(
     if (action === 'back') {
       // Back undoes the last pick; with nothing picked it leaves the screen.
       const undo = [...seats].reverse().find((s) => s.ready && (s.controller === player || (mode === 'training' && player === 0)));
+      playSfx('menuBack');
       if (undo) undo.ready = false;
       else if (player === 0) return onBack();
       render();
@@ -142,6 +145,7 @@ export function characterSelect(
     else if (action === 'right') seat.cursor = (seat.cursor + 1) % n;
     else if (action === 'up' || action === 'down') seat.cursor = (seat.cursor + COLUMNS) % n;
     else if (action === 'confirm') return confirm(seat);
+    playSfx('menuMove');
     render();
   };
 

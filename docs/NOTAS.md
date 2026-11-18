@@ -27,6 +27,13 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **I4 · Sonido (19 nov)** — Todo sintetizado con Web Audio, sin archivos ni dependencias (`client/src/audio/`).
+  - `AudioEngine`: un solo `AudioContext`, creado con el primer clic o tecla (los navegadores no dejan sonar antes); buses de música y efectos con volumen guardado en `localStorage`; limitador para que muchos sonidos a la vez no saturen; se calla con la pestaña oculta.
+  - `synth.ts`: tono (oscilador con deslizamiento de tono) y ruido filtrado, con ataque rápido y caída exponencial. `sfx.ts`: ~25 efectos (golpe que suena más grave y largo cuanto más daño, bloqueo, rotura de escudo, KO, saltos, aterrizaje, dash/esquiva, golpes al aire, carga completa, agarre, borde, cañón de Donate, humo de Robert, remate de Samu, grito de Chachin, recovery, teletransporte, menús, victoria).
+  - `MatchSounds`: como `HitEffects`, compara el `World` de cada frame con el anterior (daño que sube con destello = golpe, vidas que bajan = KO, proyectil nuevo = disparo…): funciona igual en local y online. Tests en `client/test/MatchSounds.test.ts`.
+  - `music.ts`: bucle original en La menor (Lam–Fa–Do–Sol) a 104 BPM con secuenciador que programa las notas por adelantado con el reloj de audio. Menú: pad y arpegio; partida: además bombo, caja, charles y bajo.
+  - **Sonido** en el menú principal y en la pausa: barras de Música y Efectos (ratón o W/S + A/D).
+
 - **Golpes con el puño de verdad, carga que se mantiene y agarres (19 nov)** — Feedback: "atacan con líneas imaginarias", "la carga debería poder mantenerse", "agarres toscos", "Chachin se teletransporta a la esquina al agarrar".
   - **Cajas de golpe sacadas del dibujo**: `tools/hitboxes.ts` toma el fotograma del golpe de cada tira (`hitFrame` en `bodyAnimation.ts`), busca los píxeles que salen del cuerpo cerca de donde estaba la caja escrita y escribe su contorno + 5 px en `shared/characters/artHitboxes.ts` (generado; `buildCharacter` lo usa en lugar de la caja escrita). Las cajas eran hasta 3–5 veces más grandes que el brazo: el fuerte lateral de Robert pasa de 83×44 a 19×19. **Fuera los arcos de barrido** (`SwingArc`): ya no hacen falta.
   - **Carga**: al llegar al máximo se mantiene (el personaje parpadea) hasta soltar, con un tope de 3 s (`HEAVY_MAX_HOLD_TICKS`) para que nadie se quede cargado eternamente.
@@ -251,6 +258,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **Golpes que sin la caja escrita pegan corto**: con las cajas sacadas del dibujo, el alcance es el del brazo dibujado. Los fuertes laterales quedan cortos (el puño apenas sale del cuerpo en las tiras actuales) y la estadística de alcance ya no estira estos golpes. Se arregla con tiras mejores (5 fotogramas, `docs/PROMPTS_ANIMACIONES.md`).
 - **La `light-side` de Donate y de Chachin patea hacia atrás** en el dibujo: su caja se queda en el borde delantero del cuerpo. Rehacer esas dos tiras.
+- **El volumen de cada sonido está ajustado a ojo** (sin oírlo en un altavoz): si algo suena demasiado fuerte o flojo, se cambia su `gain` en `audio/sfx.ts` o `audio/music.ts`.
 - **Los menús no se manejan con mando**, solo con teclado y ratón (el mando lo lee Phaser dentro de las partidas).
 - **La fuente Impact** existe en Windows y Mac; en Linux sale una de reserva (más ancha), el diseño aguanta pero luce menos.
 
@@ -291,7 +299,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
   4. **"Sistema de combos"**: los combos ya existen (hitstun, jab encadenado) pero no se ven fuera del entrenamiento; contador de combo en versus y más golpes que enlacen.
   5. **Especiales lateral y abajo distintos** por personaje: es v1.1 en el plan (8 movimientos nuevos con su arte y equilibrio, ~4–6 sesiones); después del MVP salvo que se decida otra cosa.
 
-- **L3 deploy** (recomendado ya): con menús, cuatro personajes animados y online con elección de personaje, es el momento de publicarlo y probarlo por Discord. Todo en `docs/DEPLOY.md`; faltan las cuentas de Riga.
+- **L3 deploy — aplazado (19 nov, decisión de Riga):** no pagar el servidor (~2 $/mes) hasta que el juego esté pulido; mientras, se juega en LAN. Todo listo: `fly.toml` (París, la app `los-vatos` ya está creada en Fly, sin máquina: no cobra), `netlify.toml` y pasos en `docs/DEPLOY.md`. Para publicar: `fly deploy --ha=false` y conectar el repo en Netlify.
+- **Siguiente:** ataques con personalidad (fase 3) mientras Riga rehace las tiras flojas (`light-side` de Donate y Chachin, `heavy-side`, `throw` de Samu).
 - **D1:** `throw` de Samu (2 imágenes).
 - **I4:** sonidos con Web Audio, música y volumen. Después D2 (efectos) y D3 (escenario vivo).
 

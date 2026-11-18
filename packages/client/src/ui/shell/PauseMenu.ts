@@ -11,6 +11,8 @@ export interface PauseOptions {
   restart?: () => void;
   /** Opens character select (local: a new match with the picks; online: from the next match). */
   pickCharacter?: () => void;
+  /** Opens the volume settings. */
+  sound?: () => void;
   exit: () => void;
 }
 
@@ -28,6 +30,7 @@ export function pauseMenu(options: PauseOptions, close: () => void): Screen {
     ...(options.restart ? [{ label: 'Reiniciar', run: () => (close(), options.restart!()) }] : []),
     ...(options.pickCharacter ? [{ label: 'Cambiar personaje', run: options.pickCharacter }] : []),
     { label: 'Controles', run: () => setControlsPanelOpen(true) },
+    ...(options.sound ? [{ label: 'Sonido', run: options.sound }] : []),
     { label: options.online ? 'Salir de la sala' : 'Salir al menú', run: options.exit },
   ]);
   const onAction = (_player: number, action: MenuAction) => {

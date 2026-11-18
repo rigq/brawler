@@ -12,6 +12,7 @@ import {
   type MatchResult,
   type World,
 } from '@brawler/shared';
+import { MatchSounds } from '../audio/MatchSounds.ts';
 import { Hud } from '../ui/hud/Hud.ts';
 import { gameLayer } from '../ui/layer.ts';
 import { ResultOverlay } from '../ui/ResultOverlay.ts';
@@ -37,6 +38,7 @@ export class MatchView {
   private readonly debugOverlay: DebugOverlay;
   private readonly projectileView: ProjectileView;
   private readonly hitEffects: HitEffects;
+  private readonly sounds = new MatchSounds();
   private readonly hud: StatsHud;
   private readonly playerHud: Hud;
   private readonly resultOverlay: ResultOverlay;
@@ -109,6 +111,7 @@ export class MatchView {
     this.projectileView.render(world.projectiles, alpha, frameMs);
     this.debugOverlay.render(world.players, alpha);
     for (const dealt of this.hitEffects.update(world.players, frameMs)) this.shake(dealt);
+    this.sounds.update(world, result.over);
     const onScreen = this.playerViews.filter((view) => view.isVisible);
     this.cameraRig.update(
       onScreen.map((view) => view.drawnBounds),

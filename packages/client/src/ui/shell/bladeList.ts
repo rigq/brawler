@@ -1,3 +1,4 @@
+import { playSfx } from '../../audio/sfx.ts';
 import { h } from './dom.ts';
 
 export interface BladeItem {
@@ -23,10 +24,14 @@ export function bladeList(items: BladeItem[], numbered = false) {
     );
     button.type = 'button';
     button.addEventListener('mouseenter', () => select(i));
-    button.addEventListener('click', () => item.run());
+    button.addEventListener('click', () => {
+      playSfx('menuConfirm');
+      item.run();
+    });
     return button;
   });
   const select = (i: number) => {
+    if (i !== selected && i >= 0) playSfx('menuMove');
     selected = i;
     buttons.forEach((button, n) => button.classList.toggle('is-selected', n === i));
   };
@@ -36,6 +41,11 @@ export function bladeList(items: BladeItem[], numbered = false) {
     move: (step: number) => select((selected + step + items.length) % items.length),
     /** Nothing highlighted (e.g. while typing a code). */
     clear: () => select(-1),
-    run: () => items[selected]?.run(),
+    run: () => {
+      const item = items[selected];
+      if (!item) return;
+      playSfx('menuConfirm');
+      item.run();
+    },
   };
 }
