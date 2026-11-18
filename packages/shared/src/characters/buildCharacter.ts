@@ -12,10 +12,15 @@ import {
   type AttackData,
   type AttackId,
 } from '../constants.ts';
+import type { ArtBoxes } from './artHitboxes.ts';
 import type { Character, CharacterDefinition } from './types.ts';
 
-/** Turns a character file into the numbers the simulation uses. */
-export function buildCharacter(definition: CharacterDefinition): Character {
+/**
+ * Turns a character file into the numbers the simulation uses. `artBoxes`:
+ * hitboxes measured on the character's attack animations (tools/hitboxes.ts);
+ * they replace the written ones, so a punch hits where the fist is drawn.
+ */
+export function buildCharacter(definition: CharacterDefinition, artBoxes: ArtBoxes = {}): Character {
   const { stats } = definition;
   const width = definition.size?.width ?? PLAYER_WIDTH;
   const height = definition.size?.height ?? PLAYER_HEIGHT;
@@ -27,7 +32,11 @@ export function buildCharacter(definition: CharacterDefinition): Character {
   };
   const ids = Object.keys(ATTACKS) as AttackId[];
   const attacks = Object.fromEntries(
-    ids.map((id) => [id, fitAttack({ ...ATTACKS[id], ...definition.attacks?.[id] }, fit)]),
+    ids.map((id) => {
+      const attack = fitAttack({ ...ATTACKS[id], ...definition.attacks?.[id] }, fit);
+      const drawn = artBoxes[id];
+      return [id, drawn ? { ...attack, box: { ...drawn } } : attack];
+    }),
   ) as Record<AttackId, AttackData>;
 
   return {

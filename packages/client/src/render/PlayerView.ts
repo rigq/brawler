@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { HITSTOP_JITTER_PX, SHIELD_MAX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
 import { CHARACTER_ART } from './art.ts';
 import { CharacterSprite } from './CharacterSprite.ts';
-import { SwingArc } from './SwingArc.ts';
 
 const DODGE_ALPHA = 0.4;
 /** After respawning the player blinks: this many ticks on, this many off. */
@@ -50,7 +49,6 @@ export class PlayerView {
   private readonly eye: Phaser.GameObjects.Rectangle;
   private readonly swing: Phaser.GameObjects.Rectangle;
   private readonly chargeBar: Phaser.GameObjects.Rectangle;
-  private readonly swingArc: SwingArc;
   private readonly shield: Phaser.GameObjects.Arc;
   private readonly color: number;
   /** Null: no art for this character, the rectangle is the body. */
@@ -73,7 +71,6 @@ export class PlayerView {
     }
     this.swing = scene.add.rectangle(0, 0, 1, 1, color).setOrigin(0, 0).setVisible(false);
     this.chargeBar = scene.add.rectangle(0, 0, 1, CHARGE_BAR_HEIGHT, CHARGE_BAR_COLOR).setOrigin(0, 0);
-    this.swingArc = new SwingArc(scene);
     this.shield = scene.add
       .circle(0, 0, SHIELD_RADIUS.max, color, SHIELD_ALPHA)
       .setStrokeStyle(SHIELD_OUTLINE_WIDTH, color)
@@ -93,7 +90,6 @@ export class PlayerView {
       this.sprite?.hide();
       this.swing.setVisible(false);
       this.chargeBar.setVisible(false);
-      this.swingArc.hide();
       this.shield.setVisible(false);
       return;
     }
@@ -110,10 +106,9 @@ export class PlayerView {
       const eyeX = player.facing === 1 ? player.width - EYE_INSET_X - EYE_SIZE : EYE_INSET_X;
       this.eye.setPosition(x + eyeX, y + EYE_Y).setAlpha(opacity);
     }
-    if (this.sprite) {
-      // Drawn characters: a slash arc for hits, and the charge shows as a glow on the body (CharacterSprite).
-      this.swingArc.render(player, x, y, frameMs);
-    } else {
+    // Drawn characters hit with what their animation shows (hitboxes come from the art, tools/hitboxes.ts)
+    // and the charge shows as a glow on the body (CharacterSprite): no slash or bar on top.
+    if (!this.sprite) {
       this.renderSwing(player, x, y, frameMs);
       this.renderChargeBar(player, x, y);
     }
@@ -131,7 +126,7 @@ export class PlayerView {
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.swingArc.gameObject, this.chargeBar, this.shield];
+    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield];
   }
 
   /** Blinking right after respawning, see-through while dodging, solid otherwise. */

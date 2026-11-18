@@ -126,6 +126,18 @@ Con el **lote 1** el juego ya se siente vivo: andar, saltar y recibir golpes. De
 | Chachin | `special-neutral.jpg` | 3 | Screaming: (1) taking a deep breath, (2) screaming with the mouth wide open, fists clenched, leaning back, (3) still screaming, trembling. |
 | Chachin | `special-up.jpg` | 2 | Screaming downwards while shooting up: (1) looking down, mouth wide open, (2) flying up, arms stretched upwards. |
 
+### Golpes más realistas (5 fotogramas)
+
+Desde el 19 nov **las cajas de golpe salen del dibujo** (`node tools/hitboxes.ts`): un golpe pega donde está el puño o el pie en el fotograma del golpe (el del medio: el 2.º de 3, el 3.º de 5). Así que **cuanto mejor y más lejos llegue el brazo o la pierna en ese fotograma, mejor pega**. Con 5 fotogramas el golpe se ve más natural. Cambia el bloque `ANIMATION` por este patrón, con `{N}` = 5:
+
+```text
+(1) anticipation: weight shifts back, the striking arm or leg pulled back, shoulders turning; (2) the strike starting, body rotating into it; (3) IMPACT: the fist or foot fully extended FORWARD (to the right), as far from the body as the pose allows, the whole body committed; (4) follow-through, the limb still out but bending back; (5) back to guard. The strike in frame 3 must clearly reach outside the body silhouette.
+```
+
+**Arreglar primero:** la `light-side` de **Donate** y la de **Chachin** dan la patada **hacia atrás**. Al rehacerlas añade: `The kick goes FORWARD, to the RIGHT, the same way the character faces. Never kick backwards.`
+
+Después de guardar la tira: `node tools/pixelate.ts art/<personaje>/anim/sprites.json` y `node tools/hitboxes.ts`.
+
 ## Total
 
 | Lote | Tiras por personaje | Para los cuatro |

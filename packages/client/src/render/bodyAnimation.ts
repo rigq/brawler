@@ -28,22 +28,29 @@ const SHIELD_RAISE_FRAME_MS = 50;
  */
 const HIT_HOLD_SHARE = 0.4;
 
-const ATTACK_ANIM: Record<AttackId, AnimName> = {
+export const ATTACK_ANIM: Record<AttackId, AnimName> = {
   jab1: 'jab', jab2: 'jab', jab3: 'jab', dash: 'dash-attack',
   lightSide: 'light-side', lightUp: 'light-up', lightDown: 'light-down',
   airNeutral: 'air-neutral', airForward: 'air-forward', airBack: 'air-back', airUp: 'air-up', airDown: 'air-down',
   heavySide: 'heavy-side', heavyUp: 'heavy-up', heavyDown: 'heavy-down',
-  grab: 'grab', throwForward: 'throw', throwBack: 'throw',
+  grab: 'grab', throwForward: 'throw', throwBack: 'throw', throwUp: 'throw', throwDown: 'throw',
   specialNeutral: 'special-neutral', specialUp: 'special-up', specialProjectile: 'special-neutral',
 };
 
 /**
- * The frame shown while the attack's hitbox is out (default 1): earlier frames
- * spread over the startup, later ones over the recovery.
+ * The frame shown while the attack's hitbox is out (default: the middle one,
+ * so 3-frame strips strike on the 2nd and 5-frame ones on the 3rd): earlier
+ * frames spread over the startup, later ones over the recovery.
  */
 const HIT_FRAME: Partial<Record<AnimName, number>> = {
   'heavy-side': 2, 'heavy-up': 2, 'heavy-down': 2, grab: 0, 'special-up': 0,
 };
+
+/** Index of the strike frame of `anim`, a strip of `frames` frames. tools/hitboxes.ts measures the hitbox on it. */
+export function hitFrame(anim: AnimName, frames: number): number {
+  const last = frames - 1;
+  return Math.min(HIT_FRAME[anim] ?? Math.floor(last / 2), last);
+}
 
 /** A missing animation borrows the closest one; with none, the character's still pose is drawn. */
 const FALLBACK: Partial<Record<AnimName, AnimName>> = {
@@ -138,7 +145,7 @@ function progress(ticksLeft: number, total: number): number {
 /** Wind-up frames over the startup, the hit frame while active (and a while after), follow-through over the rest of the recovery. */
 function attackFrame(player: Player, anim: AnimName, last: number): number {
   if (player.attackId === 'none') return 0;
-  const hit = Math.min(HIT_FRAME[anim] ?? 1, last);
+  const hit = hitFrame(anim, last + 1);
   const { startup, active, recovery } = attackData(player, player.attackId);
   const t = player.attackTick;
   switch (attackPhase(player)) {

@@ -3,7 +3,7 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BLAST_ZONE, DROP_HOLD_TICKS, GROUND, PLATFORMS, RESPAWN_DELAY_TICKS, SPAWNS, STOCKS } from '../src/constants.ts';
+import { BLAST_ZONE, DROP_HOLD_TICKS, GROUND, HEAVY_MAX_CHARGE_TICKS, PLATFORMS, RESPAWN_DELAY_TICKS, SPAWNS, STOCKS } from '../src/constants.ts';
 import { EMPTY_INPUT } from '../src/input.ts';
 import type { CharacterId } from '../src/characters/index.ts';
 import { applyKnockback } from '../src/combat/knockback.ts';
@@ -145,6 +145,35 @@ test('the grab button grabs a rival standing next to you, even behind their shie
   for (let i = 0; i < 20; i++) stepWorld(world, [EMPTY_INPUT, shield]);
   for (let i = 0; i < 20; i++) stepWorld(world, [{ ...EMPTY_INPUT, grab: i === 0 }, shield]);
   assert.ok(p1.holdTicks > 0 || p1.attackId === 'throwForward' || p1.attackId === 'throwBack' || p2.grabbedTicks > 0, 'P2 was grabbed');
+});
+
+test('a small grabber holds and throws a tall rival with both standing on the floor (no jump to the corner)', () => {
+  const world = createWorld(['chachin', 'robert']);
+  const [p1, p2] = world.players as [Player, Player];
+  teleportPlayer(p1, { x: GROUND.x + 400, y: GROUND.y - p1.height, facing: 1 });
+  teleportPlayer(p2, { x: p1.x + p1.width + 10, y: GROUND.y - p2.height, facing: -1 });
+  idle(world, 10);
+  const startX = p2.x;
+  for (let i = 0; i < 12; i++) stepWorld(world, [{ ...EMPTY_INPUT, grab: i === 0 }, EMPTY_INPUT]);
+  assert.ok(p2.grabbedTicks > 0, 'Robert is held');
+  assert.equal(feet(p2), feet(p1), 'feet on the holder\'s feet, not inside the floor');
+  assert.ok(Math.abs(p2.x - startX) < 40, 'pulled in, not teleported');
+  for (let i = 0; i < 8; i++) stepWorld(world, [{ ...EMPTY_INPUT, up: true }, EMPTY_INPUT]);
+  assert.equal(p2.grabbedTicks, 0, 'thrown');
+  assert.ok(p2.vy < 0, 'up throw sends him up');
+  assert.ok(Math.abs(p2.x - p1.x) < 80, 'from where he was held');
+});
+
+test('a fully charged heavy is held until you let go', () => {
+  const world = createWorld(['samu', 'robert']);
+  const p1 = world.players[0]!;
+  idle(world, SETTLE_TICKS);
+  const heavy = { ...EMPTY_INPUT, heavy: true };
+  for (let i = 0; i < HEAVY_MAX_CHARGE_TICKS + 60; i++) stepWorld(world, [heavy, EMPTY_INPUT]);
+  assert.equal(p1.attackId, 'heavySide');
+  assert.ok(p1.attackCharging, 'still charging a second after full charge');
+  stepWorld(world, [EMPTY_INPUT, EMPTY_INPUT]);
+  assert.equal(p1.attackCharging, false, 'released when the button is let go');
 });
 
 test('up heavy in the air lifts you once per time in the air', () => {

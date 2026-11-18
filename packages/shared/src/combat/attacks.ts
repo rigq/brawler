@@ -4,7 +4,7 @@
 import {
   HEAVY_RELEASE_STARTUP_TICKS,
   AIR_HEAVY_UP_BOOST,
-  RECOVERY_TILT, HEAVY_MAX_CHARGE_TICKS, WHIFF_STUMBLE_SPEED, type AttackData, type AttackId } from '../constants.ts';
+  RECOVERY_TILT, HEAVY_MAX_CHARGE_TICKS, HEAVY_MAX_HOLD_TICKS, WHIFF_STUMBLE_SPEED, type AttackData, type AttackId } from '../constants.ts';
 import { characterOf } from '../characters/index.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
@@ -18,7 +18,7 @@ export interface AttackState {
   attackId: AttackId | 'none';
   /** Heavy only: still holding the button, before startup begins. */
   attackCharging: boolean;
-  /** Heavy only: ticks spent charging (0..HEAVY_MAX_CHARGE_TICKS). Scales damage and knockback. */
+  /** Heavy only: ticks spent charging; past HEAVY_MAX_CHARGE_TICKS it is held at full charge. Scales damage and knockback. */
   attackChargeTicks: number;
   /** Ticks since startup began (0 on its first tick). Stays 0 while charging. */
   attackTick: number;
@@ -119,7 +119,7 @@ export function attackPhase(player: Player): AttackPhase {
 
 /** Heavy charge from 0 (tapped) to 1 (fully charged). */
 export function attackCharge(player: Player): number {
-  return player.attackChargeTicks / HEAVY_MAX_CHARGE_TICKS;
+  return Math.min(1, player.attackChargeTicks / HEAVY_MAX_CHARGE_TICKS);
 }
 
 /**
@@ -232,8 +232,8 @@ function launchRecovery(player: Player, speed: number, dirX: number): void {
 function advanceAttack(player: Player, input: PlayerInput): void {
   if (player.attackId === 'none') return;
   if (player.attackCharging) {
-    // Releasing the button (or reaching full charge) starts the swing this very tick.
-    if (input.heavy && player.attackChargeTicks < HEAVY_MAX_CHARGE_TICKS) {
+    // Releasing the button starts the swing this very tick; full charge can be held a while (flashing).
+    if (input.heavy && player.attackChargeTicks < HEAVY_MAX_CHARGE_TICKS + HEAVY_MAX_HOLD_TICKS) {
       player.attackChargeTicks += 1;
     } else {
       player.attackCharging = false;

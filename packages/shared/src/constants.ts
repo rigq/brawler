@@ -212,7 +212,7 @@ export type AttackId =
   | 'lightSide' | 'lightUp' | 'lightDown'
   | 'airNeutral' | 'airForward' | 'airBack' | 'airUp' | 'airDown'
   | 'heavySide' | 'heavyUp' | 'heavyDown'
-  | 'grab' | 'throwForward' | 'throwBack'
+  | 'grab' | 'throwForward' | 'throwBack' | 'throwUp' | 'throwDown'
   | 'specialNeutral' | 'specialUp' | 'specialProjectile';
 
 /** What a special fires. Positions in px from the body's front edge and top. */
@@ -366,7 +366,7 @@ export const ATTACKS: Record<AttackId, AttackData> = {
    * loses to any attack landing on the same tick, and a miss is heavily punished.
    */
   grab: {
-    heavy: false, startup: 5, active: 3, recovery: 24, box: { x: 36, y: 10, width: 36, height: 42 },
+    heavy: false, startup: 5, active: 3, recovery: 18, box: { x: 30, y: 6, width: 46, height: 50 },
     damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
   },
   /** Throws only use the damage and knockback fields: they have no phases or hitbox. Sets up a chase. */
@@ -378,6 +378,16 @@ export const ATTACKS: Record<AttackId, AttackData> = {
   throwBack: {
     heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
     damage: 10, kbBase: 420, kbScale: 9, kbX: 1, kbY: -0.5,
+  },
+  /** Straight up: the throw that kills off the top at high %. */
+  throwUp: {
+    heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 9, kbBase: 380, kbScale: 8.5, kbX: 0.1, kbY: -1,
+  },
+  /** Slams them down and they pop up just in front: weak, but starts a combo at low %. */
+  throwDown: {
+    heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 6, kbBase: 300, kbScale: 3, kbX: 0.35, kbY: -1,
   },
   // Specials (I / N): every character has these slots; character files replace them with their powers.
   /** Neutral special: a small energy shot. */
@@ -414,6 +424,10 @@ export const ATTACKS: Record<AttackId, AttackData> = {
 };
 /** How long you can hold someone before they get away (1.5 s). */
 export const GRAB_HOLD_TICKS = 90;
+/** The grabbed player is pulled to your hands over a few ticks (share of the gap closed per tick), not snapped. */
+export const GRAB_PULL_SHARE = 0.45;
+/** A throw comes out at least this long after the grab, so the grab reads before the throw (~0.1 s). */
+export const THROW_MIN_HOLD_TICKS = 6;
 /** Unable to act after letting go without throwing. */
 export const GRAB_RELEASE_LAG_TICKS = 12;
 /** Unable to act after a throw, once the hitstop ends. */
@@ -421,10 +435,16 @@ export const THROW_LAG_TICKS = 14;
 /** How fast a dash attack's slide slows down (px/s²): from dash speed it slides ~170 px. */
 export const DASH_ATTACK_FRICTION = 3000;
 /**
- * Holding heavy charges for at most this long (~0.6 s), then it fires on its own.
+ * Holding heavy reaches full charge after this long (~0.6 s).
  * Only on the ground: heavies in the air fire straight away.
  */
 export const HEAVY_MAX_CHARGE_TICKS = 36;
+/**
+ * Once fully charged you can keep holding (the character flashes) and release
+ * when you choose, for up to this long (~3 s): then it fires on its own, so
+ * nobody can stand there charged forever.
+ */
+export const HEAVY_MAX_HOLD_TICKS = 180;
 /** On the ground you keep running while attacking, at this fraction of RUN_SPEED. */
 export const ATTACK_MOVE_SPEED_MULT = 0.7;
 /** A fully charged heavy deals (1 + this) × damage and knockback; scales linearly with charge. */

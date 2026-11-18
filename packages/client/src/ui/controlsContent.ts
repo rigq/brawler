@@ -97,7 +97,7 @@ const ATTACKS: ControlsSection = {
     ['Especial neutral', 'Especial sin arriba'],
     ['Especial arriba (volver al escenario)', 'Especial + arriba, una vez hasta tocar suelo'],
     ['Agarre', 'U (o escudo + ligero), cerca del rival; luego una dirección o ligero lo lanza'],
-    ['Lanzar', 'Con el rival agarrado: adelante, atrás o ligero'],
+    ['Lanzar', 'Con el rival agarrado: adelante, atrás, arriba, abajo o ligero'],
   ],
   note: 'En el aire no te giras: adelante y atrás dependen de hacia dónde mirabas al saltar.',
 };

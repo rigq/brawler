@@ -38,7 +38,7 @@ brawler/
 - La simulación recibe **inputs** (no posiciones). El cliente nunca decide si un golpe acierta en online: decide el servidor.
 - **Todos los números ajustables** (gravedad, velocidades, knockback, frames de ataque) en `shared/src/constants.ts`. Nada de números mágicos sueltos.
 - Personajes definidos **por datos** (`shared/src/characters/*.ts`), no con clases distintas por personaje.
-- Hitboxes/hurtboxes rectangulares (AABB). Modo debug con tecla `F1` que las dibuje. El cuerpo mide lo que el dibujo de pie (72 px; Robert 74, Chachin 30×54) y las cajas de ataque se escriben para un cuerpo de referencia de 40×60 que `buildCharacter` adapta a cada uno.
+- Hitboxes/hurtboxes rectangulares (AABB). Modo debug con tecla `F1` que las dibuje. Las cajas de los golpes normales salen del dibujo (`tools/hitboxes.ts`): pegan donde está el puño o el pie. El cuerpo mide lo que el dibujo de pie (72 px; Robert 74, Chachin 30×54) y las cajas de ataque se escriben para un cuerpo de referencia de 40×60 que `buildCharacter` adapta a cada uno.
 - Interfaz (menús, selección, pausa, HUD) en **HTML/CSS sobre el lienzo** (`client/src/ui/shell/`, `ui/hud/`), no en Phaser: texto nítido y fácil de animar. `app/App.ts` es la máquina de pantallas; las partidas son escenas que se añaden al empezar y se quitan al salir.
 - Online, el jugador viaja partido en bloques de campos (`PLAYER_PARTS` en `shared/net/protocol.ts`): un esquema de Colyseus admite 63 campos como mucho. Añadir campos a `Player` no requiere tocar nada más.
 - Cambios en `shared` → `npm test`. El test de determinismo falla si se cuela algo aleatorio, de reloj o dependiente del orden.
@@ -65,6 +65,7 @@ brawler/
 - `npm run build` — build de producción del cliente (incluye typecheck)
 - `npm run typecheck` — comprobar tipos en los tres paquetes (tests incluidos)
 - `npm test` — tests con `node:test` (determinismo, reglas, proyectiles, red); el CI de GitHub pasa typecheck + tests + build en cada push
+- `node tools/hitboxes.ts` — saca las cajas de golpe de los puños y pies dibujados en cada tira (`shared/characters/artHitboxes.ts`). Ejecutarlo después de cambiar la tira de un ataque
 - `node tools/ko-percent.ts` — a qué % muere cada personaje (golpe fuerte lateral y arriba desde el borde, sin intentar volver y volviendo como un jugador). Usarlo antes y después de tocar gravedad, velocidades, knockback o límites
 - `docs/DEPLOY.md` — cómo desplegar (L3): `Dockerfile` del servidor, `VITE_SERVER_URL` para el cliente
 

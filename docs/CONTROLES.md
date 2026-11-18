@@ -42,7 +42,7 @@ Los dos juegos de teclas de P1 funcionan siempre: el de **J K L** para jugar sol
 | Agarre | **U**, o escudo + ligero (también con el escudo levantado). Mando: RB |
 | Especial neutral | Especial (sin arriba) |
 | Especial arriba | Especial + arriba: en casi todos es su forma de volver al escenario. El paracaídas de Donate se suelta con salto o escudo |
-| Lanzar | Con el rival agarrado: dirección (adelante o atrás) o ligero |
+| Lanzar | Con el rival agarrado: adelante, atrás, **arriba** (mata por arriba a % alto) o **abajo** (lo deja delante para seguir el combo); ligero = adelante |
 
 En el aire no te giras: "adelante" y "atrás" dependen de hacia dónde mirabas al saltar.
 

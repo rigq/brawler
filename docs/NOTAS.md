@@ -27,6 +27,12 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **Golpes con el puño de verdad, carga que se mantiene y agarres (19 nov)** — Feedback: "atacan con líneas imaginarias", "la carga debería poder mantenerse", "agarres toscos", "Chachin se teletransporta a la esquina al agarrar".
+  - **Cajas de golpe sacadas del dibujo**: `tools/hitboxes.ts` toma el fotograma del golpe de cada tira (`hitFrame` en `bodyAnimation.ts`), busca los píxeles que salen del cuerpo cerca de donde estaba la caja escrita y escribe su contorno + 5 px en `shared/characters/artHitboxes.ts` (generado; `buildCharacter` lo usa en lugar de la caja escrita). Las cajas eran hasta 3–5 veces más grandes que el brazo: el fuerte lateral de Robert pasa de 83×44 a 19×19. **Fuera los arcos de barrido** (`SwingArc`): ya no hacen falta.
+  - **Carga**: al llegar al máximo se mantiene (el personaje parpadea) hasta soltar, con un tope de 3 s (`HEAVY_MAX_HOLD_TICKS`) para que nadie se quede cargado eternamente.
+  - **Agarres**: el agarrado se coloca **pie con pie** con quien agarra (antes, cabeza con cabeza: Robert agarrado por Chachin quedaba 20 px dentro del suelo y la colisión lo sacaba por la esquina). Se atrae en unos ticks en vez de aparecer de golpe (`GRAB_PULL_SHARE`). **4 lanzamientos**: adelante, atrás, **arriba** (mata por arriba) y **abajo** (lo deja delante para combo). El lanzamiento sale como pronto a los 6 ticks (se ve el agarre). Más alcance (caja 46×50 de referencia) y menos castigo si fallas (24 → 18 ticks).
+  - Tests: agarre Chachin → Robert (pies en el suelo, sin teletransporte, lanzamiento arriba) y carga mantenida.
+
 - **Cambiar de personaje sin salir (18 nov)** — Esc → **Cambiar personaje** (también con el resultado en pantalla; el aviso dice "Personaje o menú: Esc"). La selección empieza en los personajes que llevabas.
   - **Local**: vuelve a la selección y las elecciones empiezan una partida nueva (`App.pickLocalCharacters`).
   - **Online**: la selección se abre encima y la sala sigue. Nuevo mensaje `CHARACTER_MESSAGE` (`shared/net/protocol.ts`): con la partida terminada (o esperando rival) el servidor lo aplica ya y el cliente pide la revancha; a mitad de partida lo guarda para la siguiente (`MatchRoom.nextCharacters`, aplicado en `startMatch`) y la línea de estado avisa "En la próxima partida jugarás con X".
@@ -243,6 +249,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Bugs conocidos
 
+- **Golpes que sin la caja escrita pegan corto**: con las cajas sacadas del dibujo, el alcance es el del brazo dibujado. Los fuertes laterales quedan cortos (el puño apenas sale del cuerpo en las tiras actuales) y la estadística de alcance ya no estira estos golpes. Se arregla con tiras mejores (5 fotogramas, `docs/PROMPTS_ANIMACIONES.md`).
+- **La `light-side` de Donate y de Chachin patea hacia atrás** en el dibujo: su caja se queda en el borde delantero del cuerpo. Rehacer esas dos tiras.
 - **Los menús no se manejan con mando**, solo con teclado y ratón (el mando lo lee Phaser dentro de las partidas).
 - **La fuente Impact** existe en Windows y Mac; en Linux sale una de reserva (más ancha), el diseño aguanta pero luce menos.
 
