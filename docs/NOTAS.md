@@ -8,6 +8,11 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Registro de golpes y fluidez online (18 nov)** — Feedback del playtest: "a veces se fallan hits".
+  - **Cuerpos del tamaño del dibujo**: la caja donde te golpean medía 40×60 y los sprites 72–74 de alto, así que la cabeza quedaba fuera. Ahora `PLAYER_HEIGHT` = 72, Robert 74, Chachin 30×54.
+  - **Cajas de ataque adaptadas a cada cuerpo** (`buildCharacter.fitAttack`): se escriben para un cuerpo de referencia de 40×60 (`ATTACK_REFERENCE_BODY`) y se llevan al de cada personaje en proporción (en vertical) y desde el centro (en horizontal, con el alcance). Antes no se adaptaban: en Chachin los golpes salían separados del cuerpo y en todos el jab salía por debajo del puño. También la salida de los proyectiles. Comprobado con F1 en los cuatro.
+  - **Online**: el servidor manda el estado a 60 Hz (antes 30) y el rival se dibuja con un retraso que se adapta a la conexión (`net/InterpDelay.ts`; antes, siempre 100 ms). En red local baja a ~34 ms: el rival se ve donde está de verdad (~10–15 px de diferencia corriendo, antes ~40), así que los golpes conectan donde parece. Medido con un cliente Node: un estado cada 16,7 ms, el 95 % con menos de 17,2 ms.
+
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
 - **El juego se llama "Los Vatos" (15 nov)** — `GAME_TITLE` en `shared/src/index.ts` (menú, log del servidor) y `<title>`/`og:title` en `index.html`. En el menú sale en dos líneas. En pantallas de menos de 1280 px se ocultan las notas de los botones del menú (se cortaban detrás de los personajes). El repo y los paquetes siguen llamándose `brawler`.
@@ -98,6 +103,9 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 - **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. Repo en https://github.com/rigq/brawler.
 
 ### Decisiones
+
+- **El cuerpo de cada personaje mide lo que su dibujo de pie** (18 nov): agranda un 20 % la zona golpeable (los golpes que se ven, cuentan). Las cajas de ataque siguen escritas para 40×60 y se adaptan solas.
+- **Estado online a 60 Hz** (18 nov), por encima de los 20–30 Hz del plan: con 2 jugadores es poco tráfico y reduce a la mitad el retraso mínimo del rival.
 
 - **La interfaz es HTML, no Phaser** (15 nov): menús, selección, pausa y HUD necesitan texto nítido a cualquier tamaño, maquetación y animaciones CSS; en el lienzo habría que hacerlo a mano. El HUD va en una capa que sigue el tamaño del lienzo y se mide en `em`.
 - **Online sin calentamiento** (15 nov): antes, quien creaba la sala practicaba contra un hueco vacío; ahora espera en una pantalla de sala con el código. Así cada jugador trae su personaje y la partida se dibuja con los dos ya decididos.
@@ -240,7 +248,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **Feedback del primer playtest en clase (16 nov)**, por prioridad:
   1. **Recovery de Samu chetada** ("muy difícil tirarlo"): el teletransporte a la bandera siempre le salva. Ajuste de datos.
-  2. **Golpes que fallan**: revisar hitboxes contra el dibujo de cada personaje con F1 (las cajas se pensaron para rectángulos de 40×60 y los sprites son más anchos), y si es online, que el cliente no predice golpes.
+  2. ~~Golpes que fallan~~ (hecho el 18 nov). Si online con internet siguen fallando: compensación de lag en el servidor (comprobar el golpe contra donde el atacante veía al rival).
   3. **Cambiar de personaje sin salir**: en local, opción en pausa/resultado; online, al pedir revancha (hoy la vista online no se rehace si cambia un personaje).
   4. **"Sistema de combos"**: los combos ya existen (hitstun, jab encadenado) pero no se ven fuera del entrenamiento; contador de combo en versus y más golpes que enlacen.
   5. **Especiales lateral y abajo distintos** por personaje: es v1.1 en el plan (8 movimientos nuevos con su arte y equilibrio, ~4–6 sesiones); después del MVP salvo que se decida otra cosa.

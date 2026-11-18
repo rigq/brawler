@@ -38,14 +38,14 @@ brawler/
 - La simulación recibe **inputs** (no posiciones). El cliente nunca decide si un golpe acierta en online: decide el servidor.
 - **Todos los números ajustables** (gravedad, velocidades, knockback, frames de ataque) en `shared/src/constants.ts`. Nada de números mágicos sueltos.
 - Personajes definidos **por datos** (`shared/src/characters/*.ts`), no con clases distintas por personaje.
-- Hitboxes/hurtboxes rectangulares (AABB). Modo debug con tecla `F1` que las dibuje.
+- Hitboxes/hurtboxes rectangulares (AABB). Modo debug con tecla `F1` que las dibuje. El cuerpo mide lo que el dibujo de pie (72 px; Robert 74, Chachin 30×54) y las cajas de ataque se escriben para un cuerpo de referencia de 40×60 que `buildCharacter` adapta a cada uno.
 - Interfaz (menús, selección, pausa, HUD) en **HTML/CSS sobre el lienzo** (`client/src/ui/shell/`, `ui/hud/`), no en Phaser: texto nítido y fácil de animar. `app/App.ts` es la máquina de pantallas; las partidas son escenas que se añaden al empezar y se quitan al salir.
 - Online, el jugador viaja partido en bloques de campos (`PLAYER_PARTS` en `shared/net/protocol.ts`): un esquema de Colyseus admite 63 campos como mucho. Añadir campos a `Player` no requiere tocar nada más.
 - Cambios en `shared` → `npm test`. El test de determinismo falla si se cuela algo aleatorio, de reloj o dependiente del orden.
 
 ## Online (fase F3)
-- Servidor autoritativo con Colyseus a 60 Hz; difusión de estado a 20–30 Hz.
-- Cliente: predicción del jugador propio + reconciliación suave; rival interpolado ~100 ms.
+- Servidor autoritativo con Colyseus a 60 Hz; difusión de estado a 60 Hz (antes 30).
+- Cliente: predicción del jugador propio + reconciliación suave; rival interpolado con retraso adaptable (`net/InterpDelay.ts`: 34–120 ms según la conexión; ~34 en red local).
 - Salas con código de 4 letras. Gestionar desconexión sin romper la partida del otro.
 
 ## Convenciones

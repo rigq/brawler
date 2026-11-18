@@ -82,7 +82,14 @@ export const RESPAWN_INVULN_TICKS = 120;
 
 // --- Player body ---
 export const PLAYER_WIDTH = 40;
-export const PLAYER_HEIGHT = 60;
+export const PLAYER_HEIGHT = 72;
+/**
+ * Attack hitboxes (ATTACKS and the character files) are drawn for this body:
+ * x and y from its top-left corner. buildCharacter maps them onto each
+ * character's real body, so a head-high punch stays head-high on a tall body
+ * and a sweep stays at the feet.
+ */
+export const ATTACK_REFERENCE_BODY = { width: 40, height: 60 } as const;
 
 // --- Running (px/s and px/s²) ---
 /** Top horizontal speed. */
@@ -471,8 +478,11 @@ export const TRAIL_LIFE_MS = 220;
 // --- Network ---
 /** Port the game server listens on (WebSocket + HTTP). */
 export const SERVER_PORT = 2567;
-/** How often the server sends state patches to clients (the plan says 20–30 Hz). */
-export const PATCH_RATE_HZ = 30;
+/**
+ * How often the server sends state patches to clients: as often as it simulates.
+ * (The plan said 20–30 Hz; 60 halves how far in the past the rival is drawn, for little traffic in a 1v1.)
+ */
+export const PATCH_RATE_HZ = 60;
 /**
  * Inputs the server keeps queued per player. A few absorb network jitter;
  * more would only add delay, so older ones are dropped beyond this (~100 ms).
@@ -499,11 +509,16 @@ export const RECONCILE_SNAP_DISTANCE = 160;
 
 // --- Rival interpolation (render side) ---
 /**
- * Other players are drawn this far in the past (ms), between two states that
- * already arrived. Must cover the gap between patches (33 ms at 30 Hz) plus
- * network jitter; the plan says ~100 ms.
+ * Other players are drawn in the past, between two states that already arrived.
+ * How far adapts to the connection (net/InterpDelay.ts): enough to cover the
+ * gap between patches plus how much their arrival varies, within these limits (ms).
+ * Less delay = the rival is drawn closer to where they really are, so hits land where they look like they do.
  */
-export const INTERP_DELAY_MS = 100;
+export const INTERP_DELAY_MS = { min: 34, max: 120, start: 100 } as const;
+/** Margin over the average gap between states, in "typical variations" of that gap. */
+export const INTERP_JITTER_MARGIN = 2.5;
+/** How fast the averages and the delay follow the connection (share per state received). */
+export const INTERP_ADAPT_RATE = 0.05;
 /** How much past state is kept for interpolation (ms). */
 export const SNAPSHOT_BUFFER_MS = 1000;
 /**

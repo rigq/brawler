@@ -5,7 +5,6 @@ import {
   FixedStepAccumulator,
   INPUT_MESSAGE,
   DEFAULT_LINEUP,
-  INTERP_DELAY_MS,
   MATCH_ROOM,
   REMATCH_MESSAGE,
   SERVER_PORT,
@@ -30,6 +29,7 @@ import { CombinedInput, type InputSource } from '../input/InputSource.ts';
 import { KeyboardInput, P1_BINDINGS, P2_BINDINGS } from '../input/KeyboardInput.ts';
 import { RematchInput } from '../input/RematchInput.ts';
 import { fakeLagMs, sendWithLag } from '../net/FakeLag.ts';
+import { InterpDelay } from '../net/InterpDelay.ts';
 import { Predictor } from '../net/Predictor.ts';
 import { ServerClock } from '../net/ServerClock.ts';
 import { Smoother } from '../net/Smoother.ts';
@@ -76,6 +76,7 @@ export class OnlineScene extends Phaser.Scene {
   private readonly smoother = new Smoother();
   private readonly snapshots = new SnapshotBuffer();
   private readonly clock = new ServerClock();
+  private readonly interpDelay = new InterpDelay();
   private readonly lagMs = fakeLagMs();
   private nextSeq = 0;
   /** Server tick of the last state applied, to reconcile once per new state. */
@@ -157,6 +158,8 @@ export class OnlineScene extends Phaser.Scene {
     this.room = room;
     this.connection = 'connected';
     // The SDK reconnects on its own after a drop; these only update what we show.
+    // Timed when each state arrives (not at the next frame), so a low frame rate doesn't look like jitter.
+    room.onStateChange(() => this.interpDelay.onState(performance.now()));
     room.onDrop(() => (this.connection = 'reconnecting'));
     room.onReconnect(() => (this.connection = 'connected'));
     room.onLeave(() => {
@@ -227,12 +230,12 @@ export class OnlineScene extends Phaser.Scene {
   }
 
   /**
-   * Everyone except you, and every projectile, is shown INTERP_DELAY_MS in the past, blended between
+   * Everyone except you, and every projectile, is shown a little in the past (InterpDelay), blended between
    * two states that already arrived: smooth motion at the cost of a small delay.
    */
   private drawOthers(mySlot: number | undefined, frameMs: number): void {
     this.clock.advance(frameMs);
-    const renderTick = this.clock.tick - INTERP_DELAY_MS / FIXED_DT_MS;
+    const renderTick = this.clock.tick - this.interpDelay.ms / FIXED_DT_MS;
     this.mirror.players.forEach((player, slot) => {
       if (slot !== mySlot) this.snapshots.sample(renderTick, slot, player);
     });

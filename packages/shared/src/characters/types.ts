@@ -13,7 +13,7 @@ export interface CharacterStats {
 export interface CharacterDefinition {
   name: string;
   stats: CharacterStats;
-  /** Body box in px (default PLAYER_WIDTH × PLAYER_HEIGHT). */
+  /** Body box in px, as tall as the character is drawn standing (default PLAYER_WIDTH × PLAYER_HEIGHT). */
   size?: { width: number; height: number };
   attacks?: Partial<Record<AttackId, Partial<AttackData>>>;
 }

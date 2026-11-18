@@ -7,6 +7,7 @@ import type { CharacterDefinition } from './types.ts';
 export const robert: CharacterDefinition = {
   name: 'Robert',
   stats: { speed: 1, weight: 5, damage: 4, reach: 2 },
+  size: { width: 40, height: 74 },
   attacks: {
     /**
      * "Calada": a puff of smoke that drifts forward and hits up to 4 times while

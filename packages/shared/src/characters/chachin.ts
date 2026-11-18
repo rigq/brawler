@@ -7,7 +7,7 @@ import type { CharacterDefinition } from './types.ts';
 export const chachin: CharacterDefinition = {
   name: 'Chachin',
   stats: { speed: 5, weight: 1, damage: 3, reach: 3 },
-  size: { width: 30, height: 46 },
+  size: { width: 30, height: 54 },
   attacks: {
     /**
      * "Grito": a shockwave all around him. Close up (the sweet spot) it hurts
