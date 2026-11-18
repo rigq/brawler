@@ -9,13 +9,15 @@ export interface PauseOptions {
   online: boolean;
   resume: () => void;
   restart?: () => void;
+  /** Opens character select (local: a new match with the picks; online: from the next match). */
+  pickCharacter?: () => void;
   exit: () => void;
 }
 
 /** A moment before handing control back, so the click or key that chose "Continuar" is not read by the game. */
 const RESUME_DELAY_MS = 120;
 
-/** Esc during a match: continue, restart (local), controls, or back to the menu. Mouse, or W/S + Enter (not J: it is attack). */
+/** Esc during a match: continue, restart (local), change character, controls, or back to the menu. Mouse, or W/S + Enter (not J: it is attack). */
 export function pauseMenu(options: PauseOptions, close: () => void): Screen {
   const resume = () => {
     close();
@@ -24,6 +26,7 @@ export function pauseMenu(options: PauseOptions, close: () => void): Screen {
   const list = bladeList([
     { label: 'Continuar', run: resume },
     ...(options.restart ? [{ label: 'Reiniciar', run: () => (close(), options.restart!()) }] : []),
+    ...(options.pickCharacter ? [{ label: 'Cambiar personaje', run: options.pickCharacter }] : []),
     { label: 'Controles', run: () => setControlsPanelOpen(true) },
     { label: options.online ? 'Salir de la sala' : 'Salir al menú', run: options.exit },
   ]);

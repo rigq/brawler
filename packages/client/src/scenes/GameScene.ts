@@ -42,7 +42,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.world = createWorld(this.characters);
-    this.view = new MatchView(this, this.world, 'Revancha: Enter, R o Start · Menú: Esc');
+    this.view = new MatchView(this, this.world, 'Revancha: Enter, R o Start · Personaje o menú: Esc');
     this.input.keyboard?.on('keydown-ESC', () => this.pause());
     if (this.mode === 'training') {
       this.training = new TrainingMode(this, () => this.world, () => this.restart());

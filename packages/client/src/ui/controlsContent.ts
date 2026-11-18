@@ -121,6 +121,7 @@ const GAME_KEYS: ControlsSection = {
     ['H', 'Abre o cierra este panel'],
     ['F1', 'Muestra hurtboxes (verde) y hitboxes (rojo)'],
     ['Enter, R o Start', 'Revancha al terminar'],
+    ['Esc', 'Pausa: cambiar personaje, controles o salir'],
     ['R', 'Reiniciar (entrenamiento)'],
     ['8', 'El muñeco se cubre o no (entrenamiento)'],
     ['9 / 0', '−10 % / +10 % al muñeco (entrenamiento)'],

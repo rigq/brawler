@@ -40,6 +40,11 @@ export class SnapshotBuffer {
     while (this.snapshots.length > 2 && this.snapshots[0]!.tick < tick - KEEP_TICKS) this.snapshots.shift();
   }
 
+  /** Forgets every state (e.g. the characters changed: old states would bring the old ones back). */
+  clear(): void {
+    this.snapshots.length = 0;
+  }
+
   get size(): number {
     return this.snapshots.length;
   }

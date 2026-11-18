@@ -6,10 +6,12 @@ import {
   INPUT_MESSAGE,
   DEFAULT_LINEUP,
   MATCH_ROOM,
+  CHARACTER_MESSAGE,
   REMATCH_MESSAGE,
   SERVER_PORT,
   SPAWNS,
   copyProjectile,
+  characterOf,
   createPlayer,
   createProjectile,
   createWorld,
@@ -87,6 +89,10 @@ export class OnlineScene extends Phaser.Scene {
   private readonly options: OnlineOptions;
   private readonly hooks: SceneHooks;
   private status!: Phaser.GameObjects.Text;
+  /** Picked during a match: shown until the next one starts with it. */
+  private nextCharacter: CharacterId | null = null;
+  /** The characters the view was drawn for: if the server's differ, it is drawn again. */
+  private viewCharacters: CharacterId[] = [];
 
   constructor(options: OnlineOptions, hooks: SceneHooks = {}) {
     super('OnlineScene');
@@ -103,7 +109,13 @@ export class OnlineScene extends Phaser.Scene {
     this.controls = this.createInput();
     new RematchInput(this, () => this.askRematch());
     // Online nothing pauses: Esc only opens the menu (to leave the room).
-    this.input.keyboard?.on('keydown-ESC', () => this.hooks.onPause?.({ resume: () => {} }));
+    this.input.keyboard?.on('keydown-ESC', () =>
+      this.hooks.onPause?.({
+        resume: () => {},
+        changeCharacter: (character) => this.changeCharacter(character),
+        character: this.nextCharacter ?? this.myCharacter(),
+      }),
+    );
     for (const event of [Phaser.Scenes.Events.SHUTDOWN, Phaser.Scenes.Events.DESTROY]) {
       this.events.once(event, () => void this.room?.leave());
     }
@@ -188,6 +200,13 @@ export class OnlineScene extends Phaser.Scene {
     const { tick, acks } = room.state;
     if (!room.state.players || !acks || tick === this.lastServerTick) return;
     const players = Array.from(room.state.players, toPlayer);
+    // Someone changed character (between matches, or a new rival came in): draw the match again.
+    if (this.view && players.some((p, i) => p.characterId !== this.viewCharacters[i])) {
+      this.view.destroy();
+      this.view = null;
+      this.snapshots.clear();
+      this.buildView(players);
+    }
     if (!this.view) {
       // Each player brings their character when joining: wait until both are in to draw them.
       if (room.state.seats.size < SPAWNS.length && room.state.phase === 'waiting') {
@@ -216,7 +235,8 @@ export class OnlineScene extends Phaser.Scene {
 
   /** The room's characters are known now: mirror and drawing are made for them. */
   private buildView(players: ArrayLike<Player>): void {
-    this.mirror = createWorld(Array.from(players, (player) => player.characterId));
+    this.viewCharacters = Array.from(players, (player) => player.characterId);
+    this.mirror = createWorld(this.viewCharacters);
     this.view = new MatchView(this, this.mirror, '');
     this.view.addUi([this.status]);
     if (import.meta.env.DEV) exposeForDebugging(this.mirror, this.game);
@@ -255,6 +275,22 @@ export class OnlineScene extends Phaser.Scene {
     }
   }
 
+  private myCharacter(): CharacterId | undefined {
+    const slot = this.room?.state.seats.get(this.room.sessionId);
+    return slot === undefined ? undefined : this.mirror.players[slot]?.characterId;
+  }
+
+  /** Another character: applied by the server now if no match is running (and that asks for the rematch), else next match. */
+  private changeCharacter(character: CharacterId): void {
+    const room = this.room;
+    if (!room) return;
+    room.send(CHARACTER_MESSAGE, { character } satisfies JoinOptions);
+    const playing = room.state.phase === 'playing';
+    // Mid-match it waits for the next one; otherwise the server applies it now (and a pending one is replaced).
+    this.nextCharacter = playing ? character : null;
+    if (room.state.phase === 'over') room.send(REMATCH_MESSAGE);
+  }
+
   private askRematch(): void {
     if (this.room?.state.phase === 'over') this.room.send(REMATCH_MESSAGE);
   }
@@ -278,7 +314,18 @@ export class OnlineScene extends Phaser.Scene {
       return `${header}\nEsperando rival… Comparte el código ${code} o este enlace:\n${shareLink(code)}`;
     }
     if (isPaused(room)) return `${header}\nEl rival se ha desconectado. Esperando a que vuelva…`;
-    return header;
+    return header + this.nextCharacterLine(mySlot);
+  }
+
+  /** "Next match you play X", until it happens. */
+  private nextCharacterLine(mySlot: number | undefined): string {
+    const next = this.nextCharacter;
+    if (!next || mySlot === undefined) return '';
+    if (this.mirror.players[mySlot]?.characterId === next) {
+      this.nextCharacter = null;
+      return '';
+    }
+    return `\nEn la próxima partida jugarás con ${characterOf({ characterId: next }).name}`;
   }
 
   /** Line under the result: rematch instructions, votes, or why it ended. */
@@ -291,7 +338,7 @@ export class OnlineScene extends Phaser.Scene {
     const iVoted = mySlot !== undefined && state.rematchVotes[mySlot];
     const rivalVoted = Array.from(state.rematchVotes).some((vote, slot) => vote && slot !== mySlot);
     if (iVoted) return 'Revancha pedida. Esperando al rival…';
-    return rivalVoted ? '¡Tu rival quiere la revancha! Enter, R o Start' : 'Revancha: Enter, R o Start · Menú: Esc';
+    return rivalVoted ? '¡Tu rival quiere la revancha! Enter, R o Start' : 'Revancha: Enter, R o Start · Personaje o menú: Esc';
   }
 
   /** Online you control one player, so both keyboard halves and the first gamepad all work. */

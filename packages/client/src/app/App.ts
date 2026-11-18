@@ -48,12 +48,12 @@ export class App {
   }
 
   startLocal(mode: LocalMode, lineup: CharacterId[]): void {
-    this.startMatch('GameScene', new GameScene(mode, lineup, this.hooks(false)), true);
+    this.startMatch('GameScene', new GameScene(mode, lineup, this.hooks({ online: false, mode, lineup })), true);
   }
 
   startOnline(options: OnlineOptions): void {
     // The stage stays behind the lobby until the rival arrives and the match is drawn.
-    this.startMatch('OnlineScene', new OnlineScene(options, this.hooks(true)), false);
+    this.startMatch('OnlineScene', new OnlineScene(options, this.hooks({ online: true })), false);
   }
 
   private onMenuChoice(choice: MenuChoice): void {
@@ -95,12 +95,49 @@ export class App {
     this.showMenu();
   }
 
+  /** Local: back to character select; the picks start a new match. */
+  private pickLocalCharacters(mode: LocalMode, lineup: CharacterId[]): void {
+    this.stopMatch();
+    this.game.scene.wake(BACKDROP);
+    const chip = mode === 'versus' ? 'Local · 2 jugadores' : 'Entrenamiento';
+    this.shell.show(characterSelect(mode, chip, (picks) => this.startLocal(mode, picks), () => this.exitToMenu(), lineup));
+  }
+
+  /** Online: the room keeps going behind; the pick applies now if no match is running, else from the next one. */
+  private pickOnlineCharacter(actions: PauseActions): (() => void) | undefined {
+    const change = actions.changeCharacter;
+    if (!change) return undefined;
+    return () =>
+      this.shell.show(
+        characterSelect(
+          'online',
+          'Online · cambiar personaje',
+          ([mine]) => {
+            this.shell.hide();
+            change(mine!);
+          },
+          () => this.shell.hide(),
+          actions.character ? [actions.character] : [],
+        ),
+        true,
+      );
+  }
+
   /** What match scenes call: the pause menu, and the online lobby. */
-  private hooks(online: boolean): SceneHooks {
+  private hooks(match: { online: true } | { online: false; mode: LocalMode; lineup: CharacterId[] }): SceneHooks {
+    const { online } = match;
     return {
       onPause: (actions: PauseActions) =>
         this.shell.show(
-          pauseMenu({ ...actions, online, exit: () => this.exitToMenu() }, () => this.shell.hide()),
+          pauseMenu(
+            {
+              ...actions,
+              online,
+              pickCharacter: match.online ? this.pickOnlineCharacter(actions) : () => this.pickLocalCharacters(match.mode, match.lineup),
+              exit: () => this.exitToMenu(),
+            },
+            () => this.shell.hide(),
+          ),
           true,
         ),
       onWaiting: (code) => {

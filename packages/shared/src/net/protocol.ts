@@ -22,6 +22,12 @@ export interface InputMessage {
 export const REMATCH_MESSAGE = 'rematch';
 
 /**
+ * Client → server, JoinOptions: "I want to play this character". Applied at once
+ * if no match is being played, otherwise when the next one starts.
+ */
+export const CHARACTER_MESSAGE = 'character';
+
+/**
  * Room codes are the room id: 4 letters a friend can type. No I, L or O,
  * which are easy to mix up with 1 and 0.
  */

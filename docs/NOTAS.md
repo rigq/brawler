@@ -27,6 +27,12 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **Cambiar de personaje sin salir (18 nov)** — Esc → **Cambiar personaje** (también con el resultado en pantalla; el aviso dice "Personaje o menú: Esc"). La selección empieza en los personajes que llevabas.
+  - **Local**: vuelve a la selección y las elecciones empiezan una partida nueva (`App.pickLocalCharacters`).
+  - **Online**: la selección se abre encima y la sala sigue. Nuevo mensaje `CHARACTER_MESSAGE` (`shared/net/protocol.ts`): con la partida terminada (o esperando rival) el servidor lo aplica ya y el cliente pide la revancha; a mitad de partida lo guarda para la siguiente (`MatchRoom.nextCharacters`, aplicado en `startMatch`) y la línea de estado avisa "En la próxima partida jugarás con X".
+  - La vista online se **redibuja** si cambia cualquier personaje (`MatchView.destroy`, `ProjectileView.destroy`, `SnapshotBuffer.clear`): arregla también el bug de "entra otro rival con otro personaje y se dibuja el anterior".
+  - Probado en el navegador: local (pausa → Robert/Samu → partida nueva) y online con dos pestañas (cambio a mitad = aviso y siguiente partida; tras ganar por abandono = cambio inmediato y vista redibujada).
+
 - **El juego se llama "Los Vatos" (15 nov)** — `GAME_TITLE` en `shared/src/index.ts` (menú, log del servidor) y `<title>`/`og:title` en `index.html`. En el menú sale en dos líneas. En pantallas de menos de 1280 px se ocultan las notas de los botones del menú (se cortaban detrás de los personajes). El repo y los paquetes siguen llamándose `brawler`.
 
 - **Pausa con ratón y HUD de depuración fuera (15 nov)** — En la pausa, pasar el ratón por una opción reconstruía la lista y el clic no llegaba nunca; ahora los botones se crean una vez y solo se mueve el resaltado (`ui/shell/bladeList.ts`, también en el menú principal). La J ya no confirma en la pausa (es ataque): ratón, W/S + Enter, Esc continúa. El texto verde de depuración (sim, tick, vx, vy…) se ha quitado: queda solo el FPS, discreto, y la línea de la sala online.
@@ -37,7 +43,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
   - **Selección** (`ui/shell/CharacterSelect.ts`): P1 (A/D, J; L deshace) y P2 (←/→, `,`; `-` deshace) a la vez; panel por jugador con el luchador animado, descripción, barras de stats y especiales; sello "¡LISTO!" y "¡A PELEAR!". En entrenamiento P1 elige luchador y luego el muñeco; online, cada uno elige el suyo en su pantalla.
   - **Online**: el personaje viaja al crear o unirse (`JoinOptions`, `parseCharacter` en `shared/net/protocol.ts`; `MatchRoom.onJoin`). La partida se dibuja cuando están los dos; mientras, sala de espera con el código en grande y botón de copiar enlace (`ui/shell/Lobby.ts`). Un enlace `?online=CÓDIGO` lleva a la selección y luego a la sala.
   - **HUD** (`ui/hud/`): tarjeta por jugador con retrato (cabeza recortada de su sprite), nombre, % grande que se sacude más cuanto más fuerte el golpe y pasa de blanco a amarillo y rojo, y vidas como cabecitas. Capa HTML que sigue al lienzo (`ui/layer.ts`, todo en `em`).
-  - **Pausa** con Esc (`ui/shell/PauseMenu.ts`): Continuar / Reiniciar / Controles / Salir al menú. Online no pausa: Esc abre el menú para salir de la sala.
+  - **Pausa** con Esc (`ui/shell/PauseMenu.ts`): Continuar / Reiniciar / Cambiar personaje / Controles / Salir al menú. Online no pausa: Esc abre el menú para salir de la sala.
   - Atajos de desarrollo: `?local`, `?training`, `?online` (+ `?p1`/`?p2`) se saltan los menús. Comprobado en el navegador: menú, selección local y de entrenamiento, partida con HUD, pausa, código no válido, crear sala → sala de espera → el rival entra por enlace con otro personaje.
 
 - **Curl de Samu más limpio (15 nov)** — El curl anterior (3 poses generadas por separado) se veía raro: cambiaban más cosas que el brazo. Ahora usa dos imágenes que Riga sacó editando una sobre otra (`idle-src/curl-down.webp`, `curl-up.webp`): solo cambia el brazo. Cada posición se repite dos veces para que el curl vaya pausado.
@@ -238,7 +244,6 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 ### Bugs conocidos
 
 - **Los menús no se manejan con mando**, solo con teclado y ratón (el mando lo lee Phaser dentro de las partidas).
-- **Online: si el rival se va y entra otro con un personaje distinto**, la partida sigue dibujando el anterior (la vista se crea una vez). Habría que salir y crear sala nueva.
 - **La fuente Impact** existe en Windows y Mac; en Linux sale una de reserva (más ancha), el diseño aguanta pero luce menos.
 
 
@@ -274,7 +279,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 - **Feedback del primer playtest en clase (16 nov)**, por prioridad:
   1. **Recovery de Samu chetada** ("muy difícil tirarlo"): el teletransporte a la bandera siempre le salva. Ajuste de datos.
   2. ~~Golpes que fallan~~ (hecho el 18 nov). Si online con internet siguen fallando: compensación de lag en el servidor (comprobar el golpe contra donde el atacante veía al rival).
-  3. **Cambiar de personaje sin salir**: en local, opción en pausa/resultado; online, al pedir revancha (hoy la vista online no se rehace si cambia un personaje).
+  3. ~~**Cambiar de personaje sin salir**~~ (hecho el 18 nov: Esc → Cambiar personaje, local y online).
   4. **"Sistema de combos"**: los combos ya existen (hitstun, jab encadenado) pero no se ven fuera del entrenamiento; contador de combo en versus y más golpes que enlacen.
   5. **Especiales lateral y abajo distintos** por personaje: es v1.1 en el plan (8 movimientos nuevos con su arte y equilibrio, ~4–6 sesiones); después del MVP salvo que se decida otra cosa.
 

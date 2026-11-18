@@ -26,16 +26,21 @@ interface Seat {
   label: string;
 }
 
-/** Character select for 1–2 players. Calls `onDone` with one character per seat, or `onBack`. */
+/**
+ * Character select for 1–2 players. Calls `onDone` with one character per seat, or `onBack`.
+ * `current`: where the cursors start (changing character mid-session starts on the one you had).
+ */
 export function characterSelect(
   mode: SelectMode,
   chip: string,
   onDone: (lineup: CharacterId[]) => void,
   onBack: () => void,
+  current: readonly CharacterId[] = [],
 ): Screen {
+  const startCursor = (i: number) => Math.max(0, CHARACTER_IDS.indexOf(current[i] ?? CHARACTER_IDS[i]!));
   const seats: Seat[] = [
-    { cursor: 0, ready: false, controller: 0, label: 'P1' },
-    { cursor: 1, ready: false, controller: mode === 'versus' ? 1 : null, label: mode === 'training' ? 'Muñeco' : 'P2' },
+    { cursor: startCursor(0), ready: false, controller: 0, label: 'P1' },
+    { cursor: startCursor(1), ready: false, controller: mode === 'versus' ? 1 : null, label: mode === 'training' ? 'Muñeco' : 'P2' },
   ];
   const roster = h('div', 'roster');
   const panels = seats.map((_, i) => h('div', `fighter fighter--p${i + 1}`));

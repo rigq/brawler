@@ -40,6 +40,9 @@ export class MatchView {
   private readonly hud: StatsHud;
   private readonly playerHud: Hud;
   private readonly resultOverlay: ResultOverlay;
+  /** Everything this view created, for destroy(). */
+  private readonly owned: Phaser.GameObjects.GameObject[];
+  private readonly uiCamera: Phaser.Cameras.Scene2D.Camera;
 
   constructor(scene: Phaser.Scene, world: World, rematchHint: string) {
     this.scene = scene;
@@ -68,8 +71,21 @@ export class MatchView {
     // A second, fixed camera draws only the UI, so text stays put whatever the zoom.
     const uiCamera = scene.cameras.add(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     uiCamera.ignore(worldObjects);
+    this.uiCamera = uiCamera;
     // Projectiles come and go during the match: each new object is hidden from the UI camera as it appears.
     this.projectileView = new ProjectileView(scene, (object) => uiCamera.ignore(object));
+    this.owned = [...worldObjects, this.hud.gameObject, ...this.resultOverlay.gameObjects];
+  }
+
+  /**
+   * Removes everything this view drew, so a new one can be built in the same
+   * scene (online, when someone changes character between matches).
+   */
+  destroy(): void {
+    for (const object of this.owned) object.destroy();
+    this.projectileView.destroy();
+    this.playerHud.destroy();
+    this.scene.cameras.remove(this.uiCamera);
   }
 
   /** True while the end-of-match screen is up. */

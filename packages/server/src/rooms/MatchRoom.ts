@@ -5,6 +5,7 @@ import {
   MAX_MESSAGES_PER_SECOND,
   PATCH_RATE_HZ,
   RECONNECT_GRACE_SECONDS,
+  CHARACTER_MESSAGE,
   REMATCH_MESSAGE,
   SPAWNS,
   STOCKS,
@@ -18,6 +19,7 @@ import {
   parseLineup,
   parseInputMessage,
   stepWorld,
+  type CharacterId,
   type CreateRoomOptions,
   type EndReason,
   type MatchPhase,
@@ -50,6 +52,8 @@ export class MatchRoom extends Room<{ state: MatchState }> {
   private readonly accumulator = new FixedStepAccumulator();
   /** inputQueues[slot]: one queue per player, empty seats stay idle. */
   private readonly inputQueues = SPAWNS.map(() => new InputQueue());
+  /** Characters asked for during a match, per slot: they come in when the next match starts. */
+  private readonly nextCharacters: (CharacterId | null)[] = SPAWNS.map(() => null);
 
   onCreate(options: CreateRoomOptions = {}): void {
     this.world = createWorld(parseLineup(options.lineup));
@@ -67,6 +71,7 @@ export class MatchRoom extends Room<{ state: MatchState }> {
     this.setPhase('waiting');
     this.onMessage(INPUT_MESSAGE, (client, raw) => this.receiveInput(client, raw));
     this.onMessage(REMATCH_MESSAGE, (client) => this.voteRematch(client));
+    this.onMessage(CHARACTER_MESSAGE, (client, raw) => this.changeCharacter(client, raw));
     // Measured wall-clock delta in, whole fixed 60 Hz steps out: same loop as the client.
     this.setTimestep((deltaMs) => this.update(deltaMs));
     this.log('created');
@@ -83,6 +88,7 @@ export class MatchRoom extends Room<{ state: MatchState }> {
     const character = parseCharacter(options);
     const player = this.world.players[slot];
     if (player && character) player.characterId = character;
+    this.nextCharacters[slot] = null;
     this.resetPlayer(slot);
     this.inputQueues[slot]?.reset();
     this.state.seats.set(client.sessionId, slot);
@@ -131,6 +137,26 @@ export class MatchRoom extends Room<{ state: MatchState }> {
     this.inputQueues[slot]?.push(message);
   }
 
+  /** A player picks another character: now if no match is running, else for the next one. */
+  private changeCharacter(client: Client, raw: unknown): void {
+    const slot = this.state.seats.get(client.sessionId);
+    const character = parseCharacter(raw);
+    if (slot === undefined || !character) return;
+    if (this.state.phase === 'playing') {
+      this.nextCharacters[slot] = character;
+      return;
+    }
+    this.setCharacter(slot, character);
+  }
+
+  private setCharacter(slot: number, character: CharacterId): void {
+    const player = this.world.players[slot];
+    if (player) player.characterId = character;
+    this.nextCharacters[slot] = null;
+    this.resetPlayer(slot);
+    this.syncState();
+  }
+
   private voteRematch(client: Client): void {
     const slot = this.state.seats.get(client.sessionId);
     if (slot === undefined || this.state.phase !== 'over') return;
@@ -163,6 +189,10 @@ export class MatchRoom extends Room<{ state: MatchState }> {
   /** Fresh players, same tick counter (clients rely on it only going up). */
   private startMatch(): void {
     SPAWNS.forEach((_, slot) => {
+      const next = this.nextCharacters[slot];
+      const player = this.world.players[slot];
+      if (next && player) player.characterId = next;
+      this.nextCharacters[slot] = null;
       this.resetPlayer(slot);
       this.state.rematchVotes[slot] = false;
     });

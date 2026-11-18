@@ -45,6 +45,14 @@ export class ProjectileView {
     this.onCreate = onCreate;
   }
 
+  /** Removes every projectile and explosion on screen. */
+  destroy(): void {
+    for (const view of this.flying.values()) view.object.destroy();
+    for (const burst of this.bursts) burst.sprite.destroy();
+    this.flying.clear();
+    this.bursts = [];
+  }
+
   render(projectiles: readonly Projectile[], alpha: number, frameMs: number): void {
     this.ageMs += frameMs;
     const seen = new Set<number>();
