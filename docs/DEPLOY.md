@@ -9,7 +9,7 @@ Lo que ya está preparado en el repo:
 
 ## 1. Servidor en Fly.io
 
-Ya está configurado en `fly.toml` (app `los-vatos`, Madrid, **una sola máquina siempre encendida**: las salas viven en memoria). Una máquina `shared-cpu-1x` de 256 MB cuesta unos 2 €/mes (revisa los precios al crearla; Fly pide tarjeta).
+Ya está configurado en `fly.toml` (app `los-vatos`, París: Madrid ya no admite máquinas nuevas, **una sola máquina siempre encendida**: las salas viven en memoria). Una máquina `shared-cpu-1x` de 256 MB cuesta unos 2 €/mes (revisa los precios al crearla; Fly pide tarjeta).
 
 En el PC, desde la carpeta del repo (PowerShell):
 
@@ -17,7 +17,7 @@ En el PC, desde la carpeta del repo (PowerShell):
 2. `fly auth login` (abre el navegador).
 3. `fly apps create los-vatos` — si dice que el nombre está cogido, usa otro (p. ej. `los-vatos-daw`) y cámbialo en `fly.toml` (línea `app`) y en `netlify.toml` (`VITE_SERVER_URL`).
 4. `fly deploy --ha=false` (`--ha=false`: una máquina, no dos). Tarda 2–3 min la primera vez.
-5. Comprobar: `fly logs` debe decir `listening on port 2567`. Si la región `mad` falla, cambia `primary_region` a `cdg` (París).
+5. Comprobar: `fly logs` debe decir `listening on port 2567`.
 
 Para subir cambios del servidor más adelante: `git pull` y `fly deploy --ha=false`.
 

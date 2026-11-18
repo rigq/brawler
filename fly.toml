@@ -1,7 +1,7 @@
 # Game server on Fly.io (see docs/DEPLOY.md). If the name is taken, change it here
 # and in netlify.toml (VITE_SERVER_URL).
 app = "los-vatos"
-primary_region = "mad"
+primary_region = "cdg"
 
 [build]
   dockerfile = "Dockerfile"
