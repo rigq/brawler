@@ -27,6 +27,14 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **Fase 3 · Ataques con personalidad (19 nov)** — Dos comportamientos nuevos en `shared` y golpes propios por datos en `characters/*.ts`:
+  - `rehitTicks` (multigolpe: durante la fase activa, el mismo rival puede recibir otro golpe cada N ticks) y `armor` (mientras carga, arranca o golpea, los golpes de hasta X % le hacen daño pero no le interrumpen ni le lanzan: `armorHolds`, `takeArmoredHit`). Tests de los dos.
+  - **Robert** (el que mata): jabs más lentos y fuertes, "collejón" (jab 3), fuerte lateral y arriba con **armadura de 8 %** y más lanzamiento, "culetazo" (aéreo abajo, pincho fuerte). Su lateral cargado mata a Samu a ~130 % desde el borde (antes 145 %).
+  - **Samu** (vóley): "colocación" (ligero arriba, levanta siempre a la misma altura), "toque" (aéreo arriba), "remate" (aéreo adelante, hacia abajo en diagonal) y "bloqueo" (aéreo abajo, el pincho más fuerte).
+  - **Chachin** (rápido, multigolpe): jabs que salen en 2 ticks, "derrape" (ataque en carrera rápido), "molinillo" (aéreo neutro, 4 golpes de 2 %) y "ventilador" (ligero arriba, 3 golpes).
+  - **Donate** (control): "¡Firmes!" (lateral que empuja lejos y plano), "bayoneta" (aéreo adelante que dura), neutro aéreo que dura, "coz" (aéreo atrás, su golpe para matar) y "carga de infantería" (deslizamiento largo).
+  - `node tools/ko-percent.ts <personaje>`: ahora se puede elegir quién golpea.
+
 - **I4 · Sonido (19 nov)** — Todo sintetizado con Web Audio, sin archivos ni dependencias (`client/src/audio/`).
   - `AudioEngine`: un solo `AudioContext`, creado con el primer clic o tecla (los navegadores no dejan sonar antes); buses de música y efectos con volumen guardado en `localStorage`; limitador para que muchos sonidos a la vez no saturen; se calla con la pestaña oculta.
   - `synth.ts`: tono (oscilador con deslizamiento de tono) y ruido filtrado, con ataque rápido y caída exponencial. `sfx.ts`: ~25 efectos (golpe que suena más grave y largo cuanto más daño, bloqueo, rotura de escudo, KO, saltos, aterrizaje, dash/esquiva, golpes al aire, carga completa, agarre, borde, cañón de Donate, humo de Robert, remate de Samu, grito de Chachin, recovery, teletransporte, menús, victoria).
@@ -300,7 +308,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
   5. **Especiales lateral y abajo distintos** por personaje: es v1.1 en el plan (8 movimientos nuevos con su arte y equilibrio, ~4–6 sesiones); después del MVP salvo que se decida otra cosa.
 
 - **L3 deploy — aplazado (19 nov, decisión de Riga):** no pagar el servidor (~2 $/mes) hasta que el juego esté pulido; mientras, se juega en LAN. Todo listo: `fly.toml` (París, la app `los-vatos` ya está creada en Fly, sin máquina: no cobra), `netlify.toml` y pasos en `docs/DEPLOY.md`. Para publicar: `fly deploy --ha=false` y conectar el repo en Netlify.
-- **Siguiente:** ataques con personalidad (fase 3) mientras Riga rehace las tiras flojas (`light-side` de Donate y Chachin, `heavy-side`, `throw` de Samu).
+- ~~Ataques con personalidad (fase 3)~~ (hecho el 19 nov). **Siguiente:** probarlo en clase (¿se nota la diferencia entre personajes? ¿Robert con armadura es injusto?) mientras Riga rehace las tiras flojas (`light-side` de Donate y Chachin, `heavy-side`, `throw` de Samu). Después D2 (polvo al aterrizar, destello de KO).
+- **Canción con Suno (idea de Riga, 19 nov):** rap con los personajes. Antes de meterla: revisar la licencia de Suno (el plan gratis no permite uso comercial; uno de pago sí). Técnicamente: reproducir un archivo en `audio/music.ts` en lugar del bucle sintetizado (~3–5 MB).
 - **D1:** `throw` de Samu (2 imágenes).
 - **I4:** sonidos con Web Audio, música y volumen. Después D2 (efectos) y D3 (escenario vivo).
 
