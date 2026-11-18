@@ -25,5 +25,16 @@ export const donate: CharacterDefinition = {
       startup: 0, active: 6, recovery: 16, box: { x: -10, y: 40, width: 60, height: 70 },
       damage: 6, kbBase: 320, kbScale: 13, kbX: 0.4, kbY: -0.3, launchSpeed: 1350, parachute: true,
     },
+    // His own normals (phase 3): a disciplined soldier who controls the space in front of him.
+    /** "¡Firmes!": a flat push that sends you far away, to the edge. */
+    lightSide: { kbBase: 380, kbScale: 9, kbY: -0.25 },
+    /** "Bayoneta": stays out long (6 ticks): easy to land when someone jumps in. */
+    airForward: { active: 6, damage: 8 },
+    /** Spin kick that lingers. */
+    airNeutral: { active: 10 },
+    /** "Coz": the back kick is his kill move in the air. */
+    airBack: { kbBase: 420, kbScale: 9.5 },
+    /** "Carga de infantería": a long slide. */
+    dash: { active: 8 },
   },
 };

@@ -245,6 +245,10 @@ function advanceAttack(player: Player, input: PlayerInput): void {
   }
   player.attackTick += 1;
   const data = attackData(player, player.attackId);
+  // A flurry: every rehitTicks of the active phase, everyone can be hit again.
+  if (data.rehitTicks && player.attackTick > data.startup && (player.attackTick - data.startup) % data.rehitTicks === 0) {
+    player.attackHitMask = 0;
+  }
   if (data.teleportToFlag && player.attackTick === data.startup) teleportToFlag(player);
   if (data.chainTo && player.attackQueued && player.attackTick >= (data.chainFrom ?? 0)) {
     beginAttack(player, data.chainTo);
@@ -267,6 +271,14 @@ function teleportToFlag(player: Player): void {
   player.vx = 0;
   player.vy = 0;
   player.fastFalling = false;
+}
+
+/** True if this player's attack has armour that takes a hit of `damage` % without flinching (see AttackData.armor). */
+export function armorHolds(player: Player, damage: number): boolean {
+  if (player.attackId === 'none') return false;
+  const armor = attackData(player, player.attackId).armor ?? 0;
+  const phase = attackPhase(player);
+  return damage <= armor && (phase === 'charge' || phase === 'startup' || phase === 'active');
 }
 
 /** The sweet spot box in world space if the player stood at (x, y), or null if this attack has none. */

@@ -176,6 +176,36 @@ test('a fully charged heavy is held until you let go', () => {
   assert.equal(p1.attackCharging, false, 'released when the button is let go');
 });
 
+test('a flurry hits the same rival several times (Chachin\'s up tilt)', () => {
+  const world = createWorld(['chachin', 'robert']);
+  const [p1, p2] = world.players as [Player, Player];
+  teleportPlayer(p1, { x: GROUND.x + 400, y: GROUND.y - p1.height, facing: 1 });
+  teleportPlayer(p2, { x: p1.x + 4, y: GROUND.y - p2.height, facing: -1 });
+  idle(world, 10);
+  stepWorld(world, [{ ...EMPTY_INPUT, light: true, up: true }, EMPTY_INPUT]);
+  const hitsTaken = new Set<number>();
+  for (let i = 0; i < 40; i++) {
+    stepWorld(world, [EMPTY_INPUT, EMPTY_INPUT]);
+    hitsTaken.add(p2.damage);
+  }
+  assert.ok(hitsTaken.size >= 3, `hit at least twice (damage went ${[...hitsTaken].join(' → ')})`);
+});
+
+test('armour: a jab does not stop Robert\'s charging heavy, it only hurts', () => {
+  const world = createWorld(['robert', 'chachin']);
+  const [p1, p2] = world.players as [Player, Player];
+  teleportPlayer(p1, { x: GROUND.x + 400, y: GROUND.y - p1.height, facing: 1 });
+  teleportPlayer(p2, { x: p1.x + p1.width + 2, y: GROUND.y - p2.height, facing: -1 });
+  idle(world, 10);
+  const heavy = { ...EMPTY_INPUT, heavy: true };
+  for (let i = 0; i < 10; i++) stepWorld(world, [heavy, EMPTY_INPUT]);
+  stepWorld(world, [heavy, { ...EMPTY_INPUT, light: true }]);
+  for (let i = 0; i < 12; i++) stepWorld(world, [heavy, EMPTY_INPUT]);
+  assert.ok(p1.damage > 0, 'the jab hurt him');
+  assert.equal(p1.attackId, 'heavySide', 'still charging');
+  assert.equal(p1.hitstunTicks, 0, 'not stunned');
+});
+
 test('up heavy in the air lifts you once per time in the air', () => {
   const world = createWorld(['samu', 'robert']);
   const player = world.players[0]!;

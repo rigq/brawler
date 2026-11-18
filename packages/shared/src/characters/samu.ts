@@ -26,6 +26,15 @@ export const samu: CharacterDefinition = {
       startup: 18, active: 1, recovery: 14, box: { x: 0, y: 0, width: 0, height: 0 },
       damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0, hover: true, teleportToFlag: true, cooldownTicks: 150,
     },
+    // His own normals (phase 3): volleyball. Sets up the rival in the air and spikes them down.
+    /** "Colocación": pops the rival straight up, always to about the same height: start of a juggle. */
+    lightUp: { damage: 4, kbBase: 420, kbScale: 4, kbX: 0, kbY: -1 },
+    /** "Toque": keeps them up there. */
+    airUp: { damage: 5, kbBase: 300, kbScale: 6, kbX: 0.1, kbY: -1 },
+    /** "Remate": a spike forward and down. Off the stage it buries them. */
+    airForward: { startup: 8, damage: 10, kbBase: 260, kbScale: 9, kbX: 1, kbY: 0.7 },
+    /** "Bloqueo": both hands slam down. The strongest spike of the game; long landing. */
+    airDown: { startup: 9, damage: 11, kbBase: 400, kbScale: 8, kbX: 0, kbY: 1, landingLag: 12 },
     /** The backpack: a missed heavy attack leaves him stumbling backwards. */
     heavySide: { whiffLagTicks: 14 },
     heavyUp: { whiffLagTicks: 14 },

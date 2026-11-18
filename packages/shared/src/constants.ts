@@ -290,6 +290,16 @@ export interface AttackData {
   sweetspot?: { box: { x: number; y: number; width: number; height: number }; damage: number; kbBase: number; kbScale: number; stunTicks?: number };
   /** If the attack ends without hitting anyone: unable to act this long, stumbling backwards. */
   whiffLagTicks?: number;
+  /**
+   * Several hits: while active, the same target can be hit again every this many
+   * ticks (a flurry). Without it, an attack hits each target once.
+   */
+  rehitTicks?: number;
+  /**
+   * Armour: while charging, starting up or active, hits dealing up to this much
+   * damage (%) still hurt but do not interrupt the attack or launch you.
+   */
+  armor?: number;
 }
 
 export const ATTACKS: Record<AttackId, AttackData> = {

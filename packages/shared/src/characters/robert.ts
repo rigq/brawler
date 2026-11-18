@@ -31,5 +31,19 @@ export const robert: CharacterDefinition = {
       startup: 0, active: 7, recovery: 19, box: { x: -12, y: 40, width: 64, height: 70 },
       damage: 6, kbBase: 340, kbScale: 12, kbX: 0.5, kbY: -0.6, launchSpeed: 1120,
     },
+    // His own normals (phase 3): slow, heavy, and the one who kills. Jabs that hurt.
+    jab1: { startup: 4, damage: 4 },
+    jab2: { startup: 4, damage: 4 },
+    /** "Collejón": the last jab sends you away. */
+    jab3: { startup: 5, damage: 7, kbBase: 420 },
+    /**
+     * "Puñetazo de barrio": slower to come out, but small hits do not stop it
+     * (armour up to 8 %) and it kills earlier than anyone else's.
+     */
+    heavySide: { startup: 13, kbBase: 490, kbScale: 8.4, armor: 8 },
+    /** Uppercut that also shrugs off small hits. */
+    heavyUp: { startup: 13, kbScale: 8.4, armor: 8 },
+    /** "Culetazo": drops his whole weight on you. A strong spike, long to land from. */
+    airDown: { startup: 10, damage: 12, kbBase: 380, kbScale: 8, kbX: 0, kbY: 1, landingLag: 14 },
   },
 };

@@ -3,20 +3,21 @@
 // blast zone is crossed while still in hitstun: once hitstun ends the player
 // could act (jump, recover), so that launch was survivable.
 //
-//   node tools/ko-percent.ts
+//   node tools/ko-percent.ts            (Samu hits)
+//   node tools/ko-percent.ts robert     (another character hits: their own heavies)
 //
 // Use it before and after changing gravity, speeds, knockback or the blast
 // zone, so the change is measured instead of guessed.
 
-import { CHARACTER_IDS, type CharacterId } from '../packages/shared/src/characters/index.ts';
+import { CHARACTER_IDS, isCharacterId, type CharacterId } from '../packages/shared/src/characters/index.ts';
 import { applyKnockback } from '../packages/shared/src/combat/knockback.ts';
 import { GROUND, type AttackId } from '../packages/shared/src/constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../packages/shared/src/input.ts';
 import { teleportPlayer } from '../packages/shared/src/sim/player.ts';
 import { createWorld, stepWorld } from '../packages/shared/src/sim/world.ts';
 
-/** Who hits: an average character, so only the target changes. */
-const ATTACKER: CharacterId = 'samu';
+/** Who hits: Samu (an average character, so only the target changes) unless another is named. */
+const ATTACKER: CharacterId = isCharacterId(process.argv[2] ?? null) ? (process.argv[2] as CharacterId) : 'samu';
 const MOVES: AttackId[] = ['heavySide', 'heavyUp'];
 const MAX_DAMAGE = 400;
 const STAGE_CENTER_X = GROUND.x + GROUND.width / 2;

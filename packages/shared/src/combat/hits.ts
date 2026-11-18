@@ -6,9 +6,9 @@ import { isInvulnerable } from '../sim/dodge.ts';
 import type { Player } from '../sim/player.ts';
 import { blockHit } from '../sim/shield.ts';
 import { isActive } from '../sim/stocks.ts';
-import { activeHitbox, attackCharge, hurtbox, sweetspotBoxAt } from './attacks.ts';
+import { activeHitbox, armorHolds, attackCharge, hurtbox, sweetspotBoxAt } from './attacks.ts';
 import { startGrab } from './grabs.ts';
-import { applyKnockback, attackDamage, awayFrom } from './knockback.ts';
+import { applyKnockback, attackDamage, awayFrom, takeArmoredHit } from './knockback.ts';
 
 /** The attack as it was when the hit was found (before any hit is applied). */
 export interface AttackSnapshot {
@@ -66,6 +66,7 @@ function applyHit(players: Player[], hit: Hit): void {
   attacker.attackHitMask |= 1 << hit.target;
   const dealt = attackDamage(attacker, hit.attack);
   if (target.shielding) blockHit(target, awayFrom(attacker, target), dealt);
+  else if (armorHolds(target, dealt)) takeArmoredHit(target, dealt);
   else applyKnockback(attacker, target, hit.attack);
   freezeBoth(attacker, target, dealt);
 }

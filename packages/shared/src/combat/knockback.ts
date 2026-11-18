@@ -46,6 +46,12 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
   return dealt;
 }
 
+/** A hit absorbed by armour (AttackData.armor): it hurts and flashes, but no launch, no stun, the attack goes on. */
+export function takeArmoredHit(target: Player, dealt: number): void {
+  target.damage += dealt;
+  target.hitFlashTicks = HIT_FLASH_TICKS;
+}
+
 /** The attack's damage in %, charge included. */
 export function attackDamage(attacker: Player, attack: AttackSnapshot): number {
   const data = landedData(attacker, attack);
