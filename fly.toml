@@ -1,0 +1,19 @@
+# Game server on Fly.io (see docs/DEPLOY.md). If the name is taken, change it here
+# and in netlify.toml (VITE_SERVER_URL).
+app = "los-vatos"
+primary_region = "mad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 2567
+  force_https = true
+  # Rooms live in memory: one machine, always on. Stopping it or adding a second loses or splits the rooms.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

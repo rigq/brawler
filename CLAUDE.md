@@ -137,7 +137,7 @@ brawler/
 **L · Pulido y lanzamiento** (feb – 14 mar)
 - [ ] L1 Playtest con 6–8 compañeros
 - [ ] L2 Corregir los 5 fallos principales
-- [ ] L3 Deploy (cliente Netlify/Vercel, servidor Fly.io/Hetzner) — antes F3.6. Preparado en `docs/DEPLOY.md`; faltan las cuentas
+- [ ] L3 Deploy (cliente Netlify, servidor Fly.io) — antes F3.6. `fly.toml` y `netlify.toml` listos; pasos en `docs/DEPLOY.md`
 - [ ] L4 Ping en pantalla y ajustes de red — antes F3.7
 - [ ] L5 README con GIF, enlace en el portfolio
 

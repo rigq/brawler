@@ -1,0 +1,9 @@
+# Game client on Netlify (see docs/DEPLOY.md): static files built from the repo root.
+[build]
+  command = "npm run build"
+  publish = "packages/client/dist"
+
+[build.environment]
+  NODE_VERSION = "24"
+  # The game server (fly.toml). Must match its app name.
+  VITE_SERVER_URL = "https://los-vatos.fly.dev"

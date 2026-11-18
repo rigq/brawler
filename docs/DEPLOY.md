@@ -7,23 +7,29 @@ Lo que ya está preparado en el repo:
 - El cliente lee `VITE_SERVER_URL` al compilar. Sin ella, busca el servidor en el mismo host y puerto 2567 (vale para LAN, no para internet).
 - CI en GitHub (`.github/workflows/ci.yml`): typecheck, tests y build en cada push.
 
-## 1. Servidor en Fly.io (recomendado para empezar)
+## 1. Servidor en Fly.io
 
-Necesita cuenta y tarjeta (con 1 máquina pequeña suele quedarse en 0–5 €/mes; revisa precios actuales al crearla).
+Ya está configurado en `fly.toml` (app `los-vatos`, Madrid, **una sola máquina siempre encendida**: las salas viven en memoria). Una máquina `shared-cpu-1x` de 256 MB cuesta unos 2 €/mes (revisa los precios al crearla; Fly pide tarjeta).
 
-1. Instala `flyctl` y entra: `fly auth login`.
-2. Desde la raíz del repo: `fly launch --no-deploy` → detecta el `Dockerfile`. Elige región **Madrid (mad)**.
-3. En el `fly.toml` generado:
-   - `internal_port = 2567`
-   - **Una sola máquina** y sin apagado automático (`auto_stop_machines = "off"`, `min_machines_running = 1`): las salas viven en memoria; si la máquina se apaga o hay dos, las salas se pierden o no se encuentran.
-4. `fly deploy`. Te da una URL tipo `https://brawler-xxxx.fly.dev`.
+En el PC, desde la carpeta del repo (PowerShell):
+
+1. Instalar `flyctl` (una vez): `iwr https://fly.io/install.ps1 -useb | iex` y cerrar y abrir la terminal.
+2. `fly auth login` (abre el navegador).
+3. `fly apps create los-vatos` — si dice que el nombre está cogido, usa otro (p. ej. `los-vatos-daw`) y cámbialo en `fly.toml` (línea `app`) y en `netlify.toml` (`VITE_SERVER_URL`).
+4. `fly deploy --ha=false` (`--ha=false`: una máquina, no dos). Tarda 2–3 min la primera vez.
+5. Comprobar: `fly logs` debe decir `listening on port 2567`. Si la región `mad` falla, cambia `primary_region` a `cdg` (París).
+
+Para subir cambios del servidor más adelante: `git pull` y `fly deploy --ha=false`.
 
 Alternativa: un VPS de Hetzner (~4–5 €/mes) con Docker: `docker build -t brawler-server . && docker run -d -p 2567:2567 --restart unless-stopped brawler-server`, y delante un proxy con HTTPS (Caddy lo hace solo). Más control, más trabajo.
 
-## 2. Cliente en Netlify o Vercel (gratis)
+## 2. Cliente en Netlify (gratis)
 
-- Directorio base: raíz del repo · Comando: `npm run build` · Carpeta publicada: `packages/client/dist`
-- Variable de entorno: `VITE_SERVER_URL=https://brawler-xxxx.fly.dev` (la del paso anterior; el SDK pasa solo a `wss://`).
+Ya está configurado en `netlify.toml` (comando, carpeta, Node 24 y la dirección del servidor).
+
+1. Netlify → **Add new site → Import an existing project → GitHub** → elige `brawler`.
+2. Deja todo como lo rellena (lo lee de `netlify.toml`) y **Deploy**.
+3. Cada `git push` a `main` vuelve a publicar solo. En **Site configuration → Change site name** puedes ponerle un nombre bonito (`los-vatos.netlify.app` si está libre).
 
 ## 3. Comprobar
 
