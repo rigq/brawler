@@ -246,6 +246,11 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Siguiente tarea
 
+- **Feedback del segundo amigo (18 nov) → plan en 3 fases:**
+  - **Fase 1 · Ritmo** (1 sesión): (a) en plataformas, pulsar abajo te dejaba caer al instante y no salía el ataque bajo → caer solo manteniendo abajo un momento o con un toque seco; ataque en ese margen = ataque bajo. (b) "Todo va demasiado rápido" (correr, dash, aire, caer y saltar) → −15–20 %, con menos gravedad y la misma altura de salto. (c) "Morís muy pronto" → límites de muerte ~+20 % y menos crecimiento del lanzamiento. Ajustar con una herramienta que mida el % de KO de cada personaje (objetivo ~120–150 % para peso medio), porque menos gravedad también lanza más lejos.
+  - **Fase 2 · Recovery** (1 sesión): especial arriba dirigible (hasta ~35°), cada uno con su gracia (Donate planea más, Robert no se interrumpe, Chachin cohete muy dirigible, Samu teletransporte más castigable y bandera que caduca), borde que atrapa un poco más de lejos, algo de control tras la recovery.
+  - **Fase 3 · Ataques con personalidad** (1–2 sesiones): los 20 golpes normales son iguales en los cuatro; darle a cada uno 5–6 propios (Robert mata, Chachin rápido y multigolpe, Donate alcance, Samu meteoros).
+
 - **Feedback del primer playtest en clase (16 nov)**, por prioridad:
   1. **Recovery de Samu chetada** ("muy difícil tirarlo"): el teletransporte a la bandera siempre le salva. Ajuste de datos.
   2. ~~Golpes que fallan~~ (hecho el 18 nov). Si online con internet siguen fallando: compensación de lag en el servidor (comprobar el golpe contra donde el atacante veía al rival).
