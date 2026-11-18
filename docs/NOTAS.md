@@ -254,6 +254,12 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Siguiente tarea
 
+- **Feedback de Samuel (playtest, decidido con Riga el 18 nov) → 3 sesiones:**
+  - **A · Control y defensa** (1 sesión, datos): agarre en **U** (L+J sigue valiendo; online P1 y P2 manejan al mismo personaje, así que basta con U); esquiva y rueda más cortas (~60 % de distancia y duración); paracaídas de Donate **cancelable** (salto o escudo); **nerf al grito de Chachin**; **↑+K en el aire = segundo impulso de recovery** (una vez por salto), además del especial arriba dirigible.
+  - **B · Cargados que enganchen** (1 sesión): sale al soltar, con un arranque corto sincronizado con la animación; sin barra: el personaje **brilla cada vez más** y **parpadea** al máximo; mucha más recompensa al cargar del todo (más KO, congelación y temblor). Objetivo con `tools/ko-percent.ts`: **cargado al máximo mata a ~110–130 %** desde el borde (peso medio); los golpes flojos siguen sin matar (para no romper el "morís muy pronto" del otro amigo).
+  - **C · Golpes que se ven** (1 sesión, es D2): fuera los rectángulos de golpe; en su lugar, **arco de barrido** que sigue el golpe; revisar con F1 que cada caja coincide con el brazo o pierna de su animación.
+  - Después: ataques normales con personalidad por personaje (fase 3).
+
 - **Feedback del segundo amigo (18 nov) → plan en 3 fases:**
   - ~~**Fase 1 · Ritmo**~~ (hecha el 18 nov, incluida la recovery dirigible de la fase 2): (a) en plataformas, pulsar abajo te dejaba caer al instante y no salía el ataque bajo → caer solo manteniendo abajo un momento o con un toque seco; ataque en ese margen = ataque bajo. (b) "Todo va demasiado rápido" (correr, dash, aire, caer y saltar) → −15–20 %, con menos gravedad y la misma altura de salto. (c) "Morís muy pronto" → límites de muerte ~+20 % y menos crecimiento del lanzamiento. Ajustar con una herramienta que mida el % de KO de cada personaje (objetivo ~120–150 % para peso medio), porque menos gravedad también lanza más lejos.
   - **Fase 2 · Recovery** (lo que queda): cada uno con su gracia (Donate planea más, Robert no se interrumpe, Chachin cohete muy dirigible, Samu teletransporte más castigable y bandera que caduca), borde que atrapa un poco más de lejos, algo de control tras la recovery.
