@@ -29,7 +29,7 @@ export const robert: CharacterDefinition = {
      */
     specialUp: {
       startup: 0, active: 7, recovery: 19, box: { x: -12, y: 40, width: 64, height: 70 },
-      damage: 6, kbBase: 340, kbScale: 12, kbX: 0.5, kbY: -0.6, launchSpeed: 1000,
+      damage: 6, kbBase: 340, kbScale: 12, kbX: 0.5, kbY: -0.6, launchSpeed: 1120,
     },
   },
 };

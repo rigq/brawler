@@ -65,6 +65,7 @@ brawler/
 - `npm run build` — build de producción del cliente (incluye typecheck)
 - `npm run typecheck` — comprobar tipos en los tres paquetes (tests incluidos)
 - `npm test` — tests con `node:test` (determinismo, reglas, proyectiles, red); el CI de GitHub pasa typecheck + tests + build en cada push
+- `node tools/ko-percent.ts` — a qué % muere cada personaje (golpe fuerte lateral y arriba desde el borde, sin intentar volver y volviendo como un jugador). Usarlo antes y después de tocar gravedad, velocidades, knockback o límites
 - `docs/DEPLOY.md` — cómo desplegar (L3): `Dockerfile` del servidor, `VITE_SERVER_URL` para el cliente
 
 ## Plan (marcar al completar)

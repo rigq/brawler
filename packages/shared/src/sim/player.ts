@@ -7,6 +7,7 @@ import {
   COYOTE_TICKS,
   DASH_ATTACK_FRICTION,
   DOUBLE_JUMP_SPEED,
+  DROP_HOLD_TICKS,
   DROP_THROUGH_TICKS,
   FAST_FALL_SPEED,
   FIXED_DT,
@@ -18,6 +19,7 @@ import {
   JUMP_CUT,
   JUMP_SPEED,
   PARACHUTE_DRIFT_MULT,
+  RECOVERY_AIR_DRAG,
   PARACHUTE_FALL_SPEED,
   MAX_FALL_SPEED,
   RUN_SPEED,
@@ -65,6 +67,8 @@ export interface Player extends Body, DodgeState, AttackState, GrabState, LedgeS
   jumpBufferTicks: number;
   /** Steps left during which one-way platforms are ignored (dropping through). */
   dropTicks: number;
+  /** Ticks down has been held while standing on a platform (drops at DROP_HOLD_TICKS). */
+  downHeldTicks: number;
   /** Air jumps still available before landing again. */
   airJumpsLeft: number;
   /** Locked at FAST_FALL_SPEED until landing or jumping again. */
@@ -104,6 +108,7 @@ export function createPlayer(
     fullJump: false,
     jumpBufferTicks: 0,
     dropTicks: 0,
+    downHeldTicks: 0,
     airJumpsLeft: AIR_JUMPS,
     fastFalling: false,
     recoveryAvailable: true,
@@ -166,6 +171,8 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
     player.vx = 0;
     player.vy = 0;
   } else if (isAttacking(player)) {
+    // An attack (the down attack) cancels a drop that was about to happen.
+    player.downHeldTicks = 0;
     applyAttackDrift(player, input);
   } else if (player.parachuting) {
     // Helpless glide: steer a little, nothing else until landing (or a hit).
@@ -263,8 +270,24 @@ function applyAttackDrift(player: Player, input: PlayerInput): void {
     const accel = dir !== 0 ? GROUND_ACCEL : GROUND_FRICTION;
     const speed = RUN_SPEED * characterOf(player).speedMult * ATTACK_MOVE_SPEED_MULT;
     player.vx = approach(player.vx, dir * speed, accel * FIXED_DT);
+  } else if (player.attackId === 'specialUp') {
+    applyRecoveryDrift(player, input);
   } else {
     applyRun(player, input);
+  }
+}
+
+/**
+ * During the up special the tilted launch keeps its sideways speed (it only
+ * fades slowly); holding a direction can still add up to running speed.
+ */
+function applyRecoveryDrift(player: Player, input: PlayerInput): void {
+  const dir = Number(input.right) - Number(input.left);
+  const runSpeed = RUN_SPEED * characterOf(player).speedMult;
+  if (dir !== 0 && Math.sign(player.vx) !== -dir && Math.abs(player.vx) < runSpeed) {
+    player.vx = approach(player.vx, dir * runSpeed, AIR_ACCEL * FIXED_DT);
+  } else {
+    player.vx = approach(player.vx, 0, RECOVERY_AIR_DRAG * FIXED_DT);
   }
 }
 
@@ -303,9 +326,15 @@ export function jump(player: Player, speed: number): void {
   player.jumpBufferTicks = 0;
 }
 
-/** Holding down while standing on a platform lets you fall through it. */
+/**
+ * Holding down for a moment while standing on a platform lets you fall through
+ * it. Not at once: down + attack must be able to do the down attack.
+ */
 function applyDropThrough(player: Player, input: PlayerInput): void {
-  if (input.down && player.grounded && player.onPlatform) {
+  const holding = input.down && player.grounded && player.onPlatform;
+  player.downHeldTicks = holding ? player.downHeldTicks + 1 : 0;
+  if (player.downHeldTicks >= DROP_HOLD_TICKS) {
+    player.downHeldTicks = 0;
     player.dropTicks = DROP_THROUGH_TICKS;
     player.coyoteTicks = 0;
     player.grounded = false;

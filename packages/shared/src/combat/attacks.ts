@@ -1,7 +1,8 @@
 // Attack state machine and where the hitbox is.
 // Light: startup → active → recovery. Heavy: charge (while held) → startup → active → recovery.
 
-import { HEAVY_MAX_CHARGE_TICKS, WHIFF_STUMBLE_SPEED, type AttackData, type AttackId } from '../constants.ts';
+import {
+  RECOVERY_TILT, HEAVY_MAX_CHARGE_TICKS, WHIFF_STUMBLE_SPEED, type AttackData, type AttackId } from '../constants.ts';
 import { characterOf } from '../characters/index.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
@@ -174,7 +175,7 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
 
   // Heavies charge only on the ground; in the air they fire at once.
   player.attackCharging = data.heavy && player.grounded;
-  if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed);
+  if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed, dirX);
   beginAttack(player, id);
   // Respawn invulnerability is for getting back in, not for attacking safely.
   player.invulnTicks = 0;
@@ -196,10 +197,16 @@ function beginAttack(player: Player, id: AttackId): void {
 }
 
 /** The "recovery": pushes you up, once per time in the air, to get back to the stage. */
-function launchRecovery(player: Player, speed: number): void {
+/** Straight up, or tilted towards `dirX` (-1, 0, 1) if a direction is held: that is how you get back from the side. */
+function launchRecovery(player: Player, speed: number, dirX: number): void {
   if (!player.recoveryAvailable) return;
   player.recoveryAvailable = false;
-  player.vy = -speed;
+  if (dirX !== 0) {
+    player.vx = dirX * speed * RECOVERY_TILT.x;
+    player.vy = -speed * RECOVERY_TILT.y;
+  } else {
+    player.vy = -speed;
+  }
   player.grounded = false;
   player.fastFalling = false;
 }

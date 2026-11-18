@@ -25,7 +25,7 @@ export const chachin: CharacterDefinition = {
     /** "Grito-cohete": screams at the ground and shoots up; the blast hits whoever is below. */
     specialUp: {
       startup: 0, active: 6, recovery: 18, box: { x: -10, y: 30, width: 50, height: 70 },
-      damage: 5, kbBase: 300, kbScale: 10, kbX: 0.3, kbY: 0.8, launchSpeed: 1250,
+      damage: 5, kbBase: 300, kbScale: 10, kbX: 0.3, kbY: 0.8, launchSpeed: 1400,
     },
   },
 };

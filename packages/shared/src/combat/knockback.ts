@@ -8,6 +8,7 @@ import {
   HITSTUN_COMBO_DECAY_TICKS,
   HITSTUN_MIN_TICKS,
   HITSTUN_TICKS_PER_SPEED,
+  KNOCKBACK_GROWTH_MULT,
   KNOCKBACK_MAX_SPEED,
   WEIGHT_AVERAGE,
   type AttackData,
@@ -29,7 +30,7 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
   const dealt = data.damage * chargeMult;
 
   target.damage += dealt;
-  const launch = data.kbBase * chargeMult + (data.kbScale * target.damage * dealt) / 10;
+  const launch = data.kbBase * chargeMult + (data.kbScale * KNOCKBACK_GROWTH_MULT * target.damage * dealt) / 10;
   const speed = Math.min((launch * WEIGHT_AVERAGE) / characterOf(target).weight, KNOCKBACK_MAX_SPEED);
   // Math.sqrt is exact in every JS engine, so this stays deterministic.
   const length = Math.sqrt(data.kbX * data.kbX + data.kbY * data.kbY);

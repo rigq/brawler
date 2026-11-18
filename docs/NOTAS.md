@@ -8,6 +8,12 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Fase 1 del feedback: ritmo, caídas y recovery (18 nov)**
+  - **Ataque bajo en plataformas**: antes, pulsar abajo te dejaba caer en el mismo tick. Ahora hay que mantener abajo `DROP_HOLD_TICKS` (6, 0,1 s); un ataque en ese margen es el ataque bajo (`downHeldTicks` en `Player`).
+  - **Todo ~17 % más lento**: correr 420→350, dash 1000→820, aceleración en suelo y aire, gravedad 2400→1950 con el salto a la misma altura (salto 900→811, doble 820→739), caída máxima 1300→1150, caída rápida 1600→1400.
+  - **"Morís muy pronto"** — medido con la herramienta nueva `tools/ko-percent.ts`: con un golpe limpio casi nadie moría (Robert al 257 %), pero **intentando volver** Robert moría al 107 % y Chachin al 80 %: el problema era la recovery (solo subía recto), no el lanzamiento. Arreglos: especial arriba **dirigible** (manteniendo izquierda/derecha sale a 35°, `RECOVERY_TILT`, y conserva el impulso lateral); borde que atrapa desde más lejos (24→32 px); límites más lejos (lados +150, arriba 1100→1300 para compensar la menor gravedad, abajo 760→900); lanzamiento que crece un 10 % menos con el daño (`KNOCKBACK_GROWTH_MULT`); recovery de Robert (1000→1120) y Chachin (1250→1400) más potente. Resultado (lateral volviendo / arriba volviendo): Donate 128→141 / 172→187, Robert 107→143 / 252→273, Samu 170→199 / 225→244, Chachin 80→100 / 145→158.
+  - Tests: ataque bajo en plataforma, caer manteniendo abajo, recovery inclinada.
+
 - **Registro de golpes y fluidez online (18 nov)** — Feedback del playtest: "a veces se fallan hits".
   - **Cuerpos del tamaño del dibujo**: la caja donde te golpean medía 40×60 y los sprites 72–74 de alto, así que la cabeza quedaba fuera. Ahora `PLAYER_HEIGHT` = 72, Robert 74, Chachin 30×54.
   - **Cajas de ataque adaptadas a cada cuerpo** (`buildCharacter.fitAttack`): se escriben para un cuerpo de referencia de 40×60 (`ATTACK_REFERENCE_BODY`) y se llevan al de cada personaje en proporción (en vertical) y desde el centro (en horizontal, con el alcance). Antes no se adaptaban: en Chachin los golpes salían separados del cuerpo y en todos el jab salía por debajo del puño. También la salida de los proyectiles. Comprobado con F1 en los cuatro.
@@ -103,6 +109,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 - **F0.1 (26 oct)** — Monorepo con npm workspaces (`shared`, `client`, `server`). Cliente Vite + Phaser 3 con `GameScene` vacía (1280×720, escala FIT) que importa `GAME_TITLE` de `shared`. Servidor de prueba que corre `.ts` directamente con Node 24. Repo en https://github.com/rigq/brawler.
 
 ### Decisiones
+
+- **El equilibrio se mide, no se adivina** (18 nov): `tools/ko-percent.ts` simula el golpe y un intento de vuelta razonable (hacia el centro, todos los saltos y luego el especial). Objetivo orientativo: morir de lado volviendo a ~130–160 % (los ligeros algo antes).
 
 - **El cuerpo de cada personaje mide lo que su dibujo de pie** (18 nov): agranda un 20 % la zona golpeable (los golpes que se ven, cuentan). Las cajas de ataque siguen escritas para 40×60 y se adaptan solas.
 - **Estado online a 60 Hz** (18 nov), por encima de los 20–30 Hz del plan: con 2 jugadores es poco tráfico y reduce a la mitad el retraso mínimo del rival.
@@ -247,8 +255,8 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 ### Siguiente tarea
 
 - **Feedback del segundo amigo (18 nov) → plan en 3 fases:**
-  - **Fase 1 · Ritmo** (1 sesión): (a) en plataformas, pulsar abajo te dejaba caer al instante y no salía el ataque bajo → caer solo manteniendo abajo un momento o con un toque seco; ataque en ese margen = ataque bajo. (b) "Todo va demasiado rápido" (correr, dash, aire, caer y saltar) → −15–20 %, con menos gravedad y la misma altura de salto. (c) "Morís muy pronto" → límites de muerte ~+20 % y menos crecimiento del lanzamiento. Ajustar con una herramienta que mida el % de KO de cada personaje (objetivo ~120–150 % para peso medio), porque menos gravedad también lanza más lejos.
-  - **Fase 2 · Recovery** (1 sesión): especial arriba dirigible (hasta ~35°), cada uno con su gracia (Donate planea más, Robert no se interrumpe, Chachin cohete muy dirigible, Samu teletransporte más castigable y bandera que caduca), borde que atrapa un poco más de lejos, algo de control tras la recovery.
+  - ~~**Fase 1 · Ritmo**~~ (hecha el 18 nov, incluida la recovery dirigible de la fase 2): (a) en plataformas, pulsar abajo te dejaba caer al instante y no salía el ataque bajo → caer solo manteniendo abajo un momento o con un toque seco; ataque en ese margen = ataque bajo. (b) "Todo va demasiado rápido" (correr, dash, aire, caer y saltar) → −15–20 %, con menos gravedad y la misma altura de salto. (c) "Morís muy pronto" → límites de muerte ~+20 % y menos crecimiento del lanzamiento. Ajustar con una herramienta que mida el % de KO de cada personaje (objetivo ~120–150 % para peso medio), porque menos gravedad también lanza más lejos.
+  - **Fase 2 · Recovery** (lo que queda): cada uno con su gracia (Donate planea más, Robert no se interrumpe, Chachin cohete muy dirigible, Samu teletransporte más castigable y bandera que caduca), borde que atrapa un poco más de lejos, algo de control tras la recovery.
   - **Fase 3 · Ataques con personalidad** (1–2 sesiones): los 20 golpes normales son iguales en los cuatro; darle a cada uno 5–6 propios (Robert mata, Chachin rápido y multigolpe, Donate alcance, Samu meteoros).
 
 - **Feedback del primer playtest en clase (16 nov)**, por prioridad:

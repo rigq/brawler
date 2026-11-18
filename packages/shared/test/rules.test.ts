@@ -3,7 +3,7 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BLAST_ZONE, GROUND, RESPAWN_DELAY_TICKS, SPAWNS, STOCKS } from '../src/constants.ts';
+import { BLAST_ZONE, DROP_HOLD_TICKS, GROUND, PLATFORMS, RESPAWN_DELAY_TICKS, SPAWNS, STOCKS } from '../src/constants.ts';
 import { EMPTY_INPUT } from '../src/input.ts';
 import type { CharacterId } from '../src/characters/index.ts';
 import { applyKnockback } from '../src/combat/knockback.ts';
@@ -99,4 +99,39 @@ test('join options only accept real characters', async () => {
   assert.equal(parseCharacter({ character: 'nobody' }), null);
   assert.equal(parseCharacter({ character: 42 }), null);
   assert.equal(parseCharacter(undefined), null);
+});
+
+/** P1 standing on the first platform, settled. */
+function onPlatform(): ReturnType<typeof createWorld> {
+  const world = createWorld(['samu', 'robert']);
+  const player = world.players[0]!;
+  const platform = PLATFORMS[0];
+  teleportPlayer(player, { x: platform.x + platform.width / 2 - player.width / 2, y: platform.y - player.height, facing: 1 });
+  idle(world, SETTLE_TICKS);
+  return world;
+}
+
+test('on a platform, down then attack does the down attack instead of dropping', () => {
+  const world = onPlatform();
+  const player = world.players[0]!;
+  play(world, [[{ ...EMPTY_INPUT, down: true }, { ...EMPTY_INPUT, down: true }, { ...EMPTY_INPUT, down: true, light: true }]], 3);
+  assert.equal(player.attackId, 'lightDown');
+  assert.ok(player.grounded, 'still standing on the platform');
+});
+
+test('holding down on a platform for a moment drops through it', () => {
+  const world = onPlatform();
+  const player = world.players[0]!;
+  const startY = player.y;
+  play(world, [Array.from({ length: DROP_HOLD_TICKS + 10 }, () => ({ ...EMPTY_INPUT, down: true }))], DROP_HOLD_TICKS + 10);
+  assert.ok(player.y > startY, 'fell through');
+});
+
+test('the up special goes the way you hold, so you can get back from the side', () => {
+  const world = createWorld(['robert', 'samu']);
+  const player = world.players[0]!;
+  teleportPlayer(player, { x: GROUND.x + 300, y: GROUND.y - 300, facing: 1 });
+  play(world, [[{ ...EMPTY_INPUT, up: true, special: true, left: true }]], 1);
+  assert.ok(player.vx < 0, 'launched to the left');
+  assert.ok(player.vy < 0, 'and up');
 });

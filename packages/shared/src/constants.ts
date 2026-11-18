@@ -38,8 +38,14 @@ export const PLATFORMS = [
   { x: 890, y: 420, width: 240, height: 16 },
   { x: 520, y: 290, width: 240, height: 16 },
 ] as const;
-/** How many steps you ignore platforms after pressing down on one (~0.2 s). */
+/** How many steps you ignore platforms after dropping through one (~0.2 s). */
 export const DROP_THROUGH_TICKS = 12;
+/**
+ * Down must be held this long on a platform before you drop (~0.1 s): pressing
+ * attack meanwhile does the down attack instead. (Before 18 nov you dropped at
+ * once, so the down attack was impossible on platforms.)
+ */
+export const DROP_HOLD_TICKS = 6;
 /**
  * Where each player appears (top-left of the player box), one per player.
  * Centred above each side platform, so they drop onto it, facing each other.
@@ -50,14 +56,14 @@ export const SPAWNS = [
 ] as const;
 /**
  * Death zone edges: a player whose box leaves this area is knocked out.
- * The island spans x 40–1240. 1000 px of room on each side, 1100 above the ground
- * and 760 below it: a hit has to send you really far before you cannot come back.
+ * The island spans x 40–1240. 1150 px of room on each side, 1300 above the ground
+ * and 900 below it (18 nov: further out, "you die too soon"; measured with tools/ko-percent.ts).
  */
-export const BLAST_ZONE = { left: -960, right: 2240, top: GROUND.y - 1100, bottom: GROUND.y + 760 } as const;
+export const BLAST_ZONE = { left: -1110, right: 2390, top: GROUND.y - 1300, bottom: GROUND.y + 900 } as const;
 
 // --- Ledges ---
 /** You grab a ledge when your body is within this many px of its side… */
-export const LEDGE_GRAB_REACH = 24;
+export const LEDGE_GRAB_REACH = 32;
 /** …and the top of your body is at most this far above / below the stage's surface. */
 export const LEDGE_GRAB_ABOVE = 24;
 export const LEDGE_GRAB_BELOW = 36;
@@ -92,44 +98,55 @@ export const PLAYER_HEIGHT = 72;
 export const ATTACK_REFERENCE_BODY = { width: 40, height: 60 } as const;
 
 // --- Running (px/s and px/s²) ---
+// 18 nov: everything ~17 % slower than before (playtest: "they move too fast").
 /** Top horizontal speed. */
-export const RUN_SPEED = 420;
+export const RUN_SPEED = 350;
 /** How fast you reach RUN_SPEED on the ground. Higher = snappier. */
-export const GROUND_ACCEL = 3600;
+export const GROUND_ACCEL = 3000;
 /** How fast you stop on the ground when no direction is held. */
 export const GROUND_FRICTION = 4200;
 /** Horizontal control in the air while holding a direction. */
-export const AIR_ACCEL = 2000;
+export const AIR_ACCEL = 1650;
 /** How fast horizontal speed fades in the air with no direction held. */
 export const AIR_DRAG = 600;
 
 // --- Jumping and gravity (px/s and px/s²) ---
-export const GRAVITY = 2400;
-/** Initial upward speed. Jump height = JUMP_SPEED² / (2 · GRAVITY) ≈ 169 px. */
-export const JUMP_SPEED = 900;
+export const GRAVITY = 1950;
+/** Initial upward speed. Jump height = JUMP_SPEED² / (2 · GRAVITY) ≈ 169 px (the same as before the 18 nov slowdown, just floatier). */
+export const JUMP_SPEED = 811;
 /** Releasing jump while rising multiplies vy by this: short tap = short hop. */
 export const JUMP_CUT = 0.45;
 /** Terminal falling speed. */
-export const MAX_FALL_SPEED = 1300;
+export const MAX_FALL_SPEED = 1150;
 /** After walking off a ledge you can still use your ground jump for this many ticks ("coyote time"). */
 export const COYOTE_TICKS = 5;
 /** A jump pressed this many ticks before it becomes possible on the ground still happens ("jump buffer"). */
 export const JUMP_BUFFER_TICKS = 6;
 /** Extra jumps available in the air; refilled on landing. */
 export const AIR_JUMPS = 2;
-/** Upward speed of an air jump. Height ≈ 820² / (2 · 2400) ≈ 140 px. */
-export const DOUBLE_JUMP_SPEED = 820;
+/** Upward speed of an air jump. Height ≈ 739² / (2 · 1950) ≈ 140 px. */
+export const DOUBLE_JUMP_SPEED = 739;
 /**
  * Holding down in the air once you start falling snaps to this speed.
  * Must stay below ~60 px/step (3600 px/s) or bodies could skip thin platforms.
  */
-export const FAST_FALL_SPEED = 1600;
+export const FAST_FALL_SPEED = 1400;
+
+// --- Recovery (up special) ---
+/**
+ * Holding left or right when the up special launches tilts it this way:
+ * horizontal and vertical share of the launch speed (35°: sin 0.574, cos 0.819,
+ * written as numbers so every JavaScript engine gets exactly the same result).
+ */
+export const RECOVERY_TILT = { x: 0.574, y: 0.819 } as const;
+/** During the up special the sideways speed only fades this slowly (px/s²), so the tilt carries you back. */
+export const RECOVERY_AIR_DRAG = 300;
 
 // --- Dash and dodge (durations and cooldowns in simulation ticks, 60 = 1 s) ---
 /** Tapping a direction twice within this many ticks starts a dash. */
 export const DASH_TAP_WINDOW_TICKS = 14;
-/** Ground dash: burst of horizontal speed. Distance ≈ 1000 · 10/60 ≈ 167 px. */
-export const DASH_SPEED = 1000;
+/** Ground dash: burst of horizontal speed. Distance ≈ 820 · 10/60 ≈ 137 px. */
+export const DASH_SPEED = 820;
 export const DASH_TICKS = 10;
 /** Wait after a dash ends before the next dash or dodge. */
 export const DASH_COOLDOWN_TICKS = 30;
@@ -418,6 +435,11 @@ export const PARACHUTE_DRIFT_MULT = 0.6;
 // --- Combat: getting hit ---
 /** Launch speed cap. Keeps a step under ~60 px so nobody tunnels through platforms. */
 export const KNOCKBACK_MAX_SPEED = 3600;
+/**
+ * Multiplies how much knockback grows with damage (the kbScale term), for every
+ * attack. Below 1 = people survive to higher %. (18 nov: 0.9, "you die too soon".)
+ */
+export const KNOCKBACK_GROWTH_MULT = 0.9;
 /**
  * Hitstun (no control) = base + knockback speed × this, in ticks. 1000 px/s = 22 ticks.
  * High base and a gentle slope on purpose: at low % the target stays close and stunned
