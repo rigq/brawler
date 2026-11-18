@@ -3,6 +3,7 @@
 import {
   AIR_JUMPS,
   HEAVY_CHARGE_BONUS,
+  HEAVY_CHARGE_LAUNCH_BONUS,
   HIT_FLASH_TICKS,
   HITSTUN_BASE_TICKS,
   HITSTUN_COMBO_DECAY_TICKS,
@@ -30,7 +31,8 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
   const dealt = data.damage * chargeMult;
 
   target.damage += dealt;
-  const launch = data.kbBase * chargeMult + (data.kbScale * KNOCKBACK_GROWTH_MULT * target.damage * dealt) / 10;
+  const growth = (data.kbScale * KNOCKBACK_GROWTH_MULT * target.damage * dealt) / 10;
+  const launch = (data.kbBase * chargeMult + growth) * launchChargeMultiplier(data, attack);
   const speed = Math.min((launch * WEIGHT_AVERAGE) / characterOf(target).weight, KNOCKBACK_MAX_SPEED);
   // Math.sqrt is exact in every JS engine, so this stays deterministic.
   const length = Math.sqrt(data.kbX * data.kbX + data.kbY * data.kbY);
@@ -48,6 +50,11 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
 export function attackDamage(attacker: Player, attack: AttackSnapshot): number {
   const data = landedData(attacker, attack);
   return data.damage * chargeMultiplier(data, attack);
+}
+
+/** Extra launch of a charged heavy, all of it at full charge (HEAVY_CHARGE_LAUNCH_BONUS). */
+function launchChargeMultiplier(data: AttackData, attack: AttackSnapshot): number {
+  return data.heavy ? 1 + HEAVY_CHARGE_LAUNCH_BONUS * attack.charge : 1;
 }
 
 function chargeMultiplier(data: AttackData, attack: AttackSnapshot): number {
@@ -94,4 +101,5 @@ export function interrupt(target: Player): void {
   target.airJumpsLeft = AIR_JUMPS;
   target.airDodgeAvailable = true;
   target.recoveryAvailable = true;
+  target.airBoostAvailable = true;
 }

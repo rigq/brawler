@@ -8,7 +8,7 @@ const Key = Phaser.Input.Keyboard.KeyCodes;
 export type KeyBindings = Record<keyof PlayerInput, number[]>;
 
 /**
- * P1: WASD to move and aim, Space to jump, J (light), K (heavy), L (shield/dodge), I (special).
+ * P1: WASD to move and aim, Space to jump, J (light), K (heavy), L (shield/dodge), I (special), U (grab).
  * Jump is not on W: with W as both "up" and "jump", pressing W a moment before
  * J jumped and gave the up aerial instead of the up tilt.
  * When two share one keyboard, J/K/L sit under P2's hand, so P1 can use C, V
@@ -24,6 +24,8 @@ export const P1_BINDINGS: KeyBindings = {
   light: [Key.J, Key.C],
   heavy: [Key.K, Key.V],
   special: [Key.I, Key.X],
+  // U, right above J/K: grabbing with one key (shield + light still works). Z for the shared-keyboard set.
+  grab: [Key.U, Key.Z],
 };
 
 /** P2: arrows to move and aim, M to jump (next to , . -), so ↑ is only a direction. N is the special. */
@@ -38,6 +40,8 @@ export const P2_BINDINGS: KeyBindings = {
   light: [Key.COMMA, Key.NUMPAD_ONE],
   heavy: [Key.PERIOD, Key.NUMPAD_TWO],
   special: [Key.N, Key.NUMPAD_FOUR],
+  // P2 grabs with shield + light ("-" + ","); online either half of the keyboard drives your player, so U works there.
+  grab: [],
 };
 
 /** Reads the keyboard once per render frame and turns it into a PlayerInput. */

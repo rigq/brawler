@@ -17,10 +17,11 @@ export const chachin: CharacterDefinition = {
     specialNeutral: {
       // No projectile: the scream is the hitbox itself (the generic special fires one).
       projectile: undefined,
-      startup: 10, active: 4, recovery: 24, cooldownTicks: 90,
-      box: { x: -59, y: -47, width: 148, height: 140 },
-      damage: 4, kbBase: 150, kbScale: 3, kbX: 1, kbY: -0.4, stunTicks: 22,
-      sweetspot: { box: { x: -25, y: -20, width: 80, height: 86 }, damage: 9, kbBase: 200, kbScale: 4, stunTicks: 42 },
+      // 18 nov (playtest: too strong): smaller, less stun (it led into free combos), slower to come out and to repeat.
+      startup: 14, active: 4, recovery: 26, cooldownTicks: 150,
+      box: { x: -40, y: -30, width: 120, height: 110 },
+      damage: 3, kbBase: 150, kbScale: 3, kbX: 1, kbY: -0.4, stunTicks: 12,
+      sweetspot: { box: { x: -20, y: -12, width: 70, height: 76 }, damage: 7, kbBase: 200, kbScale: 4, stunTicks: 24 },
     },
     /** "Grito-cohete": screams at the ground and shoots up; the blast hits whoever is below. */
     specialUp: {

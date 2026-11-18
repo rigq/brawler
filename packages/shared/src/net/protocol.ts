@@ -107,7 +107,7 @@ export function copyProjectile(target: Projectile, source: Projectile): void {
  * start of the last step, only used to smooth the drawing. Each client sets them
  * itself (prediction steps them, the interpolation of other players overwrites them).
  */
-const LOCAL_ONLY_FIELDS: readonly (keyof Player)[] = ['prevX', 'prevY'];
+export const LOCAL_ONLY_FIELDS: readonly (keyof Player)[] = ['prevX', 'prevY'];
 
 /** Every synced Player field, in a fixed order. */
 export const PLAYER_FIELDS = (Object.keys(createPlayer(SPAWNS[0])) as (keyof Player)[]).filter(

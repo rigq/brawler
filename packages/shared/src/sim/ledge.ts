@@ -112,6 +112,7 @@ function grabLedge(player: Player, solid: Rect, index: number, side: number): vo
   player.airJumpsLeft = AIR_JUMPS;
   player.airDodgeAvailable = true;
   player.recoveryAvailable = true;
+  player.airBoostAvailable = true;
   if (player.ledgeInvulnAvailable) {
     player.ledgeInvulnAvailable = false;
     player.invulnTicks = Math.max(player.invulnTicks, LEDGE_INVULN_TICKS);

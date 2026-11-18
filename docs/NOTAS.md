@@ -8,6 +8,12 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Hecho
 
+- **Feedback de Samuel: A, B y C (18 nov)**
+  - **A · Control y defensa**: agarre en **U** (acción `grab` nueva en `PlayerInput`; mando RB; escudo + ligero sigue valiendo, también desde el escudo); rueda 173→103 px (440 px/s × 14 ticks), esquiva aérea 175→103 px, esquiva en el sitio 18→14 ticks; **paracaídas de Donate cancelable** con salto o escudo; **grito de Chachin** más pequeño, menos aturdimiento (22/42 → 12/24 ticks; llevaba a combos gratis), más lento (arranque 10→14) y espera 90→150; **↑+K en el aire** da un impulso (`AIR_HEAVY_UP_BOOST`, una vez por salto, dirigible como el especial arriba; `airBoostAvailable`). Arreglado de paso: el tambaleo de la mochila de Samu al fallar un fuerte solo pasa en el suelo (en el aire lo tiraba fuera del escenario).
+  - **B · Cargados**: al soltar, el golpe sale en `HEAVY_RELEASE_STARTUP_TICKS` (5) en vez de todo el arranque (10–12); carga máxima = +8 % de lanzamiento extra (`HEAVY_CHARGE_LAUNCH_BONUS`, medido: con +30 % mataba a Chachin al 20 %). Sin barra: el personaje se ilumina con la carga y parpadea al máximo (`CharacterSprite.renderChargeGlow`, copia del sprite con luz aditiva). Resultado con `tools/ko-percent.ts` (que ahora mide cargados y usa ↑+K al volver): cargado al máximo solo → Donate 117 %, Robert 180 %, Samu 159 %, Chachin 96 %; intentando volver → 72 / 86 / 104 / 54 %. Sin cargar, intentando volver: 151 / 171 / 199 / 123 % (más aguante que antes).
+  - **C · Golpes que se ven**: fuera los rectángulos de golpe; arco de barrido (`render/SwingArc.ts`) desde los hombros hacia la caja de golpe, en el sentido en que mira, que se desvanece en 0,16 s; los fuertes más anchos y naranjas cuanto más cargados. Comprobado en el navegador (patada, golpe arriba, fuerte cargado).
+  - Tests nuevos: agarre con U a través del escudo, ↑+K una vez por salto, cancelar paracaídas. El test de "estado reconstruido" ignora `prevX`/`prevY` (solo dibujo, no viajan por la red).
+
 - **Fase 1 del feedback: ritmo, caídas y recovery (18 nov)**
   - **Ataque bajo en plataformas**: antes, pulsar abajo te dejaba caer en el mismo tick. Ahora hay que mantener abajo `DROP_HOLD_TICKS` (6, 0,1 s); un ataque en ese margen es el ataque bajo (`downHeldTicks` en `Player`).
   - **Todo ~17 % más lento**: correr 420→350, dash 1000→820, aceleración en suelo y aire, gravedad 2400→1950 con el salto a la misma altura (salto 900→811, doble 820→739), caída máxima 1300→1150, caída rápida 1600→1400.
@@ -254,7 +260,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 ### Siguiente tarea
 
-- **Feedback de Samuel (playtest, decidido con Riga el 18 nov) → 3 sesiones:**
+- ~~**Feedback de Samuel → 3 sesiones**~~ (A, B y C hechas el 18 nov; queda la fase 3: ataques con personalidad). Plan original:
   - **A · Control y defensa** (1 sesión, datos): agarre en **U** (L+J sigue valiendo; online P1 y P2 manejan al mismo personaje, así que basta con U); esquiva y rueda más cortas (~60 % de distancia y duración); paracaídas de Donate **cancelable** (salto o escudo); **nerf al grito de Chachin**; **↑+K en el aire = segundo impulso de recovery** (una vez por salto), además del especial arriba dirigible.
   - **B · Cargados que enganchen** (1 sesión): sale al soltar, con un arranque corto sincronizado con la animación; sin barra: el personaje **brilla cada vez más** y **parpadea** al máximo; mucha más recompensa al cargar del todo (más KO, congelación y temblor). Objetivo con `tools/ko-percent.ts`: **cargado al máximo mata a ~110–130 %** desde el borde (peso medio); los golpes flojos siguen sin matar (para no romper el "morís muy pronto" del otro amigo).
   - **C · Golpes que se ven** (1 sesión, es D2): fuera los rectángulos de golpe; en su lugar, **arco de barrido** que sigue el golpe; revisar con F1 que cada caja coincide con el brazo o pierna de su animación.

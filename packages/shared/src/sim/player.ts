@@ -73,8 +73,10 @@ export interface Player extends Body, DodgeState, AttackState, GrabState, LedgeS
   airJumpsLeft: number;
   /** Locked at FAST_FALL_SPEED until landing or jumping again. */
   fastFalling: boolean;
-  /** Up heavy in the air still gives its upward boost (once per time in the air). */
+  /** The up special can still launch you (once per time in the air). */
   recoveryAvailable: boolean;
+  /** Up heavy in the air can still lift you (once per time in the air, separate from the up special). */
+  airBoostAvailable: boolean;
 }
 
 export function createPlayer(
@@ -112,6 +114,7 @@ export function createPlayer(
     airJumpsLeft: AIR_JUMPS,
     fastFalling: false,
     recoveryAvailable: true,
+    airBoostAvailable: true,
     ...createDodgeState(),
     ...createAttackState(),
     ...createGrabState(),
@@ -148,6 +151,10 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
   }
   player.jumpBufferTicks = input.jump && !player.jumpHeld ? JUMP_BUFFER_TICKS : Math.max(player.jumpBufferTicks - 1, 0);
 
+  // The parachute can be dropped (jump or shield): a glide you can't leave is too easy to punish.
+  if (player.parachuting && ((input.jump && !player.jumpHeld) || (input.dodge && !player.dodgeHeld))) {
+    player.parachuting = false;
+  }
   // Attacking out of a dash ends it and keeps its speed (see startAttack).
   updateAttack(player, input);
   updateDodge(player, input);
@@ -358,6 +365,7 @@ function refillOnLanding(player: Player): void {
   player.fastFalling = false;
   player.airDodgeAvailable = true;
   player.recoveryAvailable = true;
+  player.airBoostAvailable = true;
   player.ledgeInvulnAvailable = true;
 }
 

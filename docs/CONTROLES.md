@@ -38,10 +38,10 @@ Los dos juegos de teclas de P1 funcionan siempre: el de **J K L** para jugar sol
 | Ataque en carrera | Ligero durante el dash |
 | Aéreos | Ligero en el aire: sin dirección (neutral), hacia donde miras (adelante), al revés (atrás), arriba o abajo |
 | Pesados (se cargan en el suelo) | Fuerte + lado, arriba o abajo |
-| Recovery (volver al escenario) | Especial + arriba, una vez hasta tocar suelo (cada personaje a su manera) |
-| Agarre | Escudo + ligero, o ligero con el escudo levantado |
+| Recovery (volver al escenario) | Especial + arriba, una vez hasta tocar suelo (cada personaje a su manera). **Manteniendo izquierda o derecha sale en diagonal hacia ese lado.** Además, **fuerte + arriba en el aire** da un segundo impulso (una vez por salto) |
+| Agarre | **U**, o escudo + ligero (también con el escudo levantado). Mando: RB |
 | Especial neutral | Especial (sin arriba) |
-| Especial arriba | Especial + arriba: en casi todos es su forma de volver al escenario |
+| Especial arriba | Especial + arriba: en casi todos es su forma de volver al escenario. El paracaídas de Donate se suelta con salto o escudo |
 | Lanzar | Con el rival agarrado: dirección (adelante o atrás) o ligero |
 
 En el aire no te giras: "adelante" y "atrás" dependen de hacia dónde mirabas al saltar.

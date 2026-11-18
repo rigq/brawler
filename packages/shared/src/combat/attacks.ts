@@ -2,6 +2,8 @@
 // Light: startup → active → recovery. Heavy: charge (while held) → startup → active → recovery.
 
 import {
+  HEAVY_RELEASE_STARTUP_TICKS,
+  AIR_HEAVY_UP_BOOST,
   RECOVERY_TILT, HEAVY_MAX_CHARGE_TICKS, WHIFF_STUMBLE_SPEED, type AttackData, type AttackId } from '../constants.ts';
 import { characterOf } from '../characters/index.ts';
 import type { PlayerInput } from '../input.ts';
@@ -26,6 +28,8 @@ export interface AttackState {
   attackQueued: boolean;
   /** Button states in the previous step, to detect fresh presses. */
   lightHeld: boolean;
+  /** Grab button state in the previous step (fresh presses only). */
+  grabHeld: boolean;
   heavyHeld: boolean;
   specialHeld: boolean;
   /** Ticks until a projectile special can be used again. */
@@ -43,6 +47,7 @@ export function createAttackState(): AttackState {
     attackHitMask: 0,
     attackQueued: false,
     lightHeld: false,
+    grabHeld: false,
     heavyHeld: false,
     specialHeld: false,
     specialCooldown: 0,
@@ -59,7 +64,9 @@ export function updateAttack(player: Player, input: PlayerInput): void {
   const lightPressed = input.light && !player.lightHeld;
   const heavyPressed = input.heavy && !player.heavyHeld;
   const specialPressed = input.special && !player.specialHeld;
+  const grabPressed = input.grab && !player.grabHeld;
   player.lightHeld = input.light;
+  player.grabHeld = input.grab;
   player.heavyHeld = input.heavy;
   player.specialHeld = input.special;
   if (player.specialCooldown > 0) player.specialCooldown -= 1;
@@ -72,7 +79,7 @@ export function updateAttack(player: Player, input: PlayerInput): void {
   if (player.lagTicks > 0 || player.parachuting) return;
   if (player.shielding) {
     // The one attack you can do from the shield.
-    if (lightPressed && player.shieldStunTicks === 0) {
+    if ((lightPressed || grabPressed) && player.shieldStunTicks === 0) {
       player.shielding = false;
       startAttack(player, input, 'grab');
     }
@@ -81,7 +88,8 @@ export function updateAttack(player: Player, input: PlayerInput): void {
   // Attacks can start from a dash (it hands over its speed), not from other dodges.
   const dodgeAllows = player.dodgeKind === 'none' || player.dodgeKind === 'dash';
   if (!dodgeAllows || player.hitstunTicks > 0) return;
-  if (lightPressed) startAttack(player, input, chooseLight(player, input));
+  if (grabPressed && player.grounded) startAttack(player, input, 'grab');
+  else if (lightPressed) startAttack(player, input, chooseLight(player, input));
   else if (heavyPressed) startAttack(player, input, chooseHeavy(input));
   else if (specialPressed) startSpecial(player, input);
 }
@@ -176,6 +184,7 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
   // Heavies charge only on the ground; in the air they fire at once.
   player.attackCharging = data.heavy && player.grounded;
   if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed, dirX);
+  if (id === 'heavyUp' && !player.grounded) airHeavyUpBoost(player, dirX);
   beginAttack(player, id);
   // Respawn invulnerability is for getting back in, not for attacking safely.
   player.invulnTicks = 0;
@@ -197,6 +206,15 @@ function beginAttack(player: Player, id: AttackId): void {
 }
 
 /** The "recovery": pushes you up, once per time in the air, to get back to the stage. */
+/** Up heavy in the air: a smaller lift than the up special, once per time in the air (see AIR_HEAVY_UP_BOOST). */
+function airHeavyUpBoost(player: Player, dirX: number): void {
+  if (!player.airBoostAvailable) return;
+  player.airBoostAvailable = false;
+  player.vx = dirX !== 0 ? dirX * AIR_HEAVY_UP_BOOST * RECOVERY_TILT.x : player.vx;
+  player.vy = -AIR_HEAVY_UP_BOOST * (dirX !== 0 ? RECOVERY_TILT.y : 1);
+  player.fastFalling = false;
+}
+
 /** Straight up, or tilted towards `dirX` (-1, 0, 1) if a direction is held: that is how you get back from the side. */
 function launchRecovery(player: Player, speed: number, dirX: number): void {
   if (!player.recoveryAvailable) return;
@@ -219,6 +237,9 @@ function advanceAttack(player: Player, input: PlayerInput): void {
       player.attackChargeTicks += 1;
     } else {
       player.attackCharging = false;
+      // The charging pose was the wind-up: only the last ticks of the startup remain.
+      const { startup } = attackData(player, player.attackId);
+      player.attackTick = Math.max(0, startup - HEAVY_RELEASE_STARTUP_TICKS);
     }
     return;
   }
@@ -232,7 +253,8 @@ function advanceAttack(player: Player, input: PlayerInput): void {
   if (player.attackTick < data.startup + data.active + data.recovery) return;
   player.attackId = 'none';
   if (data.parachute && !player.grounded) player.parachuting = true;
-  if (data.whiffLagTicks && player.attackHitMask === 0) {
+  // Only on the ground: in the air the stumble would throw him off the stage.
+  if (data.whiffLagTicks && player.attackHitMask === 0 && player.grounded) {
     player.lagTicks = data.whiffLagTicks;
     player.vx = -player.facing * WHIFF_STUMBLE_SPEED;
   }

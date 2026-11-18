@@ -1,5 +1,5 @@
 // Balance helper: at what damage % does each character get knocked out by a
-// heavy attack (uncharged) from the edge of the stage? It counts only if the
+// heavy attack (uncharged and fully charged) from the edge of the stage? It counts only if the
 // blast zone is crossed while still in hitstun: once hitstun ends the player
 // could act (jump, recover), so that launch was survivable.
 //
@@ -25,20 +25,24 @@ const FLIGHT_TICKS = 600;
 /**
  * A simple but sensible way back, from the moment hitstun ends: hold towards
  * the middle of the stage; once falling below the stage's height, use every
- * air jump and then the up special, like a player would.
+ * air jump, then the up heavy's lift, then the up special, like a player would.
  */
 function recoveryInput(
-  victim: { x: number; vy: number; y: number; width: number; height: number; airJumpsLeft: number; jumpHeld: boolean },
-  state: { specialDone: boolean },
+  victim: { x: number; vy: number; y: number; width: number; height: number; airJumpsLeft: number; jumpHeld: boolean; attackId: string },
+  state: { boostDone: boolean; specialDone: boolean },
 ): PlayerInput {
   // Towards the middle of the island (over it, that means not walking off the other side).
   const towardsLeft = victim.x + victim.width / 2 > STAGE_CENTER_X;
   const input: PlayerInput = { ...EMPTY_INPUT, left: towardsLeft, right: !towardsLeft };
   const fallingBelowStage = victim.vy > 0 && victim.y + victim.height > GROUND.y - 40;
   if (!fallingBelowStage) return input;
-  // Every air jump first (a fresh press each time), then the up special once.
+  // Every air jump first (a fresh press each time), then the up heavy's lift, then the up special.
   if (victim.airJumpsLeft > 0) input.jump = !victim.jumpHeld;
-  else if (!state.specialDone) {
+  else if (!state.boostDone) {
+    input.up = true;
+    input.heavy = true;
+    state.boostDone = true;
+  } else if (!state.specialDone && victim.attackId === 'none') {
     input.up = true;
     input.special = true;
     state.specialDone = true;
@@ -51,7 +55,7 @@ function recoveryInput(
  * `recover`: false = dies only if the launch alone crosses the blast zone
  * (still in hitstun); true = after hitstun it tries to come back (recoveryInput).
  */
-function dies(target: CharacterId, move: AttackId, damage: number, recover = false): boolean {
+function dies(target: CharacterId, move: AttackId, damage: number, recover = false, charge = 0): boolean {
   const world = createWorld([ATTACKER, target]);
   const [attacker, victim] = world.players as [NonNullable<(typeof world.players)[0]>, NonNullable<(typeof world.players)[1]>];
   const edge = GROUND.x + GROUND.width;
@@ -59,10 +63,10 @@ function dies(target: CharacterId, move: AttackId, damage: number, recover = fal
   teleportPlayer(attacker, { x: victim.x - attacker.width, y: GROUND.y - attacker.height, facing: 1 });
   victim.damage = damage;
   victim.invulnTicks = 0;
-  applyKnockback(attacker, victim, { id: move, charge: 0 });
+  applyKnockback(attacker, victim, { id: move, charge });
   const stocks = victim.stocks;
   let freeTicks = -1;
-  const state = { specialDone: false };
+  const state = { boostDone: false, specialDone: false };
   for (let i = 0; i < FLIGHT_TICKS; i++) {
     const free = victim.hitstunTicks === 0 && victim.hitstopTicks === 0;
     if (free) freeTicks += 1;
@@ -76,22 +80,29 @@ function dies(target: CharacterId, move: AttackId, damage: number, recover = fal
 }
 
 /** Lowest % that dies (binary search), or null if not even at MAX_DAMAGE. */
-function koPercent(target: CharacterId, move: AttackId, recover: boolean): number | null {
-  if (!dies(target, move, MAX_DAMAGE, recover)) return null;
+function koPercent(target: CharacterId, move: AttackId, recover: boolean, charge = 0): number | null {
+  if (!dies(target, move, MAX_DAMAGE, recover, charge)) return null;
   let lo = 0;
   let hi = MAX_DAMAGE;
   while (hi - lo > 1) {
     const mid = Math.floor((lo + hi) / 2);
-    if (dies(target, move, mid, recover)) hi = mid;
+    if (dies(target, move, mid, recover, charge)) hi = mid;
     else lo = mid;
   }
   return hi;
 }
 
-const columns = MOVES.flatMap((move) => [`${move}`, `${move}+rec`]);
-console.log(['target', ...columns].map((c) => c.padEnd(15)).join(''));
+// Columns: launch alone / trying to come back, uncharged and fully charged.
+const columns = MOVES.flatMap((move) => [`${move}`, `+rec`, `charged`, `charged+rec`]);
+console.log(['target', ...columns].map((c) => c.padEnd(12)).join(''));
 for (const id of CHARACTER_IDS) {
-  const cells = MOVES.flatMap((move) => [koPercent(id, move, false), koPercent(id, move, true)]);
-  console.log([id, ...cells.map((c) => (c === null ? '—' : `${c}%`))].map((c) => c.padEnd(15)).join(''));
+  const cells = MOVES.flatMap((move) => [
+    koPercent(id, move, false),
+    koPercent(id, move, true),
+    koPercent(id, move, false, 1),
+    koPercent(id, move, true, 1),
+  ]);
+  console.log([id, ...cells.map((c) => (c === null ? '—' : `${c}%`))].map((c) => c.padEnd(12)).join(''));
 }
-console.log('\n"+rec": the target tries to come back (towards the middle of the stage; below its height, every air jump and then the up special).');
+console.log('\n"+rec": the target tries to come back (towards the middle of the stage; below its height, every air jump, the up heavy lift and the up special).');
+console.log('"charged": the heavy charged to the maximum.');

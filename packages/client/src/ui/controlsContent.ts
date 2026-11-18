@@ -42,7 +42,8 @@ const BUTTON_ROWS: { label: string; actions: (keyof PlayerInput)[]; pad: string 
   { label: 'Saltar', actions: ['jump'], pad: 'A' },
   { label: 'Ligero', actions: ['light'], pad: 'X' },
   { label: 'Fuerte', actions: ['heavy'], pad: 'B' },
-  { label: 'Escudo / esquiva', actions: ['dodge'], pad: 'LB, RB, LT o RT' },
+  { label: 'Escudo / esquiva', actions: ['dodge'], pad: 'LB, LT o RT' },
+  { label: 'Agarre', actions: ['grab'], pad: 'RB' },
   { label: 'Especial', actions: ['special'], pad: 'Y' },
 ];
 
@@ -95,7 +96,7 @@ const ATTACKS: ControlsSection = {
     ['Fuertes', 'Fuerte + lado, arriba o abajo (mantén para cargar)'],
     ['Especial neutral', 'Especial sin arriba'],
     ['Especial arriba (volver al escenario)', 'Especial + arriba, una vez hasta tocar suelo'],
-    ['Agarre', 'Escudo + ligero'],
+    ['Agarre', 'U (o escudo + ligero), cerca del rival; luego una dirección o ligero lo lanza'],
     ['Lanzar', 'Con el rival agarrado: adelante, atrás o ligero'],
   ],
   note: 'En el aire no te giras: adelante y atrás dependen de hacia dónde mirabas al saltar.',

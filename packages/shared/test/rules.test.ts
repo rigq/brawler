@@ -135,3 +135,37 @@ test('the up special goes the way you hold, so you can get back from the side', 
   assert.ok(player.vx < 0, 'launched to the left');
   assert.ok(player.vy < 0, 'and up');
 });
+
+test('the grab button grabs a rival standing next to you, even behind their shield', () => {
+  const world = createWorld(['samu', 'robert']);
+  const [p1, p2] = world.players as [Player, Player];
+  teleportPlayer(p1, { x: GROUND.x + 400, y: GROUND.y - p1.height, facing: 1 });
+  teleportPlayer(p2, { x: p1.x + p1.width + 10, y: GROUND.y - p2.height, facing: -1 });
+  const shield = { ...EMPTY_INPUT, dodge: true };
+  for (let i = 0; i < 20; i++) stepWorld(world, [EMPTY_INPUT, shield]);
+  for (let i = 0; i < 20; i++) stepWorld(world, [{ ...EMPTY_INPUT, grab: i === 0 }, shield]);
+  assert.ok(p1.holdTicks > 0 || p1.attackId === 'throwForward' || p1.attackId === 'throwBack' || p2.grabbedTicks > 0, 'P2 was grabbed');
+});
+
+test('up heavy in the air lifts you once per time in the air', () => {
+  const world = createWorld(['samu', 'robert']);
+  const player = world.players[0]!;
+  teleportPlayer(player, { x: GROUND.x + 300, y: GROUND.y - 400, facing: 1 });
+  play(world, [[{ ...EMPTY_INPUT, up: true, heavy: true }]], 1);
+  assert.ok(player.vy < 0, 'first one lifts');
+  idle(world, 40);
+  const vyBefore = player.vy;
+  play(world, [[{ ...EMPTY_INPUT, up: true, heavy: true }]], 1);
+  assert.ok(player.vy >= vyBefore, 'second one in the same jump does not');
+});
+
+test("Donate's parachute can be dropped with jump", () => {
+  const world = createWorld(['donate', 'robert']);
+  const player = world.players[0]!;
+  teleportPlayer(player, { x: GROUND.x + 300, y: GROUND.y - 300, facing: 1 });
+  play(world, [[{ ...EMPTY_INPUT, up: true, special: true }]], 1);
+  for (let i = 0; i < 120 && !player.parachuting; i++) stepWorld(world, []);
+  assert.ok(player.parachuting, 'gliding');
+  play(world, [[{ ...EMPTY_INPUT, jump: true }]], 1);
+  assert.equal(player.parachuting, false);
+});

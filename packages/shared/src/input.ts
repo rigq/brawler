@@ -17,6 +17,8 @@ export interface PlayerInput {
   heavy: boolean;
   /** Special: up for the up special (recovery), otherwise the neutral special. */
   special: boolean;
+  /** Grab on its own button (shield + light still works too). */
+  grab: boolean;
 }
 
 export const EMPTY_INPUT: Readonly<PlayerInput> = {
@@ -29,4 +31,5 @@ export const EMPTY_INPUT: Readonly<PlayerInput> = {
   light: false,
   heavy: false,
   special: false,
+  grab: false,
 };

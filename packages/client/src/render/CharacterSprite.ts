@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { attackData, attackPhase, type Player } from '@brawler/shared';
+import { attackCharge, attackData, attackPhase, type Player } from '@brawler/shared';
 import { SHEETS, type CharacterArt } from './art.ts';
 import { animFor, frameFor, resolveAnim, type AnimName } from './bodyAnimation.ts';
 
@@ -33,6 +33,11 @@ const DASH_TINT = 0xffe0a8;
 const FLASH_TINT = 0xffffff;
 /** Effects behind the body (props, helpers) and in front of it (auras, sparks). */
 const DEPTH = { behind: -1, front: 1 } as const;
+/** Charging a heavy: a warm light added over the body, stronger as the charge grows… */
+const CHARGE_GLOW_COLOR = 0xffc861;
+const CHARGE_GLOW_MAX_ALPHA = 0.55;
+/** …and pulsing once full: between these alphas, this fast. */
+const CHARGE_FULL_PULSE = { low: 0.2, high: 0.9, periodMs: 160 } as const;
 
 type Sprite = Phaser.GameObjects.Sprite;
 
@@ -43,6 +48,8 @@ type Sprite = Phaser.GameObjects.Sprite;
  */
 export class CharacterSprite {
   private readonly body: Sprite;
+  /** A copy of the body drawn with additive light while a heavy charges. */
+  private readonly glow: Sprite;
   private readonly prop: Sprite | null;
   private readonly helper: Sprite | null;
   private readonly aura: Sprite | null;
@@ -79,10 +86,15 @@ export class CharacterSprite {
     this.aura = add(art.neutralAura, 0.5, 0.5, DEPTH.front);
     this.teleport = add(art.teleport, 0.5, 1, DEPTH.front);
     this.dizzy = scene.add.sprite(0, 0, SHEETS.chachinDizzy.key, 0).setOrigin(0.5, 1).setDepth(DEPTH.front).setVisible(false);
+    this.glow = scene.add
+      .sprite(0, 0, art.body.key, 0)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setTintFill(CHARGE_GLOW_COLOR)
+      .setVisible(false);
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    const all = [this.flag, this.prop, this.helper, this.cords, this.canopy, this.body, this.blast, this.aura, this.teleport, this.dizzy];
+    const all = [this.flag, this.prop, this.helper, this.cords, this.canopy, this.body, this.glow, this.blast, this.aura, this.teleport, this.dizzy];
     return all.filter((o): o is NonNullable<typeof o> => o !== null);
   }
 
@@ -97,6 +109,7 @@ export class CharacterSprite {
     else if (player.dodgeKind === 'dash') this.body.setTint(DASH_TINT);
     else if (this.tint !== null) this.body.setTint(this.tint);
     else this.body.clearTint();
+    this.renderChargeGlow(player, opacity);
     this.renderProp(player, x, feetY);
     this.renderHelper(player);
     this.renderAura(player, feetX, y + player.height / 2);
@@ -105,6 +118,28 @@ export class CharacterSprite {
     this.renderFlag(player, frameMs);
     this.renderParachute(player, feetX, y, frameMs);
     this.renderDizzy(player, feetX, y);
+  }
+
+  /**
+   * Charging a heavy: the body lights up more and more, and pulses once the
+   * charge is full (no bar: you read it on the character).
+   */
+  private renderChargeGlow(player: Player, opacity: number): void {
+    const charging = attackPhase(player) === 'charge';
+    this.glow.setVisible(charging);
+    if (!charging) return;
+    const charge = attackCharge(player);
+    const pulse = 0.5 + 0.5 * Math.sin((this.clockMs / CHARGE_FULL_PULSE.periodMs) * Math.PI * 2);
+    const alpha = charge >= 1
+      ? CHARGE_FULL_PULSE.low + (CHARGE_FULL_PULSE.high - CHARGE_FULL_PULSE.low) * pulse
+      : charge * CHARGE_GLOW_MAX_ALPHA;
+    const b = this.body;
+    this.glow
+      .setTexture(b.texture.key, b.frame.name)
+      .setOrigin(b.originX, b.originY)
+      .setPosition(b.x, b.y)
+      .setFlipX(b.flipX)
+      .setAlpha(alpha * opacity);
   }
 
   /**

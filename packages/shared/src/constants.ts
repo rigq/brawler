@@ -142,6 +142,13 @@ export const RECOVERY_TILT = { x: 0.574, y: 0.819 } as const;
 /** During the up special the sideways speed only fades this slowly (px/s²), so the tilt carries you back. */
 export const RECOVERY_AIR_DRAG = 300;
 
+/**
+ * Up heavy in the air also lifts you (once per time in the air, apart from the
+ * up special): a second way back, so recoveries are less predictable. Tilted
+ * like the up special when a direction is held. Height ≈ 700² / (2 · GRAVITY) ≈ 125 px.
+ */
+export const AIR_HEAVY_UP_BOOST = 700;
+
 // --- Dash and dodge (durations and cooldowns in simulation ticks, 60 = 1 s) ---
 /** Tapping a direction twice within this many ticks starts a dash. */
 export const DASH_TAP_WINDOW_TICKS = 14;
@@ -150,16 +157,16 @@ export const DASH_SPEED = 820;
 export const DASH_TICKS = 10;
 /** Wait after a dash ends before the next dash or dodge. */
 export const DASH_COOLDOWN_TICKS = 30;
-/** Roll: shield + left/right. Distance ≈ 520 · 20/60 ≈ 173 px. */
-export const ROLL_SPEED = 520;
-export const ROLL_TICKS = 20;
+/** Roll: shield + left/right. Distance ≈ 440 · 14/60 ≈ 103 px (18 nov: shorter, playtest). */
+export const ROLL_SPEED = 440;
+export const ROLL_TICKS = 14;
 /** The roll's last ticks are not invulnerable: that is where you punish it. */
 export const ROLL_END_VULN_TICKS = 5;
 /** Dodge in place: shield + down. Invulnerable. */
-export const SPOT_DODGE_TICKS = 18;
+export const SPOT_DODGE_TICKS = 14;
 /** Air dodge in the held direction (8 ways), gravity off. Invulnerable. */
-export const AIR_DODGE_SPEED = 750;
-export const AIR_DODGE_TICKS = 14;
+export const AIR_DODGE_SPEED = 620;
+export const AIR_DODGE_TICKS = 10;
 /** Touching the ground during an air dodge leaves you this many ticks unable to act. */
 export const AIR_DODGE_LANDING_LAG = 10;
 /** Velocity kept when an air dodge ends (0 = full stop, 1 = keep all). */
@@ -422,6 +429,18 @@ export const HEAVY_MAX_CHARGE_TICKS = 36;
 export const ATTACK_MOVE_SPEED_MULT = 0.7;
 /** A fully charged heavy deals (1 + this) × damage and knockback; scales linearly with charge. */
 export const HEAVY_CHARGE_BONUS = 0.4;
+/**
+ * On top of that, the launch alone grows this much at full charge: charging all
+ * the way is what kills (18 nov playtest: "you need too much % to kill").
+ * Measure with tools/ko-percent.ts.
+ */
+export const HEAVY_CHARGE_LAUNCH_BONUS = 0.08;
+/**
+ * Once the heavy is released, the hit comes out this many ticks later, whatever
+ * the attack's startup (the charging pose is already the wind-up). 18 nov: before,
+ * the whole 10–12 tick startup came after releasing and felt random.
+ */
+export const HEAVY_RELEASE_STARTUP_TICKS = 5;
 
 /** Stumbling back after a missed heavy (whiffLagTicks): this speed, slowed by friction. */
 export const WHIFF_STUMBLE_SPEED = 220;

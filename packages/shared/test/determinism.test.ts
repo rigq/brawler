@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { CHARACTER_IDS } from '../src/characters/index.ts';
-import { copyPlayer, copyProjectile } from '../src/net/protocol.ts';
+import { LOCAL_ONLY_FIELDS, copyPlayer, copyProjectile } from '../src/net/protocol.ts';
 import { createProjectile } from '../src/combat/projectiles.ts';
 import { createWorld, type World } from '../src/sim/world.ts';
 import { mashing, play, snapshot } from './helpers.ts';
@@ -56,6 +56,11 @@ function rebuiltFromNetwork(source: World): World {
   return copy;
 }
 
+/** The world without the drawing-only fields (prevX/prevY), which each client sets for itself. */
+function simulated(world: World): string {
+  return JSON.stringify(world, (key, value) => ((LOCAL_ONLY_FIELDS as readonly string[]).includes(key) ? undefined : value));
+}
+
 test('the synced fields hold the whole state: a rebuilt world continues identically', () => {
   // If some state lived outside the synced fields, the client's prediction would
   // replay from an incomplete copy and drift away from the server.
@@ -67,6 +72,6 @@ test('the synced fields hold the whole state: a rebuilt world continues identica
     const rest = scripts.map((s) => s.slice(pause));
     play(original, rest, TICKS - pause);
     play(rebuilt, rest, TICKS - pause);
-    assert.equal(snapshot(rebuilt), snapshot(original), `rebuilt at tick ${pause}`);
+    assert.equal(simulated(rebuilt), simulated(original), `rebuilt at tick ${pause}`);
   }
 });

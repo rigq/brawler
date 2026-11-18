@@ -46,10 +46,11 @@ export class GamepadInput implements InputSource {
       up: stick.y < -STICK_DEADZONE || pressed(Button.DPAD_UP),
       down: stick.y > STICK_DEADZONE || pressed(Button.DPAD_DOWN),
       jump: pressed(Button.A),
-      dodge: pressed(Button.LB, Button.RB, Button.LT, Button.RT),
+      dodge: pressed(Button.LB, Button.LT, Button.RT),
       light: pressed(Button.X),
       heavy: pressed(Button.B),
       special: pressed(Button.Y),
+      grab: pressed(Button.RB),
     };
   }
 }
