@@ -1,14 +1,14 @@
 // Projectiles: things a special fires that keep flying on their own (Donate's shell).
 // They live in the World, not in a player, so several can exist and the server syncs them as a list.
 
-import { BLAST_ZONE, FIXED_DT, PROJECTILE_BOUNCE, type ProjectileSpec } from '../constants.ts';
+import { BLAST_ZONE, FIXED_DT, PROJECTILE_BOUNCE, type AttackId, type ProjectileSpec } from '../constants.ts';
 import { overlaps, type Rect } from '../math/rect.ts';
 import { isInvulnerable } from '../sim/dodge.ts';
 import type { StageGeometry } from '../sim/collision.ts';
 import type { Player } from '../sim/player.ts';
 import { blockHit } from '../sim/shield.ts';
 import { isActive } from '../sim/stocks.ts';
-import { attackCharge, attackData, attackPhase } from './attacks.ts';
+import { attackCharge, attackData, attackPhase, counterHolds } from './attacks.ts';
 import { hitstopTicks } from './hits.ts';
 import { applyKnockback, attackDamage } from './knockback.ts';
 
@@ -40,6 +40,12 @@ export interface Projectile {
   hitInterval: number;
   /** Damage and launch multiplier (a charged shot hits harder); 1 = as written. */
   power: number;
+  /** The owner's attack whose damage and knockback its hits use. */
+  hitWith: string;
+  /** Boomerang: ticks left before it turns round (-1 = it never does). */
+  returnIn: number;
+  /** Boomerang on its way back: it vanishes on reaching its owner. */
+  returning: boolean;
 }
 
 /** The world fields projectiles need. */
@@ -53,6 +59,7 @@ export function createProjectile(): Projectile {
   return {
     id: 0, owner: 0, kind: '', x: 0, y: 0, prevX: 0, prevY: 0, vx: 0, vy: 0, gravity: 0, bouncesLeft: -1, width: 0, height: 0,
     ticksLeft: 0, lifetime: 0, hitsLeft: 0, hitCooldown: 0, hitInterval: 0, power: 1,
+    hitWith: 'specialProjectile', returnIn: -1, returning: false,
   };
 }
 
@@ -75,8 +82,12 @@ export function stepProjectiles(world: ProjectileWorld): void {
     projectile.ticksLeft -= 1;
     if (projectile.hitCooldown > 0) projectile.hitCooldown -= 1;
     const owner = world.players[projectile.owner];
+    if (owner) boomerang(projectile, owner);
     const target = owner && projectile.hitCooldown === 0 && findTarget(world.players, projectile);
-    if (owner && target) {
+    if (owner && target && counterHolds(target)) {
+      // Refused by a counter: it just vanishes.
+      projectile.ticksLeft = 0;
+    } else if (owner && target) {
       hit(owner, target, projectile);
       projectile.hitsLeft -= 1;
       projectile.hitCooldown = projectile.hitInterval;
@@ -91,11 +102,31 @@ export function stepProjectiles(world: ProjectileWorld): void {
  * is what stops it firing twice (the attack can sit on that tick during hitstop).
  */
 function fireIfReady(world: ProjectileWorld, player: Player, slot: number): void {
-  if (player.attackId === 'none' || !isActive(player) || player.specialCooldown > 0) return;
+  if (player.attackId === 'none' || !isActive(player)) return;
   const data = attackData(player, player.attackId);
-  if (!data.projectile || attackPhase(player) !== 'active') return;
-  player.specialCooldown = data.cooldownTicks ?? 0;
-  world.projectiles.push(spawn(world, player, slot, data.projectile, charged(data.chargedProjectile, attackCharge(player))));
+  const spec = data.projectile;
+  if (!spec || attackPhase(player) !== 'active') return;
+  const shots = spec.shots ?? 1;
+  const due = player.attackTick - data.startup >= player.attackShots * (spec.shotIntervalTicks ?? 1);
+  // The first shot waits for the cooldown; counting shots stops a second one while frozen in hitstop.
+  if (player.attackShots >= shots || !due || (player.attackShots === 0 && player.specialCooldown > 0)) return;
+  const offsets = spec.shotOffsetsY ?? [0];
+  const scale = { ...charged(data.chargedProjectile, attackCharge(player)), offsetY: offsets[player.attackShots % offsets.length] ?? 0 };
+  world.projectiles.push(spawn(world, player, slot, spec, scale, player.facing));
+  if (spec.bothSides) world.projectiles.push(spawn(world, player, slot, spec, scale, player.facing === 1 ? -1 : 1));
+  player.attackShots += 1;
+  if (player.attackShots >= shots) player.specialCooldown = data.cooldownTicks ?? 0;
+}
+
+/** A boomerang turns round once, then vanishes when it reaches its owner. */
+function boomerang(p: Projectile, owner: Player): void {
+  if (p.returnIn > 0) p.returnIn -= 1;
+  if (p.returnIn === 0 && !p.returning) {
+    p.returning = true;
+    p.vx = -p.vx;
+    p.vy = -p.vy;
+  }
+  if (p.returning && overlaps(p as Rect, owner)) p.ticksLeft = 0;
 }
 
 /** How a charge (0..1) changes the shot: everything 1 when the special does not charge. */
@@ -109,13 +140,14 @@ function spawn(
   player: Player,
   slot: number,
   spec: ProjectileSpec,
-  scale: { size: number; power: number; speed: number },
+  scale: { size: number; power: number; speed: number; offsetY: number },
+  direction: 1 | -1,
 ): Projectile {
   const width = spec.width * scale.size;
   const height = spec.height * scale.size;
-  // offsetX is measured from the front edge of the body, outwards. A bigger shot keeps the same centre height.
-  const front = player.facing === 1 ? player.x + player.width + spec.offsetX : player.x - spec.offsetX - width;
-  const y = player.y + spec.offsetY - (height - spec.height) / 2;
+  // offsetX is measured from the edge of the body it leaves from, outwards. A bigger shot keeps the same centre height.
+  const front = direction === 1 ? player.x + player.width + spec.offsetX : player.x - spec.offsetX - width;
+  const y = player.y + spec.offsetY + scale.offsetY - (height - spec.height) / 2;
   world.nextProjectileId += 1;
   return {
     id: world.nextProjectileId,
@@ -125,7 +157,7 @@ function spawn(
     y,
     prevX: front,
     prevY: y,
-    vx: player.facing * spec.speed * scale.speed,
+    vx: direction * spec.speed * scale.speed,
     vy: spec.speedY ?? 0,
     gravity: spec.gravity ?? 0,
     bouncesLeft: spec.bounces ?? -1,
@@ -137,6 +169,9 @@ function spawn(
     hitCooldown: 0,
     hitInterval: spec.hitIntervalTicks ?? 0,
     power: scale.power,
+    hitWith: spec.hitAttack ?? 'specialProjectile',
+    returnIn: spec.returnAfterTicks ?? -1,
+    returning: false,
   };
 }
 
@@ -153,7 +188,7 @@ function findTarget(players: Player[], projectile: Projectile): Player | undefin
 
 /** Like a normal hit, but only the target freezes: the shooter is far away and keeps acting. */
 function hit(owner: Player, target: Player, projectile: Projectile): void {
-  const attack = { id: 'specialProjectile' as const, charge: 0, power: projectile.power };
+  const attack = { id: projectile.hitWith as AttackId, charge: 0, power: projectile.power };
   const dealt = attackDamage(owner, attack);
   if (target.shielding) blockHit(target, projectile.vx > 0 ? 1 : -1, dealt);
   else applyKnockback(owner, target, attack);

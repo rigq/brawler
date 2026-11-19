@@ -6,6 +6,9 @@
 import {
   SHIELD_BREAK_STUN_TICKS,
   attackCharge,
+  attackPhase,
+  counterHolds,
+  rouletteChoice,
   isActive,
   type AttackId,
   type CharacterId,
@@ -32,6 +35,8 @@ const PROJECTILE_SOUND: Record<string, { fire: SfxName; burst?: SfxName }> = {
   shell: { fire: 'cannon', burst: 'blast' },
   smoke: { fire: 'puff' },
   ball: { fire: 'spike' },
+  bubble: { fire: 'type' },
+  star: { fire: 'sparkle' },
 };
 /** Neutral specials heard when they start (the others are heard through their projectile). */
 const NEUTRAL_SPECIAL_SOUND: Partial<Record<CharacterId, SfxName>> = { chachin: 'scream' };
@@ -56,6 +61,12 @@ interface Seen {
   hitstunTicks: number;
   holdTicks: number;
   ledgeSide: number;
+  /** Roulette option showing while charging ('' when not). */
+  pick: string;
+  countering: boolean;
+  attackTick: number;
+  /** A tether pulling (active phase with a ledge hooked). */
+  pulling: boolean;
 }
 
 function seen(p: Player): Seen {
@@ -75,6 +86,10 @@ function seen(p: Player): Seen {
     hitstunTicks: p.hitstunTicks,
     holdTicks: p.holdTicks,
     ledgeSide: p.ledgeSide,
+    pick: rouletteChoice(p) ?? '',
+    countering: counterHolds(p),
+    attackTick: p.attackTick,
+    pulling: p.tetherSide !== 0 && attackPhase(p) === 'active',
   };
 }
 
@@ -143,6 +158,10 @@ function movementSounds(play: Play, before: Seen, now: Seen): void {
 
 function attackSounds(play: Play, before: Seen, now: Seen, character: CharacterId): void {
   if (now.fullyCharged && !before.fullyCharged) play('chargeFull');
+  if (now.pick && now.pick !== before.pick) play('rouletteTick');
+  // Refused: the counter jumped straight to its recovery instead of running out.
+  if (before.countering && !now.countering && now.attackId === before.attackId && now.attackTick - before.attackTick > 1) play('counter');
+  if (now.pulling && !before.pulling) play('zip');
   const started = now.attackId !== 'none' && now.attackId !== before.attackId;
   const released = before.attackCharging && !now.attackCharging && now.attackId !== 'none';
   if (released || (started && !now.attackCharging && SWINGS.has(now.attackId as AttackId))) {

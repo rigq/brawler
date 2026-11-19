@@ -15,7 +15,8 @@ import { applyKnockback } from '../packages/shared/src/combat/knockback.ts';
 import { GROUND, type AttackId } from '../packages/shared/src/constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../packages/shared/src/input.ts';
 import { teleportPlayer, type Player } from '../packages/shared/src/sim/player.ts';
-import { createWorld, stepWorld } from '../packages/shared/src/sim/world.ts';
+import { tetherTarget } from '../packages/shared/src/sim/tether.ts';
+import { createWorld, stepWorld, type World } from '../packages/shared/src/sim/world.ts';
 
 /** Who hits: Samu (an average character, so only the target changes) unless another is named. */
 const ATTACKER: CharacterId = isCharacterId(process.argv[2] ?? null) ? (process.argv[2] as CharacterId) : 'samu';
@@ -32,13 +33,14 @@ const FLIGHT_TICKS = 600;
  */
 function recoveryInput(
   victim: { x: number; vy: number; y: number; width: number; height: number; airJumpsLeft: number; jumpHeld: boolean; attackId: string },
-  state: { boostDone: boolean; specialDone: boolean; teleports: boolean },
+  state: { boostDone: boolean; specialDone: boolean; teleports: boolean; tetherRange: number; stage: World },
 ): PlayerInput {
   // Towards the middle of the island (over it, that means not walking off the other side).
   const towardsLeft = victim.x + victim.width / 2 > STAGE_CENTER_X;
   const input: PlayerInput = { ...EMPTY_INPUT, left: towardsLeft, right: !towardsLeft };
-  // A teleport needs no height: a good player uses it at once (while the flag lasts).
-  if (state.teleports && !state.specialDone && victim.attackId === 'none' && flagReachable(victim as Player)) {
+  // A teleport (or a tether with a ledge in reach) needs no height: a good player uses it at once.
+  const quick = (state.teleports && flagReachable(victim as Player)) || (state.tetherRange > 0 && tetherTarget(victim as Player, state.stage, state.tetherRange) !== null);
+  if (quick && !state.specialDone && victim.attackId === 'none') {
     input.up = true;
     input.special = true;
     state.specialDone = true;
@@ -76,7 +78,8 @@ function dies(target: CharacterId, move: AttackId, damage: number, recover = fal
   applyKnockback(attacker, victim, { id: move, charge });
   const stocks = victim.stocks;
   let freeTicks = -1;
-  const state = { boostDone: false, specialDone: false, teleports: attackData(victim, 'specialUp').teleportToFlag === true };
+  const up = attackData(victim, 'specialUp');
+  const state = { boostDone: false, specialDone: false, teleports: up.teleportToFlag === true, tetherRange: up.tether?.range ?? 0, stage: world };
   for (let i = 0; i < FLIGHT_TICKS; i++) {
     const free = victim.hitstunTicks === 0 && victim.hitstopTicks === 0;
     if (free) freeTicks += 1;

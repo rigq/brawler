@@ -32,6 +32,7 @@ import { moveAndCollide, type Body, type StageGeometry } from './collision.ts';
 import { applyDodgeMovement, createDodgeState, endDodge, updateDodge, type DodgeState } from './dodge.ts';
 import { createLedgeState, tryGrabLedge, updateLedge, type LedgeState } from './ledge.ts';
 import { createShieldState, updateShield, type ShieldState } from './shield.ts';
+import { updateTether } from './tether.ts';
 import { createStockState, type StockState } from './stocks.ts';
 
 export interface Player extends Body, DodgeState, AttackState, GrabState, LedgeState, ShieldState, StockState {
@@ -197,6 +198,12 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
 
   // After the jump check, so the window lasts exactly COYOTE_TICKS ticks in the air.
   if (player.coyoteTicks > 0) player.coyoteTicks -= 1;
+  updateTether(player, stage);
+  // A tether may have just hung the player on a ledge: then they do not move this step.
+  if (player.ledgeSide !== 0) {
+    player.jumpHeld = input.jump;
+    return;
+  }
   moveAndCollide(player, stage, player.dropTicks > 0);
   if (player.grounded) land(player);
   else tryGrabLedge(player, input, stage);

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { CharacterId } from '@brawler/shared';
+import type { AiIcon } from './aiIcons.ts';
 import { ANIM_NAMES, type AnimName, type IdleTiming } from './bodyAnimation.ts';
 
 /** A sprite strip in public/sprites: frames side by side, all the same size. */
@@ -78,6 +79,8 @@ export interface CharacterArt {
   teleport?: Sheet;
   /** Planted at the player's flag point while they are in the air: planting, then waving. */
   flag?: { plant: Sheet; wave: Sheet };
+  /** Icon shown over the head for each option of a roulette special, in order. */
+  rouletteIcons?: AiIcon[];
 }
 
 /** Robert: 1 s standing still, then a ~1.5 s drag (one every ~2.5 s, the first 1 s after stopping). */
@@ -103,7 +106,7 @@ export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
   // His idle is a show-off backflip every couple of seconds.
   chachin: { body: SHEETS.chachinBody, anims: animSheets('chachin'), idle: CHACHIN_IDLE, neutralAura: SHEETS.chachinScream, upBlast: SHEETS.chachinRocket },
   // His idle: pulls out the laptop, types a prompt, smirks at the answer, puts it away.
-  riga: { body: SHEETS.rigaBody, anims: animSheets('riga'), idle: RIGA_IDLE },
+  riga: { body: SHEETS.rigaBody, anims: animSheets('riga'), idle: RIGA_IDLE, rouletteIcons: ['claude', 'chatgpt', 'gemini'] },
 };
 
 /**

@@ -33,7 +33,7 @@ export const CHARACTER_INFO: Record<CharacterId, CharacterInfo> = {
   },
   riga: {
     tagline: 'El más alto. Lo resuelve todo con IA. Llega lejos, pega flojo.',
-    specials: ['Ruleta de IAs (pronto)', 'Prompt de emergencia (pronto)'],
+    specials: ['Ruleta de IAs (mantén: Claude · ChatGPT · Gemini)', 'Prompt de emergencia'],
     head: { top: 0, height: 22 },
   },
 };

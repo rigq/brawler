@@ -35,6 +35,7 @@ export const ATTACK_ANIM: Record<AttackId, AnimName> = {
   heavySide: 'heavy-side', heavyUp: 'heavy-up', heavyDown: 'heavy-down',
   grab: 'grab', throwForward: 'throw', throwBack: 'throw', throwUp: 'throw', throwDown: 'throw',
   specialNeutral: 'special-neutral', specialUp: 'special-up', specialProjectile: 'special-neutral',
+  specialPick1: 'special-neutral', specialPick2: 'special-neutral', specialPick3: 'special-neutral',
 };
 
 /**

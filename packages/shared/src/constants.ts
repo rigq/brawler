@@ -212,7 +212,9 @@ export type AttackId =
   | 'airNeutral' | 'airForward' | 'airBack' | 'airUp' | 'airDown'
   | 'heavySide' | 'heavyUp' | 'heavyDown'
   | 'grab' | 'throwForward' | 'throwBack' | 'throwUp' | 'throwDown'
-  | 'specialNeutral' | 'specialUp' | 'specialProjectile';
+  | 'specialNeutral' | 'specialUp' | 'specialProjectile'
+  // The options of a roulette special (AttackData.roulette): attacks of their own, chosen by how long it was charged.
+  | 'specialPick1' | 'specialPick2' | 'specialPick3';
 
 /** What a special fires. Positions in px from the body's front edge and top. */
 export interface ProjectileSpec {
@@ -234,6 +236,17 @@ export interface ProjectileSpec {
   gravity?: number;
   /** If set, it bounces on the stage this many times (and vanishes on the next landing). */
   bounces?: number;
+  /** A burst: this many shots, one every `shotIntervalTicks` of the active phase (default 1). */
+  shots?: number;
+  shotIntervalTicks?: number;
+  /** With shots: height offset of each shot (px, cycled), so a burst spreads a little. */
+  shotOffsetsY?: number[];
+  /** A boomerang: after this many ticks it turns round and flies back, vanishing when it reaches its owner. */
+  returnAfterTicks?: number;
+  /** Fires a second one backwards, out of the back of the body (a mirror image). */
+  bothSides?: boolean;
+  /** Which of the owner's attacks its hits use (default 'specialProjectile'). */
+  hitAttack?: AttackId;
 }
 
 /**
@@ -299,6 +312,24 @@ export interface AttackData {
   stunTicks?: number;
   /** A smaller box inside the hitbox that hits harder (closer = stronger). */
   sweetspot?: { box: { x: number; y: number; width: number; height: number }; damage: number; kbBase: number; kbScale: number; stunTicks?: number };
+  /**
+   * Roulette: while charging, the attack cycles through `options` every
+   * `stepTicks`; letting go (or full charge) starts the one showing. Needs chargeTicks.
+   * Unlike other charges, it also charges in the air.
+   */
+  roulette?: { stepTicks: number; options: AttackId[] };
+  /**
+   * Counter: during the active phase, an attack that would hit this player is
+   * refused instead (no damage), and the attacker gets this attack's damage and
+   * knockback. Projectiles that reach them just vanish.
+   */
+  counter?: boolean;
+  /**
+   * Tether recovery: at the start of the active phase, the nearest ledge within
+   * `range` px is hooked and the player is pulled to it at `speed` px/s, grabbing it.
+   * With no ledge in reach it only gives a small lift (`missLift` px/s up).
+   */
+  tether?: { range: number; speed: number; missLift: number };
   /** If the attack ends without hitting anyone: unable to act this long, stumbling backwards. */
   whiffLagTicks?: number;
   /**
@@ -408,6 +439,19 @@ export const ATTACKS: Record<AttackId, AttackData> = {
     heavy: false, startup: 12, active: 1, recovery: 20, box: { x: 0, y: 0, width: 0, height: 0 },
     damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0, cooldownTicks: 45,
     projectile: { kind: 'orb', speed: 480, width: 16, height: 16, offsetX: 4, offsetY: 18, lifetimeTicks: 60 },
+  },
+  /** Roulette options (only characters with a roulette special use them; these are placeholders). */
+  specialPick1: {
+    heavy: false, startup: 1, active: 1, recovery: 1, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
+  },
+  specialPick2: {
+    heavy: false, startup: 1, active: 1, recovery: 1, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
+  },
+  specialPick3: {
+    heavy: false, startup: 1, active: 1, recovery: 1, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
   },
   /** What the neutral special's projectile does when it hits. */
   specialProjectile: {

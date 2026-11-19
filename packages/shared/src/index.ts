@@ -19,5 +19,6 @@ export * from './sim/ledge.ts';
 export * from './sim/player.ts';
 export * from './sim/shield.ts';
 export * from './sim/stocks.ts';
+export * from './sim/tether.ts';
 export * from './sim/world.ts';
 export * from './net/protocol.ts';

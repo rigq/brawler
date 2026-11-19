@@ -35,6 +35,12 @@ export interface AttackState {
   specialCooldown: number;
   /** Gliding down after a parachute special: no attacks, air jumps or dodges until landing. */
   parachuting: boolean;
+  /** Shots this attack has fired so far (bursts fire several, see ProjectileSpec.shots). */
+  attackShots: number;
+  /** Tether recovery: the ledge being pulled to (side -1/1 and the point hooked), side 0 = none. */
+  tetherSide: number;
+  tetherX: number;
+  tetherY: number;
 }
 
 export function createAttackState(): AttackState {
@@ -51,6 +57,10 @@ export function createAttackState(): AttackState {
     specialHeld: false,
     specialCooldown: 0,
     parachuting: false,
+    attackShots: 0,
+    tetherSide: 0,
+    tetherX: 0,
+    tetherY: 0,
   };
 }
 
@@ -98,12 +108,12 @@ function startSpecial(player: Player, input: PlayerInput): void {
   if (data.groundOnly && !player.grounded) return;
   if (data.cooldownTicks && player.specialCooldown > 0) return;
   if (data.teleportToFlag && !flagReachable(player)) return;
-  const recovery = data.launchSpeed !== undefined || data.teleportToFlag === true;
+  const recovery = data.launchSpeed !== undefined || data.teleportToFlag === true || data.tether !== undefined;
   if (recovery && !player.recoveryAvailable) return;
   startAttack(player, input, id);
   // A projectile special starts its cooldown when it fires (see fireIfReady); the rest, now.
   if (!data.projectile && data.cooldownTicks) player.specialCooldown = data.cooldownTicks;
-  if (data.teleportToFlag) player.recoveryAvailable = false;
+  if (data.teleportToFlag || data.tether) player.recoveryAvailable = false;
 }
 
 export function attackPhase(player: Player): AttackPhase {
@@ -177,8 +187,8 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
   const dirX = Number(input.right) - Number(input.left);
   // Aerials keep the facing: holding backwards means back aerial, not turning around.
   if (dirX !== 0 && data.landingLag === undefined) player.facing = dirX === 1 ? 1 : -1;
-  // Heavies (and chargeable specials) charge only on the ground; in the air they fire at once.
-  player.attackCharging = (data.heavy || data.chargeTicks !== undefined) && player.grounded;
+  // Heavies (and chargeable specials) charge only on the ground; in the air they fire at once. A roulette charges anywhere.
+  player.attackCharging = (data.heavy || data.chargeTicks !== undefined) && (player.grounded || data.roulette !== undefined);
   if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed, dirX);
   if (id === 'heavyUp' && !player.grounded) airHeavyUpBoost(player, dirX);
   beginAttack(player, id);
@@ -199,6 +209,8 @@ function beginAttack(player: Player, id: AttackId): void {
   player.attackTick = 0;
   player.attackHitMask = 0;
   player.attackQueued = false;
+  player.attackShots = 0;
+  player.tetherSide = 0;
 }
 
 /** The "recovery": pushes you up, once per time in the air, to get back to the stage. */
@@ -283,10 +295,30 @@ function advanceCharge(player: Player, input: PlayerInput): void {
     player.attackChargeTicks += 1;
     return;
   }
+  const pick = rouletteChoice(player);
   player.attackCharging = false;
+  if (data.roulette) {
+    // The option showing when the button was let go becomes the attack, from its own startup.
+    beginAttack(player, pick ?? player.attackId);
+    return;
+  }
   const quickest = Math.max(0, data.startup - HEAVY_RELEASE_STARTUP_TICKS);
   // The charging pose was the wind-up: only the last ticks of the startup remain.
   player.attackTick = data.heavy ? quickest : Math.min(player.attackChargeTicks, quickest);
+}
+
+/** While a roulette special charges: the option showing now (what letting go would start), else null. */
+export function rouletteChoice(player: Player): AttackId | null {
+  if (player.attackId === 'none' || !player.attackCharging) return null;
+  const roulette = attackData(player, player.attackId).roulette;
+  if (!roulette || roulette.options.length === 0) return null;
+  const index = Math.floor(player.attackChargeTicks / roulette.stepTicks) % roulette.options.length;
+  return roulette.options[index] ?? null;
+}
+
+/** True while this player's counter is waiting for a hit (AttackData.counter, active phase). */
+export function counterHolds(player: Player): boolean {
+  return player.attackId !== 'none' && attackPhase(player) === 'active' && attackData(player, player.attackId).counter === true;
 }
 
 /** Appears standing on the flag (the feet of the last spot the player stood on). */

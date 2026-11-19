@@ -96,7 +96,7 @@ function nearbySide(player: Player, solid: Rect): number {
   return 0;
 }
 
-function grabLedge(player: Player, solid: Rect, index: number, side: number): void {
+export function grabLedge(player: Player, solid: Rect, index: number, side: number): void {
   player.ledgeSide = side;
   player.ledgeSolid = index;
   player.ledgeTicks = LEDGE_HANG_TICKS;

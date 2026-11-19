@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { HITSTOP_JITTER_PX, SHIELD_MAX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
 import { CHARACTER_ART } from './art.ts';
 import { CharacterSprite } from './CharacterSprite.ts';
+import { SpecialFx } from './SpecialFx.ts';
 
 const DODGE_ALPHA = 0.4;
 /** After respawning the player blinks: this many ticks on, this many off. */
@@ -52,6 +53,8 @@ export class PlayerView {
   private readonly color: number;
   /** Null: no art for this character, the rectangle is the body. */
   private readonly sprite: CharacterSprite | null;
+  /** Roulette icon, counter glow, tether line. */
+  private readonly fx: SpecialFx;
   private visible = true;
   /** Time the last active hitbox stays on screen after its active phase ended. */
   private swingLeftMs = 0;
@@ -61,6 +64,7 @@ export class PlayerView {
     this.color = color;
     const art = CHARACTER_ART[player.characterId];
     this.sprite = art ? new CharacterSprite(scene, art, tint) : null;
+    this.fx = new SpecialFx(scene, art?.rouletteIcons);
     // With art the rectangle stays as an invisible box: the camera frames it.
     this.body = scene.add.rectangle(player.x, player.y, player.width, player.height, color).setOrigin(0, 0);
     this.eye = scene.add.rectangle(0, 0, EYE_SIZE, EYE_SIZE, EYE_COLOR).setOrigin(0, 0);
@@ -87,6 +91,7 @@ export class PlayerView {
     this.eye.setVisible(this.visible && !this.sprite);
     if (!this.visible) {
       this.sprite?.hide();
+      this.fx.hide();
       this.swing.setVisible(false);
       this.chargeBar.setVisible(false);
       this.shield.setVisible(false);
@@ -112,6 +117,7 @@ export class PlayerView {
       this.renderChargeBar(player, x, y);
     }
     this.renderShield(player, x, y);
+    this.fx.render(player, x, y, frameMs);
   }
 
   /** False while the player is knocked out or out of the match; the camera skips it. */
@@ -125,7 +131,7 @@ export class PlayerView {
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield];
+    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield, this.fx.gameObject];
   }
 
   /** Blinking right after respawning, see-through while dodging, solid otherwise. */

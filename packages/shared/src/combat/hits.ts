@@ -6,7 +6,7 @@ import { isInvulnerable } from '../sim/dodge.ts';
 import type { Player } from '../sim/player.ts';
 import { blockHit } from '../sim/shield.ts';
 import { isActive } from '../sim/stocks.ts';
-import { activeHitbox, armorHolds, attackCharge, hurtbox, sweetspotBoxAt } from './attacks.ts';
+import { activeHitbox, armorHolds, attackCharge, attackData, counterHolds, hurtbox, sweetspotBoxAt } from './attacks.ts';
 import { startGrab } from './grabs.ts';
 import { applyKnockback, attackDamage, awayFrom, takeArmoredHit } from './knockback.ts';
 
@@ -66,11 +66,25 @@ function applyHit(players: Player[], hit: Hit): void {
   const target = players[hit.target];
   if (!attacker || !target) return;
   attacker.attackHitMask |= 1 << hit.target;
+  if (counterHolds(target)) {
+    counterHit(target, attacker);
+    return;
+  }
   const dealt = attackDamage(attacker, hit.attack);
   if (target.shielding) blockHit(target, awayFrom(attacker, target), dealt);
   else if (armorHolds(target, dealt)) takeArmoredHit(target, dealt);
   else applyKnockback(attacker, target, hit.attack);
   freezeBoth(attacker, target, dealt);
+}
+
+/** A counter refuses the hit: no damage to the defender, and the attacker takes the counter's own hit. */
+function counterHit(defender: Player, attacker: Player): void {
+  if (defender.attackId === 'none') return;
+  const data = attackData(defender, defender.attackId);
+  const dealt = applyKnockback(defender, attacker, { id: defender.attackId, charge: 0 });
+  freezeBoth(defender, attacker, dealt);
+  // Spent: straight to its recovery, so it cannot counter twice.
+  defender.attackTick = data.startup + data.active;
 }
 
 function applyGrab(players: Player[], hit: Hit): void {

@@ -84,6 +84,25 @@ const SOUNDS = {
     tone(ctx, out, { freq: 1500, to: 300, duration: 0.3, gain: 0.12 });
     tone(ctx, out, { freq: 300, to: 1500, duration: 0.3, gain: 0.1, delay: 0.25 });
   },
+  /** The AI roulette moves on to the next icon. */
+  rouletteTick: (ctx, out) => tone(ctx, out, { type: 'square', freq: 1180, duration: 0.03, gain: 0.06, lowpass: 4000 }),
+  /** A counter refuses a hit: a firm "no" (two falling notes) and a knock. */
+  counter: (ctx, out) => {
+    tone(ctx, out, { type: 'triangle', freq: midi(79), duration: 0.12, gain: 0.16 });
+    tone(ctx, out, { type: 'triangle', freq: midi(72), duration: 0.22, gain: 0.16, delay: 0.1 });
+    noise(ctx, out, { filter: 'bandpass', freq: 2400, duration: 0.06, gain: 0.25 });
+  },
+  /** A text bubble flies out: a keyboard click. */
+  type: (ctx, out) => noise(ctx, out, { filter: 'highpass', freq: 4500, duration: 0.025, gain: 0.18 }),
+  /** Twin stars: a bright shimmer. */
+  sparkle: (ctx, out) => {
+    for (const [i, note] of [88, 93, 100].entries()) tone(ctx, out, { freq: midi(note), duration: 0.18, gain: 0.07, delay: i * 0.04 });
+  },
+  /** A tether pulls: a fast rising zip. */
+  zip: (ctx, out) => {
+    noise(ctx, out, { filter: 'bandpass', freq: 600, to: 4000, q: 2, duration: 0.25, gain: 0.25 });
+    tone(ctx, out, { type: 'sawtooth', freq: 220, to: 880, duration: 0.2, gain: 0.05, lowpass: 2500 });
+  },
   menuMove: (ctx, out) => tone(ctx, out, { type: 'triangle', freq: 700, duration: 0.04, gain: 0.08 }),
   menuConfirm: (ctx, out) => {
     tone(ctx, out, { type: 'triangle', freq: midi(76), duration: 0.07, gain: 0.12 });
