@@ -19,12 +19,16 @@ export const samu: CharacterDefinition = {
     /** The ball. */
     specialProjectile: { damage: 9, kbBase: 330, kbScale: 9, kbX: 1, kbY: -0.6 },
     /**
-     * "A la bandera": hovers still for a moment (you can see it coming), then
-     * teleports to his flag, planted where he last stood. Always gets him back.
+     * "A la bandera": hovers still for a moment, then teleports to his flag,
+     * planted where he last stood. 19 nov (playtest: "it always saves him"):
+     * the flag expires after 2.5 s in the air, the hover is long enough to be hit
+     * out of (28 ticks), and he arrives unable to act for a while (22 ticks), so
+     * someone waiting at the flag can punish him.
      */
     specialUp: {
-      startup: 18, active: 1, recovery: 14, box: { x: 0, y: 0, width: 0, height: 0 },
+      startup: 28, active: 1, recovery: 22, box: { x: 0, y: 0, width: 0, height: 0 },
       damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0, hover: true, teleportToFlag: true, cooldownTicks: 150,
+      flagLifetimeTicks: 150, flagRange: 800,
     },
     // His own normals (phase 3): volleyball. Sets up the rival in the air and spikes them down.
     /** "Colocación": pops the rival straight up, always to about the same height: start of a juggle. */

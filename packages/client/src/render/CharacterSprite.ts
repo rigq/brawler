@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { attackCharge, attackData, attackPhase, type Player } from '@brawler/shared';
+import { attackCharge, attackData, attackPhase, flagReachable, hasFlag, type Player } from '@brawler/shared';
 import { SHEETS, type CharacterArt } from './art.ts';
 import { animFor, frameFor, resolveAnim, type AnimName } from './bodyAnimation.ts';
 
@@ -24,6 +24,11 @@ const TELEPORT_ARRIVAL_TICKS = 8;
 /** Flag: plants (first frames) over this long, then waves. */
 const FLAG_PLANT_MS = 250;
 const FLAG_WAVE_FRAME_MS = 140;
+/** The flag blinks during its last ticks before expiring (and blinks this fast). */
+const FLAG_WARNING_TICKS = 30;
+const FLAG_BLINK_MS = 90;
+/** Too far to teleport to: drawn faded. */
+const FLAG_OUT_OF_RANGE_ALPHA = 0.35;
 /** Stars over the head of a player stunned this long while barely moving (a scream, not a launch). */
 const DIZZY_MIN_STUN_TICKS = 18;
 const DIZZY_MAX_SPEED = 300;
@@ -235,10 +240,14 @@ export class CharacterSprite {
     this.teleport.setFrame(frame).setPosition(feetX, feetY);
   }
 
-  /** Planted at the last spot stood on, shown while the player is away from it (in the air). */
+  /**
+   * Planted at the last spot stood on, shown while the player is away from it
+   * (in the air): faded when too far to teleport to, blinking just before it
+   * expires, gone once it has.
+   */
   private renderFlag(player: Player, frameMs: number): void {
     if (!this.flag || !this.art.flag) return;
-    const showing = !player.grounded;
+    const showing = !player.grounded && hasFlag(player);
     this.flag.setVisible(showing);
     if (!showing) {
       this.airborneMs = 0;
@@ -250,6 +259,10 @@ export class CharacterSprite {
     const frame = planting ? Math.floor((this.airborneMs / FLAG_PLANT_MS) * 3) : Math.floor(this.clockMs / FLAG_WAVE_FRAME_MS) % 4;
     // The pole is at the sheet's left edge: plant it on the flag point.
     this.flag.setTexture(sheet.key, Math.min(frame, planting ? 2 : 3)).setPosition(player.flagX - 2, player.flagY);
+    this.flag.setAlpha(flagReachable(player) ? 1 : FLAG_OUT_OF_RANGE_ALPHA);
+    const lifetime = attackData(player, 'specialUp').flagLifetimeTicks;
+    const expiring = lifetime !== undefined && lifetime - player.flagAgeTicks < FLAG_WARNING_TICKS;
+    if (expiring && Math.floor(this.clockMs / FLAG_BLINK_MS) % 2 === 1) this.flag.setVisible(false);
   }
 
   private renderParachute(player: Player, centerX: number, top: number, frameMs: number): void {

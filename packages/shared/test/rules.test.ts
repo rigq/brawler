@@ -206,6 +206,33 @@ test('armour: a jab does not stop Robert\'s charging heavy, it only hurts', () =
   assert.equal(p1.hitstunTicks, 0, 'not stunned');
 });
 
+/** Samu standing at the middle of the ground (his flag there), then put in the air `dx` px to the side. */
+function samuInTheAir(dx: number): { world: ReturnType<typeof createWorld>; samu: Player } {
+  const world = createWorld(['samu', 'robert']);
+  const samu = world.players[0]!;
+  teleportPlayer(samu, { x: GROUND.x + GROUND.width / 2, y: GROUND.y - samu.height, facing: 1 });
+  idle(world, 5);
+  teleportPlayer(samu, { x: samu.x + dx, y: GROUND.y - 300, facing: 1 });
+  return { world, samu };
+}
+
+test('Samu teleports to a flag in range, but not to one too far away or expired', () => {
+  const special = { ...EMPTY_INPUT, up: true, special: true };
+  const near = samuInTheAir(200);
+  stepWorld(near.world, [special, EMPTY_INPUT]);
+  idle(near.world, 40);
+  assert.ok(Math.abs(near.samu.x + near.samu.width / 2 - near.samu.flagX) < 1, 'appeared on the flag');
+
+  const far = samuInTheAir(1000);
+  stepWorld(far.world, [special, EMPTY_INPUT]);
+  assert.equal(far.samu.attackId, 'none', 'too far: nothing happens');
+
+  const late = samuInTheAir(200);
+  late.samu.flagAgeTicks = 10_000;
+  stepWorld(late.world, [special, EMPTY_INPUT]);
+  assert.equal(late.samu.attackId, 'none', 'expired: nothing happens');
+});
+
 test('up heavy in the air lifts you once per time in the air', () => {
   const world = createWorld(['samu', 'robert']);
   const player = world.players[0]!;

@@ -10,10 +10,11 @@
 // zone, so the change is measured instead of guessed.
 
 import { CHARACTER_IDS, isCharacterId, type CharacterId } from '../packages/shared/src/characters/index.ts';
+import { attackData, flagReachable } from '../packages/shared/src/combat/attacks.ts';
 import { applyKnockback } from '../packages/shared/src/combat/knockback.ts';
 import { GROUND, type AttackId } from '../packages/shared/src/constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../packages/shared/src/input.ts';
-import { teleportPlayer } from '../packages/shared/src/sim/player.ts';
+import { teleportPlayer, type Player } from '../packages/shared/src/sim/player.ts';
 import { createWorld, stepWorld } from '../packages/shared/src/sim/world.ts';
 
 /** Who hits: Samu (an average character, so only the target changes) unless another is named. */
@@ -25,16 +26,24 @@ const FLIGHT_TICKS = 600;
 
 /**
  * A simple but sensible way back, from the moment hitstun ends: hold towards
- * the middle of the stage; once falling below the stage's height, use every
- * air jump, then the up heavy's lift, then the up special, like a player would.
+ * the middle of the stage; a teleporting up special goes first (it needs no
+ * height); otherwise, once falling below the stage's height, use every air
+ * jump, then the up heavy's lift, then the up special, like a player would.
  */
 function recoveryInput(
   victim: { x: number; vy: number; y: number; width: number; height: number; airJumpsLeft: number; jumpHeld: boolean; attackId: string },
-  state: { boostDone: boolean; specialDone: boolean },
+  state: { boostDone: boolean; specialDone: boolean; teleports: boolean },
 ): PlayerInput {
   // Towards the middle of the island (over it, that means not walking off the other side).
   const towardsLeft = victim.x + victim.width / 2 > STAGE_CENTER_X;
   const input: PlayerInput = { ...EMPTY_INPUT, left: towardsLeft, right: !towardsLeft };
+  // A teleport needs no height: a good player uses it at once (while the flag lasts).
+  if (state.teleports && !state.specialDone && victim.attackId === 'none' && flagReachable(victim as Player)) {
+    input.up = true;
+    input.special = true;
+    state.specialDone = true;
+    return input;
+  }
   const fallingBelowStage = victim.vy > 0 && victim.y + victim.height > GROUND.y - 40;
   if (!fallingBelowStage) return input;
   // Every air jump first (a fresh press each time), then the up heavy's lift, then the up special.
@@ -67,7 +76,7 @@ function dies(target: CharacterId, move: AttackId, damage: number, recover = fal
   applyKnockback(attacker, victim, { id: move, charge });
   const stocks = victim.stocks;
   let freeTicks = -1;
-  const state = { boostDone: false, specialDone: false };
+  const state = { boostDone: false, specialDone: false, teleports: attackData(victim, 'specialUp').teleportToFlag === true };
   for (let i = 0; i < FLIGHT_TICKS; i++) {
     const free = victim.hitstunTicks === 0 && victim.hitstopTicks === 0;
     if (free) freeTicks += 1;

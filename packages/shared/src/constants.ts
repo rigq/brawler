@@ -284,6 +284,10 @@ export interface AttackData {
   hover?: boolean;
   /** On the first active tick, the player appears at their flag (where they last stood). */
   teleportToFlag?: boolean;
+  /** With teleportToFlag: after this long in the air the flag is gone and the special cannot be used. */
+  flagLifetimeTicks?: number;
+  /** With teleportToFlag: only works if the flag is at most this far (px, from the body's centre). */
+  flagRange?: number;
   /** Hitstun of at least this many ticks, however little it launches: a stun. */
   stunTicks?: number;
   /** A smaller box inside the hitbox that hits harder (closer = stronger). */
@@ -476,6 +480,12 @@ export const HEAVY_RELEASE_STARTUP_TICKS = 5;
 export const WHIFF_STUMBLE_SPEED = 220;
 /** Projectiles that bounce keep this fraction of their falling speed, going up. */
 export const PROJECTILE_BOUNCE = 0.6;
+/**
+ * Hovering (a special winding up in the air) stops the fall but not a launch:
+ * the sideways speed drains at this rate (px/s²). 19 nov: it used to stop dead,
+ * so Samu's teleport saved him from any launch.
+ */
+export const HOVER_DRAG = 1400;
 /** Under a parachute you fall at most this fast (px/s)… */
 export const PARACHUTE_FALL_SPEED = 180;
 /** …and steer at this fraction of the normal air speed. */

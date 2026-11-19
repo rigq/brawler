@@ -100,6 +100,7 @@ function startSpecial(player: Player, input: PlayerInput): void {
   const data = attackData(player, id);
   if (data.groundOnly && !player.grounded) return;
   if (data.cooldownTicks && player.specialCooldown > 0) return;
+  if (data.teleportToFlag && !flagReachable(player)) return;
   const recovery = data.launchSpeed !== undefined || data.teleportToFlag === true;
   if (recovery && !player.recoveryAvailable) return;
   startAttack(player, input, id);
@@ -262,6 +263,23 @@ function advanceAttack(player: Player, input: PlayerInput): void {
     player.lagTicks = data.whiffLagTicks;
     player.vx = -player.facing * WHIFF_STUMBLE_SPEED;
   }
+}
+
+/** False once the flag has expired (too long in the air): it is gone. */
+export function hasFlag(player: Player): boolean {
+  const lifetime = attackData(player, 'specialUp').flagLifetimeTicks;
+  return lifetime === undefined || player.flagAgeTicks <= lifetime;
+}
+
+/** The flag is there and close enough to teleport to it now (flagRange). */
+export function flagReachable(player: Player): boolean {
+  const range = attackData(player, 'specialUp').flagRange;
+  if (!hasFlag(player)) return false;
+  if (range === undefined) return true;
+  const dx = player.x + player.width / 2 - player.flagX;
+  const dy = player.y + player.height - player.flagY;
+  // Squared, so no square root: exact and deterministic.
+  return dx * dx + dy * dy <= range * range;
 }
 
 /** Appears standing on the flag (the feet of the last spot the player stood on). */

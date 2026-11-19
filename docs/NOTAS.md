@@ -27,6 +27,14 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **Recovery de Samu ya no es gratis (19 nov)** — Playtest: "el teletransporte siempre le salva". Medido con un bot que usa el teletransporte en cuanto puede (como un buen jugador): Samu aguantaba un lateral **hasta el 289 %** volviendo, el resto 123–171 %. Causas: al flotar se frenaba en seco y la bandera estaba siempre a mano.
+  - **Alcance de la bandera** (`flagRange: 800` px): más lejos no puede teletransportarse; primero tiene que acercarse saltando. Ahora aguanta hasta el **164 %** (lateral) y 256 % (arriba): de las mejores recoveries, pero en la zona de los demás.
+  - **La bandera caduca** tras 2,5 s en el aire (`flagLifetimeTicks: 150`, contador `flagAgeTicks` en `Player`).
+  - **Flotar no frena en seco** (`HOVER_DRAG`): conserva parte del impulso del golpe.
+  - **Más castigable**: flota 28 ticks (antes 18; si le pegas, se cancela) y llega 22 ticks sin poder actuar (antes 14).
+  - Dibujo: la bandera se ve apagada si está fuera de alcance, parpadea antes de caducar y desaparece al caducar.
+  - `ko-percent`: el bot usa un teletransporte en cuanto está a su alcance. Test nuevo: teletransporte con la bandera cerca, lejos y caducada.
+
 - **Fase 3 · Ataques con personalidad (19 nov)** — Dos comportamientos nuevos en `shared` y golpes propios por datos en `characters/*.ts`:
   - `rehitTicks` (multigolpe: durante la fase activa, el mismo rival puede recibir otro golpe cada N ticks) y `armor` (mientras carga, arranca o golpea, los golpes de hasta X % le hacen daño pero no le interrumpen ni le lanzan: `armorHolds`, `takeArmoredHit`). Tests de los dos.
   - **Robert** (el que mata): jabs más lentos y fuertes, "collejón" (jab 3), fuerte lateral y arriba con **armadura de 8 %** y más lanzamiento, "culetazo" (aéreo abajo, pincho fuerte). Su lateral cargado mata a Samu a ~130 % desde el borde (antes 145 %).
@@ -301,7 +309,7 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
   - **Fase 3 · Ataques con personalidad** (1–2 sesiones): los 20 golpes normales son iguales en los cuatro; darle a cada uno 5–6 propios (Robert mata, Chachin rápido y multigolpe, Donate alcance, Samu meteoros).
 
 - **Feedback del primer playtest en clase (16 nov)**, por prioridad:
-  1. **Recovery de Samu chetada** ("muy difícil tirarlo"): el teletransporte a la bandera siempre le salva. Ajuste de datos.
+  1. ~~**Recovery de Samu chetada**~~ (hecho el 19 nov: alcance, caducidad y más castigo).
   2. ~~Golpes que fallan~~ (hecho el 18 nov). Si online con internet siguen fallando: compensación de lag en el servidor (comprobar el golpe contra donde el atacante veía al rival).
   3. ~~**Cambiar de personaje sin salir**~~ (hecho el 18 nov: Esc → Cambiar personaje, local y online).
   4. **"Sistema de combos"**: los combos ya existen (hitstun, jab encadenado) pero no se ven fuera del entrenamiento; contador de combo en versus y más golpes que enlacen.

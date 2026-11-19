@@ -15,6 +15,7 @@ import {
   GROUND_ACCEL,
   GROUND_FRICTION,
   HITSTUN_DRAG,
+  HOVER_DRAG,
   JUMP_BUFFER_TICKS,
   JUMP_CUT,
   JUMP_SPEED,
@@ -40,6 +41,8 @@ export interface Player extends Body, DodgeState, AttackState, GrabState, LedgeS
   /** Feet of the last spot this player stood on (Samu's flag teleports here). */
   flagX: number;
   flagY: number;
+  /** Ticks since the flag was planted (since last standing on something). A flag can expire: AttackData.flagLifetimeTicks. */
+  flagAgeTicks: number;
   /** 1 = facing right, -1 = facing left. Side attacks go this way. */
   facing: 1 | -1;
   /** Ticks left of the "just got hit" flash. */
@@ -88,6 +91,7 @@ export function createPlayer(
     characterId,
     flagX: spawn.x + size.width / 2,
     flagY: spawn.y + size.height,
+    flagAgeTicks: 0,
     facing: spawn.facing,
     hitFlashTicks: 0,
     damage: 0,
@@ -175,7 +179,7 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
     player.vx = approach(player.vx, 0, GROUND_FRICTION * FIXED_DT);
     if (player.shieldStunTicks === 0) applyJump(player, input);
   } else if (isHovering(player)) {
-    player.vx = 0;
+    player.vx = approach(player.vx, 0, HOVER_DRAG * FIXED_DT);
     player.vy = 0;
   } else if (isAttacking(player)) {
     // An attack (the down attack) cancels a drop that was about to happen.
@@ -203,6 +207,7 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
 
   player.jumpHeld = input.jump;
   if (stunned) player.hitstunTicks -= 1;
+  if (!player.grounded) player.flagAgeTicks += 1;
 }
 
 export function teleportPlayer(player: Player, spawn: { x: number; y: number; facing: 1 | -1 }): void {
@@ -231,6 +236,7 @@ function land(player: Player): void {
   player.coyoteTicks = COYOTE_TICKS;
   player.flagX = player.x + player.width / 2;
   player.flagY = player.y + player.height;
+  player.flagAgeTicks = 0;
   refillOnLanding(player);
   if (player.attackId === 'none') return;
   const lag = attackData(player, player.attackId).landingLag;
