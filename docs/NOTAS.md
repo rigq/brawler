@@ -27,6 +27,17 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **Lote de mejoras decidido el 20 nov** — Todo como datos o como mecánicas reutilizables; tests nuevos en `shared/test/specials2.test.ts`.
+  - **Pantalla de victoria** (`ui/shell/VictoryScreen.ts`): al acabar, el ganador en grande con su frase, estadísticas de los dos (daño hecho, KOs, mayor golpe; `render/MatchStats.ts`, contadas mirando el `World` como los efectos, así que valen online) y Revancha / Cambiar personaje / Salir. Online sigue los votos de revancha y se quita sola al empezar la siguiente. Las escenas avisan con `onMatchOver`/`onMatchOverEnd`; con la pantalla, las teclas de revancha propias de las escenas no se usan (si no, Enter pedía dos revanchas).
+  - **Frases** (`ui/quotes.ts`, editable): de victoria según quién gana a quién, bocadillo de la provocación y bocadillo del contraataque de Claude según el rival. Escritas por Claude como punto de partida: mejor que las escribáis vosotros.
+  - **Provocaciones**: botón nuevo `taunt` (O / 5 numérico / View en el mando). Quieto en el suelo, ~1 s sin poder actuar (`TAUNT_TICKS`), un golpe lo corta. Bocadillo con la frase del personaje. Animaciones `taunt` y `victory` nuevas (hasta tener tiras, el idle; prompts en `PROMPTS_ANIMACIONES.md` lote 7 y `prompts/riga.md`).
+  - **Samu**: el remate se carga (0,8 s, también en el aire, `chargeInAir`): más rápido (×1,7), más recto (gravedad ×0,35) y algo más fuerte.
+  - **Donate**: "Bombardeo", con el especial bajo el paracaídas suelta hasta 3 bombas flojas (5 %; `parachuteDrops`, `freeOfCooldown`). Para compensar, el cañonazo cargado crece ×1,6 (antes ×2).
+  - **Robert**: "Colocón", cada Calada que acierta le da 1 carga de humo (máx. 3; `grantsStack`, una por Calada aunque el humo pegue varias veces) y su siguiente fuerte las gasta: +12 % de daño y lanzamiento por carga (`stackBonus`). Se ven como bolas de humo girando sobre su cabeza.
+  - **Riga**: "Alucinación", cuarta opción de la ruleta: un clon suyo violeta y transparente que corre por el escenario (`walker`) y explota al tocar al rival o al segundo. Icono: espiral violeta. Ojo: la altura de salida de los proyectiles se escala con la del personaje (×80/60 en Riga).
+  - `ko-percent` sin cambios.
+  - **Chachin**: pendiente de elegir su mecánica (triple salto, golpes por la espalda u otra).
+
 - **Especiales de Riga (20 nov)** — Cinco comportamientos nuevos del motor, todos como datos (sirven para cualquier personaje futuro):
   - **Ruleta** (`roulette` + `chargeTicks`): mantener el especial hace girar las opciones cada `stepTicks`; al soltar empieza la que se ve (`rouletteChoice`). Carga también en el aire. Riga: Claude → ChatGPT → Gemini cada 20 ticks, 2 s de tope. Las tres comparten enfriamiento.
   - **Contraataque** (`counter`, Claude "Lo siento, no puedo ayudarte con eso"): 20 ticks en los que un golpe no le hace nada y el atacante recibe 8 % y sale lanzado; un proyectil simplemente desaparece (`counterHolds`, `counterHit`).

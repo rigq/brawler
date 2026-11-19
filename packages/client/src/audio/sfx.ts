@@ -103,6 +103,13 @@ const SOUNDS = {
     noise(ctx, out, { filter: 'bandpass', freq: 600, to: 4000, q: 2, duration: 0.25, gain: 0.25 });
     tone(ctx, out, { type: 'sawtooth', freq: 220, to: 880, duration: 0.2, gain: 0.05, lowpass: 2500 });
   },
+  /** A taunt: a cheeky little "ta-da". */
+  taunt: (ctx, out) => {
+    tone(ctx, out, { type: 'square', freq: midi(72), duration: 0.08, gain: 0.07, lowpass: 3000 });
+    tone(ctx, out, { type: 'square', freq: midi(79), duration: 0.16, gain: 0.07, lowpass: 3000, delay: 0.09 });
+  },
+  /** A bomb let go: a short falling whistle. */
+  drop: (ctx, out) => tone(ctx, out, { freq: 1400, to: 500, duration: 0.25, gain: 0.06 }),
   menuMove: (ctx, out) => tone(ctx, out, { type: 'triangle', freq: 700, duration: 0.04, gain: 0.08 }),
   menuConfirm: (ctx, out) => {
     tone(ctx, out, { type: 'triangle', freq: midi(76), duration: 0.07, gain: 0.12 });

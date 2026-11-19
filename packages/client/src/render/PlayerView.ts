@@ -84,7 +84,7 @@ export class PlayerView {
    * `alpha` (0–1) is how far we are between the last simulation step and the next.
    * Drawing in between keeps motion smooth on screens faster than 60 Hz.
    */
-  render(player: Player, alpha: number, frameMs: number, offset: VisualOffset = NO_OFFSET): void {
+  render(player: Player, alpha: number, frameMs: number, offset: VisualOffset = NO_OFFSET, rival?: Player): void {
     // Knocked out (waiting to respawn) or out of the match: draw nothing.
     this.visible = isActive(player);
     this.body.setVisible(this.visible);
@@ -117,7 +117,7 @@ export class PlayerView {
       this.renderChargeBar(player, x, y);
     }
     this.renderShield(player, x, y);
-    this.fx.render(player, x, y, frameMs);
+    this.fx.render(player, x, y, frameMs, rival);
   }
 
   /** False while the player is knocked out or out of the match; the camera skips it. */
@@ -131,7 +131,7 @@ export class PlayerView {
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield, this.fx.gameObject];
+    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield, ...this.fx.gameObjects];
   }
 
   /** Blinking right after respawning, see-through while dodging, solid otherwise. */

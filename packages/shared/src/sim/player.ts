@@ -23,6 +23,7 @@ import {
   PARACHUTE_FALL_SPEED,
   MAX_FALL_SPEED,
   RUN_SPEED,
+  TAUNT_TICKS,
 } from '../constants.ts';
 import { DEFAULT_CHARACTER, characterOf, type CharacterId } from '../characters/index.ts';
 import { createGrabState, chooseThrow, type GrabState } from '../combat/grabs.ts';
@@ -80,6 +81,10 @@ export interface Player extends Body, DodgeState, AttackState, GrabState, LedgeS
   recoveryAvailable: boolean;
   /** Up heavy in the air can still lift you (once per time in the air, separate from the up special). */
   airBoostAvailable: boolean;
+  /** Ticks left of a taunt (it also sets lagTicks: no acting meanwhile). */
+  tauntTicks: number;
+  /** Taunt button state in the previous step (fresh presses only). */
+  tauntHeld: boolean;
 }
 
 export function createPlayer(
@@ -119,6 +124,8 @@ export function createPlayer(
     fastFalling: false,
     recoveryAvailable: true,
     airBoostAvailable: true,
+    tauntTicks: 0,
+    tauntHeld: false,
     ...createDodgeState(),
     ...createAttackState(),
     ...createGrabState(),
@@ -145,6 +152,7 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
     return;
   }
   if (player.hitFlashTicks > 0) player.hitFlashTicks -= 1;
+  if (player.tauntTicks > 0) player.tauntTicks -= 1;
   if (player.dropTicks > 0) player.dropTicks -= 1;
   if (player.invulnTicks > 0) player.invulnTicks -= 1;
   if (player.ledgeRegrabTicks > 0) player.ledgeRegrabTicks -= 1;
@@ -159,6 +167,7 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
   if (player.parachuting && ((input.jump && !player.jumpHeld) || (input.dodge && !player.dodgeHeld))) {
     player.parachuting = false;
   }
+  startTaunt(player, input);
   updateAttack(player, input);
   updateDodge(player, input);
   updateShield(player, input);
@@ -247,6 +256,16 @@ function land(player: Player): void {
   if (lag === undefined) return;
   player.attackId = 'none';
   player.lagTicks = lag;
+}
+
+/** A fresh press of taunt, standing on the ground and free: about a second showing off, wide open. */
+function startTaunt(player: Player, input: PlayerInput): void {
+  const pressed = input.taunt && !player.tauntHeld;
+  player.tauntHeld = input.taunt;
+  const free = player.attackId === 'none' && player.lagTicks === 0 && player.hitstunTicks === 0 && player.dodgeKind === 'none';
+  if (!pressed || !free || !player.grounded || player.shielding || player.holdTicks > 0) return;
+  player.tauntTicks = TAUNT_TICKS;
+  player.lagTicks = TAUNT_TICKS;
 }
 
 /** Specials with `hover` keep the player still in the air while they wind up. */

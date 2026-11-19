@@ -77,7 +77,7 @@ test('Donate\'s shell charges: held longer it comes out bigger, harder and a bit
   const full = donateShell(120);
   assert.equal(tap.shell.power, 1);
   assert.ok(tap.firedAfter <= 22, `a tap fires about as fast as before (${tap.firedAfter} ticks)`);
-  assert.equal(full.shell.width, tap.shell.width * 2, 'twice as big at full charge');
+  assert.ok(Math.abs(full.shell.width - tap.shell.width * 1.6) < 1e-9, '1.6 times as big at full charge');
   assert.equal(full.shell.power, 1.5);
   assert.ok(Math.abs(full.shell.vx) < Math.abs(tap.shell.vx), 'heavier, slower');
   assert.ok(full.firedAfter < 120, 'fires on its own at full charge');

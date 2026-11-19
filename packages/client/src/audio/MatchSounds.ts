@@ -40,6 +40,8 @@ const PROJECTILE_SOUND: Record<string, { fire: SfxName; burst?: SfxName }> = {
   ball: { fire: 'spike' },
   bubble: { fire: 'type' },
   star: { fire: 'sparkle' },
+  bomb: { fire: 'drop', burst: 'blast' },
+  clone: { fire: 'sparkle', burst: 'blast' },
 };
 /** Neutral specials heard when they start (the others are heard through their projectile). */
 const NEUTRAL_SPECIAL_SOUND: Partial<Record<CharacterId, SfxName>> = { chachin: 'scream' };
@@ -72,6 +74,8 @@ interface Seen {
   pulling: boolean;
   /** Starting up a tether recovery (typing the prompt). */
   typing: boolean;
+  taunting: boolean;
+  powerStacks: number;
 }
 
 function seen(p: Player): Seen {
@@ -96,6 +100,8 @@ function seen(p: Player): Seen {
     attackTick: p.attackTick,
     pulling: p.tetherSide !== 0 && attackPhase(p) === 'active',
     typing: p.attackId !== 'none' && attackPhase(p) === 'startup' && attackData(p, p.attackId).tether !== undefined,
+    taunting: p.tauntTicks > 0,
+    powerStacks: p.powerStacks,
   };
 }
 
@@ -168,6 +174,8 @@ function attackSounds(play: Play, before: Seen, now: Seen, character: CharacterI
   // Refused: the counter jumped straight to its recovery instead of running out.
   if (before.countering && !now.countering && now.attackId === before.attackId && now.attackTick - before.attackTick > 1) play('counter');
   if (now.pulling && !before.pulling) play('zip');
+  if (now.taunting && !before.taunting) play('taunt');
+  if (now.powerStacks > before.powerStacks) play('puff');
   // Typing the emergency prompt, frozen in the air: a key every few ticks.
   if (now.typing && now.attackTick !== before.attackTick && now.attackTick % TYPE_EVERY_TICKS === 0) play('type');
   const started = now.attackId !== 'none' && now.attackId !== before.attackId;

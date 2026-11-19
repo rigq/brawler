@@ -40,7 +40,7 @@ import { preloadArt } from '../render/art.ts';
 import { MatchView } from '../render/MatchView.ts';
 import type { VisualOffset } from '../render/PlayerView.ts';
 import { exposeForDebugging } from './GameScene.ts';
-import type { SceneHooks } from './hooks.ts';
+import type { MatchOverHandle, SceneHooks } from './hooks.ts';
 
 /** Who you play and which room: `code` null creates one. `lineup`: both seats' characters (dev URLs). */
 export interface OnlineOptions {
@@ -91,6 +91,8 @@ export class OnlineScene extends Phaser.Scene {
   private status!: Phaser.GameObjects.Text;
   /** Picked during a match: shown until the next one starts with it. */
   private nextCharacter: CharacterId | null = null;
+  /** The victory screen, while it is up. */
+  private overHandle: MatchOverHandle | null = null;
   /** The characters the view was drawn for: if the server's differ, it is drawn again. */
   private viewCharacters: CharacterId[] = [];
 
@@ -107,15 +109,17 @@ export class OnlineScene extends Phaser.Scene {
   create(): void {
     this.status = this.add.text(STATUS_POS.x, STATUS_POS.y, '', STATUS_STYLE);
     this.controls = this.createInput();
-    new RematchInput(this, () => this.askRematch());
+    if (!this.hooks.onMatchOver) new RematchInput(this, () => this.askRematch());
     // Online nothing pauses: Esc only opens the menu (to leave the room).
-    this.input.keyboard?.on('keydown-ESC', () =>
+    this.input.keyboard?.on('keydown-ESC', () => {
+      // The victory screen has the same options as buttons.
+      if (this.overHandle) return;
       this.hooks.onPause?.({
         resume: () => {},
         changeCharacter: (character) => this.changeCharacter(character),
         character: this.nextCharacter ?? this.myCharacter(),
-      }),
-    );
+      });
+    });
     for (const event of [Phaser.Scenes.Events.SHUTDOWN, Phaser.Scenes.Events.DESTROY]) {
       this.events.once(event, () => void this.room?.leave());
     }
@@ -137,6 +141,34 @@ export class OnlineScene extends Phaser.Scene {
     if (mySlot !== undefined) offsets[mySlot] = { x: this.smoother.offsetX, y: this.smoother.offsetY };
     this.view?.render(this.mirror, this.accumulator.alpha, delta, { offsets, result: serverResult(room) });
     this.smoother.decay(delta);
+    if (room) this.syncVictory(room, mySlot);
+  }
+
+  /** The victory screen comes up once the result shows, follows the rematch votes, and goes when a new match starts. */
+  private syncVictory(room: MatchRoom, mySlot: number | undefined): void {
+    const over = serverResult(room).over;
+    if (over && this.view?.isResultShown && !this.overHandle && this.hooks.onMatchOver) {
+      this.overHandle = this.hooks.onMatchOver(this.view.summary(), {
+        rematch: () => this.askRematch(),
+        changeCharacter: (character) => this.changeCharacter(character),
+        character: this.nextCharacter ?? this.myCharacter(),
+      });
+    }
+    this.overHandle?.setStatus(this.victoryStatus(room, mySlot));
+    if (!over && this.overHandle) {
+      this.overHandle = null;
+      this.view?.resetStats();
+      this.hooks.onMatchOverEnd?.();
+    }
+  }
+
+  /** Under the victory screen's buttons: who asked for the rematch, or why the match ended. */
+  private victoryStatus(room: MatchRoom, mySlot: number | undefined): string {
+    if (room.state.endReason === 'forfeit' || room.state.seats.size < 2) return this.resultHint(room, mySlot);
+    const iVoted = mySlot !== undefined && room.state.rematchVotes[mySlot];
+    const rivalVoted = Array.from(room.state.rematchVotes).some((vote, slot) => vote && slot !== mySlot);
+    if (iVoted) return 'Revancha pedida. Esperando al rival…';
+    return rivalVoted ? '¡Tu rival quiere la revancha!' : '';
   }
 
   // --- Connection ---------------------------------------------------------

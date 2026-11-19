@@ -15,6 +15,8 @@ const Button = {
   RB: 5,
   LT: 6,
   RT: 7,
+  /** View / Select, left of the centre. */
+  BACK: 8,
   DPAD_UP: 12,
   DPAD_DOWN: 13,
   DPAD_LEFT: 14,
@@ -51,6 +53,7 @@ export class GamepadInput implements InputSource {
       heavy: pressed(Button.B),
       special: pressed(Button.Y),
       grab: pressed(Button.RB),
+      taunt: pressed(Button.BACK),
     };
   }
 }

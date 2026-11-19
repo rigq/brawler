@@ -19,6 +19,8 @@ export interface AttackSnapshot {
   sweet?: boolean;
   /** Damage and launch multiplier of a charged projectile (default 1). */
   power?: number;
+  /** The attacker's power stacks when it hit (AttackData.stackBonus). */
+  stacks?: number;
 }
 
 export interface Hit {
@@ -55,7 +57,7 @@ function findHits(players: Player[]): Hit[] {
       if (isInvulnerable(target)) return;
       if (!overlaps(box, hurtbox(target))) return;
       const sweet = sweetBox !== null && overlaps(sweetBox, hurtbox(target));
-      hits.push({ attacker: a, target: t, attack: { id, charge: attackCharge(attacker), sweet } });
+      hits.push({ attacker: a, target: t, attack: { id, charge: attackCharge(attacker), sweet, stacks: attacker.powerStacks } });
     });
   });
   return hits;
@@ -74,6 +76,8 @@ function applyHit(players: Player[], hit: Hit): void {
   if (target.shielding) blockHit(target, awayFrom(attacker, target), dealt);
   else if (armorHolds(target, dealt)) takeArmoredHit(target, dealt);
   else applyKnockback(attacker, target, hit.attack);
+  // Power stacks are spent by the hit that uses them (blocked or not).
+  if (attackData(attacker, hit.attack.id).stackBonus) attacker.powerStacks = 0;
   freezeBoth(attacker, target, dealt);
 }
 

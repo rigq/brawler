@@ -1,4 +1,4 @@
-import { AIR_DODGE_TICKS, ROLL_TICKS, SPOT_DODGE_TICKS, attackData, attackPhase, type AttackId, type Player } from '@brawler/shared';
+import { AIR_DODGE_TICKS, ROLL_TICKS, SPOT_DODGE_TICKS, TAUNT_TICKS, attackData, attackPhase, type AttackId, type Player } from '@brawler/shared';
 
 /** Every body animation a character can have, named like its strip in art/<character>/anim/. */
 export const ANIM_NAMES = [
@@ -8,6 +8,8 @@ export const ANIM_NAMES = [
   'heavy-side', 'heavy-up', 'heavy-down',
   'shield', 'roll', 'dodge', 'grab', 'throw', 'ledge',
   'special-neutral', 'special-up',
+  // 20 nov: showing off (taunt key) and the pose on the victory screen.
+  'taunt', 'victory',
 ] as const;
 export type AnimName = (typeof ANIM_NAMES)[number];
 
@@ -35,7 +37,7 @@ export const ATTACK_ANIM: Record<AttackId, AnimName> = {
   heavySide: 'heavy-side', heavyUp: 'heavy-up', heavyDown: 'heavy-down',
   grab: 'grab', throwForward: 'throw', throwBack: 'throw', throwUp: 'throw', throwDown: 'throw',
   specialNeutral: 'special-neutral', specialUp: 'special-up', specialProjectile: 'special-neutral',
-  specialPick1: 'special-neutral', specialPick2: 'special-neutral', specialPick3: 'special-neutral',
+  specialPick1: 'special-neutral', specialPick2: 'special-neutral', specialPick3: 'special-neutral', specialPick4: 'special-neutral',
 };
 
 /**
@@ -65,6 +67,9 @@ const FALLBACK: Partial<Record<AnimName, AnimName>> = {
   dodge: 'fall',
   'special-neutral': 'jab',
   throw: 'grab',
+  // Until their strips exist: the idle.
+  taunt: 'idle',
+  victory: 'idle',
 };
 
 /** How a character's idle plays: `restMs` on the first frame between play-throughs, `frameMs` per frame. */
@@ -96,6 +101,7 @@ export function idleSteps(idle: IdleTiming, frames: number): IdleStep[] {
 export function animFor(player: Player): AnimName {
   if (player.ledgeSide !== 0) return 'ledge';
   if (player.hitstunTicks > 0 || player.grabbedTicks > 0) return 'hurt';
+  if (player.tauntTicks > 0) return 'taunt';
   if (player.holdTicks > 0) return 'grab';
   if (player.attackId !== 'none') return ATTACK_ANIM[player.attackId];
   if (player.parachuting) return 'special-up';
@@ -144,6 +150,7 @@ export function frameFor(
     case 'fall': return Math.abs(player.vy) < APEX_SPEED ? 0 : last;
     case 'hurt': return Math.hypot(player.vx, player.vy) > HURT_LAUNCH_SPEED ? last : 0;
     case 'special-up': return last;
+    case 'taunt': return clamp(progress(player.tauntTicks, TAUNT_TICKS) * frames);
     case 'shield': return clamp(Math.min(SHIELD_HOLD_FRAME, 1 + stateMs / SHIELD_RAISE_FRAME_MS));
     case 'roll': return clamp(progress(player.dodgeTicks, ROLL_TICKS) * frames);
     case 'dodge': return clamp(progress(player.dodgeTicks, player.dodgeKind === 'air' ? AIR_DODGE_TICKS : SPOT_DODGE_TICKS) * frames);

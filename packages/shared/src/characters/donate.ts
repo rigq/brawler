@@ -12,11 +12,12 @@ export const donate: CharacterDefinition = {
     /**
      * "Cañonazo": the tank rolls in behind him (startup) and fires a slow, heavy shell. Ground only.
      * 20 nov: hold the button to charge it for up to 1 s: at full charge the shell
-     * is twice as big, hits 50 % harder and flies a bit slower (it is heavier).
+     * is 1.6 times as big (was 2: Donate got the bombs below), hits 50 % harder
+     * and flies a bit slower (it is heavier).
      */
     specialNeutral: {
       startup: 20, active: 1, recovery: 36, groundOnly: true, cooldownTicks: 120,
-      chargeTicks: 60, chargedProjectile: { size: 2, power: 1.5, speed: 0.8 },
+      chargeTicks: 60, chargedProjectile: { size: 1.6, power: 1.5, speed: 0.8 },
       projectile: { kind: 'shell', speed: 496, width: 44, height: 13, offsetX: 20, offsetY: 10, lifetimeTicks: 150 },
     },
     /** The shell itself. */
@@ -29,6 +30,19 @@ export const donate: CharacterDefinition = {
     specialUp: {
       startup: 0, active: 6, recovery: 16, box: { x: -10, y: 40, width: 60, height: 70 },
       damage: 6, kbBase: 320, kbScale: 13, kbX: 0.4, kbY: -0.3, launchSpeed: 1080, parachute: true,
+      parachuteDrops: { attack: 'specialPick1', count: 3 },
+    },
+    /**
+     * "Bombardeo": under the parachute the special drops a small bomb straight down
+     * (3 per glide, one every ~0.5 s). Weak on purpose: it annoys, it does not kill.
+     */
+    specialPick1: {
+      startup: 3, active: 1, recovery: 24, box: { x: 0, y: 0, width: 0, height: 0 }, freeOfCooldown: true,
+      damage: 5, kbBase: 260, kbScale: 4, kbX: 0.3, kbY: -1,
+      projectile: {
+        kind: 'bomb', speed: 0, speedY: 120, gravity: 1000, width: 12, height: 12, offsetX: -26, offsetY: 70,
+        lifetimeTicks: 120, hitAttack: 'specialPick1',
+      },
     },
     // His own normals (phase 3): a disciplined soldier who controls the space in front of him.
     /** "¡Firmes!": a flat push that sends you far away, to the edge. */

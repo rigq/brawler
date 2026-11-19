@@ -26,6 +26,8 @@ export const P1_BINDINGS: KeyBindings = {
   special: [Key.I, Key.X],
   // U, right above J/K: grabbing with one key (shield + light still works). Z for the shared-keyboard set.
   grab: [Key.U, Key.Z],
+  // O, next to I: showing off.
+  taunt: [Key.O],
 };
 
 /** P2: arrows to move and aim, M to jump (next to , . -), so ↑ is only a direction. N is the special. */
@@ -42,6 +44,7 @@ export const P2_BINDINGS: KeyBindings = {
   special: [Key.N, Key.NUMPAD_FOUR],
   // P2 grabs with shield + light ("-" + ","); online either half of the keyboard drives your player, so U works there.
   grab: [],
+  taunt: [Key.NUMPAD_FIVE],
 };
 
 /** Reads the keyboard once per render frame and turns it into a PlayerInput. */

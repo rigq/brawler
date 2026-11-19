@@ -45,6 +45,7 @@ const BUTTON_ROWS: { label: string; actions: (keyof PlayerInput)[]; pad: string 
   { label: 'Escudo / esquiva', actions: ['dodge'], pad: 'LB, LT o RT' },
   { label: 'Agarre', actions: ['grab'], pad: 'RB' },
   { label: 'Especial', actions: ['special'], pad: 'Y' },
+  { label: 'Provocar', actions: ['taunt'], pad: 'View / Select' },
 ];
 
 /** Keys of one action written for a person: `pick` chooses which of its keys. */

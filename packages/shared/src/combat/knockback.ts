@@ -66,7 +66,8 @@ function launchChargeMultiplier(data: AttackData, attack: AttackSnapshot): numbe
 }
 
 function chargeMultiplier(data: AttackData, attack: AttackSnapshot): number {
-  return data.heavy ? 1 + HEAVY_CHARGE_BONUS * attack.charge : (attack.power ?? 1);
+  const charge = data.heavy ? 1 + HEAVY_CHARGE_BONUS * attack.charge : (attack.power ?? 1);
+  return charge * (1 + (data.stackBonus ?? 0) * (attack.stacks ?? 0));
 }
 
 /** The more hits already taken in this combo, the shorter the stun: combos always end. */
@@ -94,6 +95,7 @@ export function awayFrom(attacker: Player, target: Player): 1 | -1 {
  * air jumps, air dodge and recovery, so a launched player always has a chance to get back.
  */
 export function interrupt(target: Player): void {
+  target.tauntTicks = 0;
   target.attackId = 'none';
   target.attackCharging = false;
   target.parachuting = false;

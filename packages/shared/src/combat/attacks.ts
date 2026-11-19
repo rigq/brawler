@@ -33,8 +33,12 @@ export interface AttackState {
   specialHeld: boolean;
   /** Ticks until a projectile special can be used again. */
   specialCooldown: number;
-  /** Gliding down after a parachute special: no attacks, air jumps or dodges until landing. */
+  /** Gliding down after a parachute special: no attacks, air jumps or dodges until landing (except its drops). */
   parachuting: boolean;
+  /** Drops left in this glide (AttackData.parachuteDrops). */
+  dropsLeft: number;
+  /** Power stacks gathered (AttackData.grantsStack), spent by an attack with stackBonus. */
+  powerStacks: number;
   /** Shots this attack has fired so far (bursts fire several, see ProjectileSpec.shots). */
   attackShots: number;
   /** Tether recovery: the ledge being pulled to (side -1/1 and the point hooked), side 0 = none. */
@@ -57,6 +61,8 @@ export function createAttackState(): AttackState {
     specialHeld: false,
     specialCooldown: 0,
     parachuting: false,
+    dropsLeft: 0,
+    powerStacks: 0,
     attackShots: 0,
     tetherSide: 0,
     tetherX: 0,
@@ -85,6 +91,10 @@ export function updateAttack(player: Player, input: PlayerInput): void {
     advanceAttack(player, input);
     return;
   }
+  if (player.parachuting && specialPressed && player.lagTicks === 0) {
+    dropFromParachute(player, input);
+    return;
+  }
   if (player.lagTicks > 0 || player.parachuting) return;
   if (player.shielding) {
     // The one attack you can do from the shield.
@@ -99,6 +109,14 @@ export function updateAttack(player: Player, input: PlayerInput): void {
   else if (lightPressed) startAttack(player, input, chooseLight(player, input));
   else if (heavyPressed) startAttack(player, input, chooseHeavy(input));
   else if (specialPressed) startSpecial(player, input);
+}
+
+/** Under the parachute, the special drops something (a bomb), a few times per glide. */
+function dropFromParachute(player: Player, input: PlayerInput): void {
+  const drops = attackData(player, 'specialUp').parachuteDrops;
+  if (!drops || player.dropsLeft <= 0) return;
+  player.dropsLeft -= 1;
+  startAttack(player, input, drops.attack);
 }
 
 /** Up = up special (only while the recovery is unused); otherwise neutral, if its cooldown and the ground allow. */
@@ -187,8 +205,8 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
   const dirX = Number(input.right) - Number(input.left);
   // Aerials keep the facing: holding backwards means back aerial, not turning around.
   if (dirX !== 0 && data.landingLag === undefined) player.facing = dirX === 1 ? 1 : -1;
-  // Heavies (and chargeable specials) charge only on the ground; in the air they fire at once. A roulette charges anywhere.
-  player.attackCharging = (data.heavy || data.chargeTicks !== undefined) && (player.grounded || data.roulette !== undefined);
+  // Heavies (and chargeable specials) charge only on the ground, unless chargeInAir; in the air they fire at once.
+  player.attackCharging = (data.heavy || data.chargeTicks !== undefined) && (player.grounded || data.chargeInAir === true);
   if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed, dirX);
   if (id === 'heavyUp' && !player.grounded) airHeavyUpBoost(player, dirX);
   beginAttack(player, id);
@@ -256,7 +274,10 @@ function advanceAttack(player: Player, input: PlayerInput): void {
   }
   if (player.attackTick < data.startup + data.active + data.recovery) return;
   player.attackId = 'none';
-  if (data.parachute && !player.grounded) player.parachuting = true;
+  if (data.parachute && !player.grounded) {
+    player.parachuting = true;
+    player.dropsLeft = data.parachuteDrops?.count ?? 0;
+  }
   // Only on the ground: in the air the stumble would throw him off the stage.
   if (data.whiffLagTicks && player.attackHitMask === 0 && player.grounded) {
     player.lagTicks = data.whiffLagTicks;

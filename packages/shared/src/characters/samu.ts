@@ -8,9 +8,14 @@ export const samu: CharacterDefinition = {
   name: 'Samu',
   stats: { speed: 2, weight: 4, damage: 3, reach: 3 },
   attacks: {
-    /** "Remate": spikes a ball that flies down diagonally and bounces once. Works in the air too. */
+    /**
+     * "Remate": spikes a ball that flies down diagonally and bounces once. Works in the air too.
+     * 20 nov: hold the special to charge it (up to 0.8 s, in the air too): the
+     * ball comes out faster and straighter (less drop) and hits a bit harder.
+     */
     specialNeutral: {
       startup: 12, active: 1, recovery: 22, cooldownTicks: 70,
+      chargeTicks: 48, chargeInAir: true, chargedProjectile: { power: 1.25, speed: 1.7, gravity: 0.35 },
       projectile: {
         kind: 'ball', speed: 416, speedY: 304, gravity: 576, bounces: 1,
         width: 16, height: 16, offsetX: 0, offsetY: -6, lifetimeTicks: 90,

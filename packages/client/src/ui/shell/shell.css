@@ -688,3 +688,96 @@
   accent-color: var(--lantern);
   cursor: pointer;
 }
+
+/* ---------- Victory screen ---------- */
+
+.victory { --side: var(--lantern); }
+.victory--p1 { --side: var(--p1); }
+.victory--p2 { --side: var(--p2); }
+
+.victory__panel {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 40px;
+  border-left-color: var(--side);
+  max-width: min(1040px, 94vw);
+}
+
+.victory__hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 260px;
+}
+
+.victory__hero .kicker { color: var(--side); }
+
+.victory__name {
+  font-size: 72px;
+  color: var(--moon);
+  transform: skewX(var(--skew));
+}
+
+.victory__stage {
+  display: grid;
+  place-items: end center;
+  min-height: 300px;
+  padding-bottom: 10px;
+  background: radial-gradient(ellipse 60% 14% at 50% 96%, color-mix(in srgb, var(--side) 45%, transparent), transparent 70%);
+}
+
+.victory__quote {
+  margin: 0;
+  max-width: 320px;
+  color: var(--text);
+  font: italic 600 18px/1.35 var(--font-body);
+}
+
+.victory__side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: center;
+  min-width: 360px;
+}
+
+.victory__stats {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px 22px;
+  align-items: center;
+  font: 600 15px/1 var(--font-body);
+  color: var(--muted);
+}
+
+.victory__who {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font: 700 12px/1 var(--font-body);
+  letter-spacing: 0.12em;
+}
+
+.victory__who--p1 { color: var(--p1); }
+.victory__who--p2 { color: var(--p2); }
+.victory__who .head-portrait { border-radius: 50%; border: 2px solid currentColor; }
+
+.victory__value {
+  justify-self: center;
+  color: var(--moon);
+  font: 26px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.victory__status {
+  min-height: 1.2em;
+  margin: 0;
+  color: var(--lantern-soft);
+  font: 600 15px/1.2 var(--font-body);
+}
+
+@media (max-width: 900px) {
+  .victory__panel { flex-direction: column; }
+  .victory__stage { min-height: 200px; }
+}

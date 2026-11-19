@@ -15,7 +15,7 @@ export const riga: CharacterDefinition = {
   attacks: {
     /**
      * "Ruleta de IAs": hold the special and an AI icon cycles over his head every
-     * 1/3 s (Claude → ChatGPT → Gemini → …); letting go starts that AI's attack.
+     * 1/3 s (Claude → ChatGPT → Gemini → Alucinación → …); letting go starts that attack.
      * Charging is not luck: with practice you pick the one you want, and the rival
      * sees it coming. Full charge (2 s) starts whichever is showing.
      */
@@ -23,8 +23,8 @@ export const riga: CharacterDefinition = {
       startup: 1, active: 1, recovery: 1, box: NO_BOX, damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
       // The roulette itself fires nothing; each option does. Cooldown 1: just so it cannot restart while an option's is running.
       projectile: undefined, cooldownTicks: 1,
-      chargeTicks: 120,
-      roulette: { stepTicks: 20, options: ['specialPick1', 'specialPick2', 'specialPick3'] },
+      chargeTicks: 120, chargeInAir: true,
+      roulette: { stepTicks: 20, options: ['specialPick1', 'specialPick2', 'specialPick3', 'specialPick4'] },
     },
     /**
      * Claude, "Lo siento, no puedo ayudarte con eso": a counter. For 20 ticks a
@@ -57,6 +57,19 @@ export const riga: CharacterDefinition = {
       projectile: {
         kind: 'star', speed: 420, width: 16, height: 16, offsetX: -8, offsetY: 18, lifetimeTicks: 90,
         returnAfterTicks: 30, bothSides: true, hits: 2, hitIntervalTicks: 20, hitAttack: 'specialPick3',
+      },
+    },
+    /**
+     * "Alucinación": a see-through clone of him runs ahead along the stage and
+     * blows up when it touches the rival (or after a second).
+     */
+    specialPick4: {
+      startup: 10, active: 1, recovery: 24, box: NO_BOX, cooldownTicks: 90,
+      damage: 7, kbBase: 380, kbScale: 7, kbX: 1, kbY: -0.6,
+      projectile: {
+        // offsetY is scaled by his height (×80/60): 3 → 4 px, feet exactly on his feet. Any lower and it starts inside the floor and bursts.
+        kind: 'clone', speed: 300, gravity: 1248, width: 30, height: 76, offsetX: 4, offsetY: 3,
+        lifetimeTicks: 60, walker: true, hitAttack: 'specialPick4',
       },
     },
     /**

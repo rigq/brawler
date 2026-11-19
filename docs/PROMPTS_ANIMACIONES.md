@@ -138,6 +138,20 @@ Desde el 19 nov **las cajas de golpe salen del dibujo** (`node tools/hitboxes.ts
 
 Después de guardar la tira: `node tools/pixelate.ts art/<personaje>/anim/sprites.json` y `node tools/hitboxes.ts`.
 
+### Lote 7 · Provocación y victoria (20 nov)
+
+Una tira de cada por personaje, como `art/<personaje>/anim/taunt.jpg` y `victory.jpg`. Mientras no existan, el juego usa el idle.
+
+| Personaje | `taunt.jpg` (4) | `victory.jpg` (4) |
+| --- | --- | --- |
+| Donate | Saluting like a soldier, then looking around confused as if he lost something (his tank). | Standing proudly at attention, then raising a fist; his beret straight. |
+| Robert | Taking a long drag of his cigarette and blowing smoke, cocky look, one hand in his pocket. | Arms crossed, nodding slowly with a smirk, cigarette in his mouth. |
+| Samu | Bouncing a volleyball on his forearms (bump) twice, cheering. | Jumping with both fists up, then flexing one arm, the backpack on. |
+| Chachin | Jumping up and down screaming with his mouth wide open, arms flailing. | A backflip, then landing in a wide victory pose, screaming. |
+| Riga | Looking at his phone, laughing at the screen, then showing it towards the viewer. | Closing his laptop with a snap, tucking it under his arm, cocky half-smile and a nod. |
+
+En la tabla, `N` es el número entre paréntesis; el bloque `ANIMATION` es el texto de la columna, con "(1)…(4)" si quieres más control.
+
 ## Total
 
 | Lote | Tiras por personaje | Para los cuatro |

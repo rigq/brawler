@@ -4,7 +4,7 @@ import type Phaser from 'phaser';
  * Riga's roulette icons, drawn in code: our own simple shapes that call each AI
  * to mind (an orange spark, a green knot, a blue-violet star), not their logos.
  */
-export type AiIcon = 'claude' | 'chatgpt' | 'gemini';
+export type AiIcon = 'claude' | 'chatgpt' | 'gemini' | 'hallucination';
 
 const BADGE = { size: 22, fill: 0x0b1026, line: 0xf4f1de } as const;
 const SPARK = { color: 0xd97757, rays: 8, outer: 8, width: 2.5 } as const;
@@ -18,7 +18,28 @@ export function drawAiIcon(g: Phaser.GameObjects.Graphics, icon: AiIcon, x: numb
   g.lineStyle(1.5, BADGE.line, 0.9).strokeRoundedRect(x - half, y - half, half * 2, half * 2, 4 * scale);
   if (icon === 'claude') drawSpark(g, x, y, scale);
   else if (icon === 'chatgpt') drawKnot(g, x, y, scale);
-  else drawStar(g, x, y, scale, STAR.outer, STAR.inner);
+  else if (icon === 'gemini') drawStar(g, x, y, scale, STAR.outer, STAR.inner);
+  else drawSpiral(g, x, y, scale);
+}
+
+/** A dizzy violet spiral: the AI that makes things up. */
+function drawSpiral(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number): void {
+  const turns = 2.2;
+  const points = Array.from({ length: 28 }, (_, i) => {
+    const t = i / 27;
+    const angle = t * turns * Math.PI * 2;
+    const radius = (1 + t * 7.5) * scale;
+    return { x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius };
+  });
+  g.lineStyle(2 * scale, 0xc9a6ff, 1).strokePoints(points, false);
+}
+
+/** Donate's bomb: a black ball with a lit fuse, centred at (x, y). */
+export function drawBomb(g: Phaser.GameObjects.Graphics, x: number, y: number, radius: number): void {
+  g.fillStyle(0x1d2330, 1).fillCircle(x, y, radius);
+  g.fillStyle(0x5c6a8a, 1).fillCircle(x - radius * 0.35, y - radius * 0.35, radius * 0.3);
+  g.lineStyle(2, 0xb08a5a, 1).lineBetween(x, y - radius, x + 3, y - radius - 4);
+  g.fillStyle(0xffb703, 1).fillCircle(x + 3, y - radius - 5, 2);
 }
 
 /** Rays round a centre, like an asterisk. Render only: trigonometry is fine here. */

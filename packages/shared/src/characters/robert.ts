@@ -20,8 +20,8 @@ export const robert: CharacterDefinition = {
         lifetimeTicks: 80, hits: 4, hitIntervalTicks: 14,
       },
     },
-    /** Each hit of the smoke. */
-    specialProjectile: { damage: 3, kbBase: 120, kbScale: 4, kbX: 1, kbY: -0.3 },
+    /** Each hit of the smoke. "Colocón": a Calada that lands gives him a stack of smoke (up to 3). */
+    specialProjectile: { damage: 3, kbBase: 120, kbScale: 4, kbX: 1, kbY: -0.3, grantsStack: { max: 3 } },
     /**
      * "Aúpa del rapero": his rapper friend pops up under him and throws him up.
      * Short (he is heavy); the push hits whoever is right below. It is active from
@@ -40,9 +40,11 @@ export const robert: CharacterDefinition = {
      * "Puñetazo de barrio": slower to come out, but small hits do not stop it
      * (armour up to 8 %) and it kills earlier than anyone else's.
      */
-    heavySide: { startup: 13, kbBase: 490, kbScale: 8.4, armor: 8 },
+    // Heavies spend the smoke stacks: +12 % damage and launch per stack.
+    heavySide: { startup: 13, kbBase: 490, kbScale: 8.4, armor: 8, stackBonus: 0.12 },
     /** Uppercut that also shrugs off small hits. */
-    heavyUp: { startup: 13, kbScale: 8.4, armor: 8 },
+    heavyUp: { startup: 13, kbScale: 8.4, armor: 8, stackBonus: 0.12 },
+    heavyDown: { stackBonus: 0.12 },
     /** "Culetazo": drops his whole weight on you. A strong spike, long to land from. */
     airDown: { startup: 10, damage: 12, kbBase: 380, kbScale: 8, kbX: 0, kbY: 1, landingLag: 14 },
   },

@@ -121,7 +121,7 @@ export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
     idle: RIGA_IDLE,
     // Up special: typing (frozen in the air) while it starts up, pulled by the cursor while active.
     hitFrames: { 'special-up': 1 },
-    rouletteIcons: ['claude', 'chatgpt', 'gemini'],
+    rouletteIcons: ['claude', 'chatgpt', 'gemini', 'hallucination'],
   },
 };
 

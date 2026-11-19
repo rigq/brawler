@@ -25,8 +25,8 @@ function holdSpecial(world: World, ticks: number, rivalInput: PlayerInput = EMPT
   stepWorld(world, [EMPTY_INPUT, rivalInput]);
 }
 
-test('the roulette picks by how long the special was held: Claude, ChatGPT, Gemini, then round again', () => {
-  for (const [ticks, pick] of [[5, 'specialPick1'], [25, 'specialPick2'], [45, 'specialPick3'], [65, 'specialPick1']] as const) {
+test('the roulette picks by how long the special was held: Claude, ChatGPT, Gemini, Alucinación, then round again', () => {
+  for (const [ticks, pick] of [[5, 'specialPick1'], [25, 'specialPick2'], [45, 'specialPick3'], [65, 'specialPick4'], [85, 'specialPick1']] as const) {
     const { world, riga } = setup();
     holdSpecial(world, ticks);
     assert.equal(riga.attackId, pick, `held ${ticks} ticks`);

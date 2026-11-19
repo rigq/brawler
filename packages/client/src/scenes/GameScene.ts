@@ -28,6 +28,8 @@ export class GameScene extends Phaser.Scene {
   private readonly hooks: SceneHooks;
   /** While the pause menu is open the simulation does not advance. */
   private paused = false;
+  /** The victory screen is up for this match (it comes up once). */
+  private overShown = false;
 
   constructor(mode: LocalMode = 'versus', characters: readonly CharacterId[] = [], hooks: SceneHooks = {}) {
     super('GameScene');
@@ -48,7 +50,8 @@ export class GameScene extends Phaser.Scene {
       this.training = new TrainingMode(this, () => this.world, () => this.restart());
       this.view.addUi(this.training.gameObjects);
     } else {
-      new RematchInput(this, () => this.rematch());
+      // With menus around (App), the victory screen has the rematch button instead.
+      if (!this.hooks.onMatchOver) new RematchInput(this, () => this.rematch());
     }
     this.inputs = this.world.players.map((_, i) =>
       this.training && i === DUMMY_SLOT ? this.training.dummyInput : this.createInput(i),
@@ -68,10 +71,19 @@ export class GameScene extends Phaser.Scene {
     }
     this.view.render(this.world, this.accumulator.alpha, delta);
     this.training?.render(this.world);
+    this.showVictoryOnce();
+  }
+
+  /** When the result appears, the victory screen comes up over it (once per match). */
+  private showVictoryOnce(): void {
+    if (this.overShown || !this.view.isResultShown || !this.hooks.onMatchOver) return;
+    this.overShown = true;
+    this.hooks.onMatchOver(this.view.summary(), { rematch: () => this.rematch() });
   }
 
   private pause(): void {
-    if (this.paused || !this.hooks.onPause) return;
+    // The victory screen has its own buttons.
+    if (this.paused || !this.hooks.onPause || this.overShown) return;
     this.paused = true;
     this.hooks.onPause({
       resume: () => (this.paused = false),
@@ -91,6 +103,8 @@ export class GameScene extends Phaser.Scene {
     if (!this.view.isResultShown) return;
     this.view.hideResult();
     this.restart();
+    this.overShown = false;
+    this.hooks.onMatchOverEnd?.();
   }
 
   private restart(): void {

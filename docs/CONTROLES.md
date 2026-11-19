@@ -13,6 +13,7 @@ Los dos juegos de teclas de P1 funcionan siempre: el de **J K L** para jugar sol
 | Ataque fuerte (mantener para cargar) | K | V | `.` (o 2 numérico) | B |
 | Escudo / esquiva | L | B o Shift | `-` (o `/`, 3 numérico) | LB, RB, LT o RT |
 | Especial | I | X | N (o 4 numérico) | Y |
+| Provocar (quieto en el suelo, ~1 s vulnerable) | O | O | 5 numérico | View / Select |
 
 ## Movimientos
 
@@ -39,7 +40,8 @@ Los dos juegos de teclas de P1 funcionan siempre: el de **J K L** para jugar sol
 | Recovery (volver al escenario) | Especial + arriba, una vez hasta tocar suelo (cada personaje a su manera). **Manteniendo izquierda o derecha sale en diagonal hacia ese lado.** Además, **fuerte + arriba en el aire** da un segundo impulso (una vez por salto) |
 | Agarre | **U**, o escudo + ligero (también con el escudo levantado). Mando: RB |
 | Especial neutral | Especial (sin arriba) |
-| Especial arriba | Especial + arriba: en casi todos es su forma de volver al escenario. El paracaídas de Donate se suelta con salto o escudo |
+| Especial arriba | Especial + arriba: en casi todos es su forma de volver al escenario. El paracaídas de Donate se suelta con salto o escudo, y con especial suelta bombas (3 por paracaídas) |
+| Especiales que se cargan (mantener) | Cañonazo de Donate (más grande), remate de Samu (más rápido y recto, también en el aire), ruleta de Riga (Claude → ChatGPT → Gemini → Alucinación) |
 | Lanzar | Con el rival agarrado: adelante, atrás, **arriba** (mata por arriba a % alto) o **abajo** (lo deja delante para seguir el combo); ligero = adelante |
 
 En el aire no te giras: "adelante" y "atrás" dependen de hacia dónde mirabas al saltar.

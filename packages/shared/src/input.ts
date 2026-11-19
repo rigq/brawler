@@ -19,6 +19,8 @@ export interface PlayerInput {
   special: boolean;
   /** Grab on its own button (shield + light still works too). */
   grab: boolean;
+  /** Taunt (on the ground, standing still): about a second showing off, wide open. */
+  taunt: boolean;
 }
 
 export const EMPTY_INPUT: Readonly<PlayerInput> = {
@@ -32,4 +34,5 @@ export const EMPTY_INPUT: Readonly<PlayerInput> = {
   heavy: false,
   special: false,
   grab: false,
+  taunt: false,
 };

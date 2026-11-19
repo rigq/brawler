@@ -13,6 +13,7 @@ import { mainMenu, type MenuChoice } from '../ui/shell/MainMenu.ts';
 import { pauseMenu } from '../ui/shell/PauseMenu.ts';
 import { Shell } from '../ui/shell/Shell.ts';
 import { soundSettings } from '../ui/shell/SoundSettings.ts';
+import { victoryScreen } from '../ui/shell/VictoryScreen.ts';
 
 const BACKDROP = 'BackdropScene';
 
@@ -157,6 +158,21 @@ export class App {
       onWaitingEnd: () => {
         this.game.scene.sleep(BACKDROP);
         if (this.shell.isShowing('lobby')) this.shell.hide();
+      },
+      onMatchOver: (summary, actions) => {
+        const screen = victoryScreen(summary, {
+          online,
+          rematch: actions.rematch,
+          pickCharacter: match.online
+            ? this.pickOnlineCharacter({ resume: () => {}, ...actions })
+            : () => this.pickLocalCharacters(match.mode, match.lineup),
+          exit: () => this.exitToMenu(),
+        });
+        this.shell.show(screen, true);
+        return { setStatus: (text) => screen.setStatus(text) };
+      },
+      onMatchOverEnd: () => {
+        if (this.shell.isShowing('victory')) this.shell.hide();
       },
     };
   }

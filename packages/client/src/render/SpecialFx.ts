@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import { attackData, attackPhase, counterHolds, rouletteChoice, type Player } from '@brawler/shared';
+import { COUNTER_LINES, TAUNT_LINES } from '../ui/quotes.ts';
 import { drawAiIcon, type AiIcon } from './aiIcons.ts';
 
 /** Above the head, in px. */
@@ -8,6 +9,20 @@ const ICON_GAP = 18;
 const POP_MS = 120;
 const COUNTER = { color: 0xd97757, radius: 12, pulseMs: 220 } as const;
 const CURSOR = { color: 0xffffff, outline: 0x0b1026 } as const;
+/** Power stacks (Robert's smoke): puffs going round the head. */
+const PUFF = { color: 0xb8bcc8, radius: 5, orbit: 18, turnMs: 1400 } as const;
+const BUBBLE_STYLE = {
+  fontFamily: 'system-ui, sans-serif',
+  fontSize: '11px',
+  fontStyle: 'bold',
+  color: '#0b1026',
+  backgroundColor: '#f4f1de',
+  padding: { x: 6, y: 4 },
+  wordWrap: { width: 170 },
+  align: 'center',
+} as const;
+/** Bubbles sit this far above the head (px). */
+const BUBBLE_GAP = 26;
 
 /**
  * What special powers draw around a fighter, from the attack data alone:
@@ -21,25 +36,58 @@ export class SpecialFx {
   private sincePickMs = POP_MS;
   private clockMs = 0;
 
+  private readonly bubble: Phaser.GameObjects.Text;
+
   constructor(scene: Phaser.Scene, icons: readonly AiIcon[] = []) {
     this.graphics = scene.add.graphics().setDepth(5);
+    this.bubble = scene.add.text(0, 0, '', BUBBLE_STYLE).setOrigin(0.5, 1).setDepth(6).setResolution(2).setVisible(false);
     this.icons = icons;
   }
 
-  get gameObject(): Phaser.GameObjects.GameObject {
-    return this.graphics;
+  get gameObjects(): Phaser.GameObjects.GameObject[] {
+    return [this.graphics, this.bubble];
   }
 
   hide(): void {
     this.graphics.clear();
+    this.bubble.setVisible(false);
   }
 
-  render(player: Player, x: number, y: number, frameMs: number): void {
+  render(player: Player, x: number, y: number, frameMs: number, rival?: Player): void {
     this.clockMs += frameMs;
     const g = this.graphics.clear();
     this.renderRoulette(g, player, x, y, frameMs);
     if (counterHolds(player)) this.renderCounter(g, player, x, y);
     this.renderTether(g, player, x, y);
+    this.renderStacks(g, player, x, y);
+    this.renderBubble(player, x, y, rival);
+  }
+
+  /** Taunting: the character's line. Countering: what Claude says to this rival. */
+  private renderBubble(player: Player, x: number, y: number, rival?: Player): void {
+    const countering = player.attackId !== 'none' && attackData(player, player.attackId).counter === true;
+    const text = player.tauntTicks > 0
+      ? TAUNT_LINES[player.characterId]
+      : countering
+        ? (rival ? COUNTER_LINES[rival.characterId] : undefined) ?? COUNTER_LINES.default
+        : '';
+    this.bubble.setVisible(text !== '');
+    if (!text) return;
+    if (this.bubble.text !== text) this.bubble.setText(text);
+    this.bubble.setPosition(x + player.width / 2, y - BUBBLE_GAP);
+  }
+
+  /** Smoke stacks: grey puffs going round the head, one per stack. */
+  private renderStacks(g: Phaser.GameObjects.Graphics, player: Player, x: number, y: number): void {
+    const cx = x + player.width / 2;
+    const cy = y + 6;
+    for (let i = 0; i < player.powerStacks; i++) {
+      const angle = (this.clockMs / PUFF.turnMs) * Math.PI * 2 + (i / Math.max(1, player.powerStacks)) * Math.PI * 2;
+      const px = cx + Math.cos(angle) * PUFF.orbit;
+      const py = cy + Math.sin(angle) * PUFF.orbit * 0.4;
+      g.fillStyle(PUFF.color, 0.75).fillCircle(px, py, PUFF.radius);
+      g.fillStyle(0xffffff, 0.35).fillCircle(px - 1.5, py - 1.5, PUFF.radius * 0.45);
+    }
   }
 
   private renderRoulette(g: Phaser.GameObjects.Graphics, player: Player, x: number, y: number, frameMs: number): void {

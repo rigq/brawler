@@ -214,7 +214,7 @@ export type AttackId =
   | 'grab' | 'throwForward' | 'throwBack' | 'throwUp' | 'throwDown'
   | 'specialNeutral' | 'specialUp' | 'specialProjectile'
   // The options of a roulette special (AttackData.roulette): attacks of their own, chosen by how long it was charged.
-  | 'specialPick1' | 'specialPick2' | 'specialPick3';
+  | 'specialPick1' | 'specialPick2' | 'specialPick3' | 'specialPick4';
 
 /** What a special fires. Positions in px from the body's front edge and top. */
 export interface ProjectileSpec {
@@ -245,6 +245,8 @@ export interface ProjectileSpec {
   returnAfterTicks?: number;
   /** Fires a second one backwards, out of the back of the body (a mirror image). */
   bothSides?: boolean;
+  /** Walks: falls and then runs along the top of the stage instead of bursting on it (a clone running ahead). */
+  walker?: boolean;
   /** Which of the owner's attacks its hits use (default 'specialProjectile'). */
   hitAttack?: AttackId;
 }
@@ -292,8 +294,25 @@ export interface AttackData {
    * tap comes out as before and a full charge fires soon after letting go.
    */
   chargeTicks?: number;
-  /** With chargeTicks, at full charge the projectile is `size` times bigger, hits `power` times harder and flies at `speed` × its speed. */
-  chargedProjectile?: { size: number; power: number; speed: number };
+  /**
+   * With chargeTicks, at full charge the projectile is `size` times bigger, hits
+   * `power` times harder, flies at `speed` × its speed and with `gravity` × its
+   * gravity (less = a straighter, more direct shot). Missing ones stay as they are.
+   */
+  chargedProjectile?: { size?: number; power?: number; speed?: number; gravity?: number };
+  /** With chargeTicks: it also charges in the air (normally only on the ground). */
+  chargeInAir?: boolean;
+  /** Its projectile ignores the special cooldown and does not set it (small extra shots, e.g. bombs from a parachute). */
+  freeOfCooldown?: boolean;
+  /** With parachute: while gliding down, the special starts `attack`, up to `count` times per glide. */
+  parachuteDrops?: { attack: AttackId; count: number };
+  /**
+   * A hit with this attack's data (a projectile's first hit) gives the owner a
+   * power stack, up to `max`. Attacks with stackBonus spend them all.
+   */
+  grantsStack?: { max: number };
+  /** Each power stack the attacker has makes this hit this much stronger (damage and launch); landing it spends them. */
+  stackBonus?: number;
   /** Cannot be started in the air. */
   groundOnly?: boolean;
   /** Launches the player upwards at this speed when it starts (uses up the recovery). */
@@ -455,6 +474,10 @@ export const ATTACKS: Record<AttackId, AttackData> = {
     heavy: false, startup: 1, active: 1, recovery: 1, box: { x: 0, y: 0, width: 0, height: 0 },
     damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
   },
+  specialPick4: {
+    heavy: false, startup: 1, active: 1, recovery: 1, box: { x: 0, y: 0, width: 0, height: 0 },
+    damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
+  },
   /** What the neutral special's projectile does when it hits. */
   specialProjectile: {
     heavy: false, startup: 0, active: 0, recovery: 0, box: { x: 0, y: 0, width: 0, height: 0 },
@@ -481,6 +504,8 @@ export const ATTACKS: Record<AttackId, AttackData> = {
     damage: 11, kbBase: 460, kbScale: 8.18, kbX: 1, kbY: -0.7,
   },
 };
+/** A taunt lasts this long (~1 s): you cannot act meanwhile, so it is a risk. */
+export const TAUNT_TICKS = 60;
 /** How long you can hold someone before they get away (1.5 s). */
 export const GRAB_HOLD_TICKS = 90;
 /** The grabbed player is pulled to your hands over a few ticks (share of the gap closed per tick), not snapped. */

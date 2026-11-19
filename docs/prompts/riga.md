@@ -640,3 +640,55 @@ Riga: the tallest fighter, a tall young man with a normal build (no belly, no vi
 ANIMATION (2 frames)
 Emergency prompt to get back to the stage: (1) in the air, typing on an open laptop held in one hand, the other arm stretched up and forward, (2) being pulled up and forward by his raised arm, body stretched, legs dangling, laptop closed under his arm (no cursor, rope or effect drawn).
 ```
+
+## Lote 7 · Provocación y victoria
+
+### 26. `art/riga/anim/taunt.jpg`
+
+```text
+Using the attached character sheet as the EXACT reference — same face, hair, outfit, accessories, body proportions, palette, 1-pixel dark outline and pixel size; do not redesign anything — create ONE horizontal animation strip of this character for a 2D side-view platform fighting game.
+
+LAYOUT (very important)
+- One single row of 4 frames, left to right, evenly spaced, all the same size. No second row.
+- Side view, the character FACING RIGHT in every frame.
+- Same scale as the side view on the reference sheet in every frame.
+- The feet rest on the same invisible ground line in every frame (unless the move is in the air), and the middle of the body stays at the same horizontal spot inside its frame: arms, legs and weapons may reach out, the body does not slide.
+- Leave clear empty space between frames so they never touch.
+
+STYLE
+- 16-bit era pixel art like the reference: hard square pixels on one exact grid, no anti-aliasing, no blur, no gradients, no motion blur, no glow.
+- NO speed lines, NO afterimages, NO ghost copies of limbs or heads: every pixel is either the character or flat magenta.
+- Flat pure magenta #FF00FF background, nothing else on it: no ground, no shadow, no speed lines, no text, no numbers, no frame borders.
+- Clear, readable key poses with strong silhouettes; exaggerate anticipation and follow-through like a fighting game.
+
+CHARACTER
+Riga: the tallest fighter, a tall young man with a normal build (no belly, no visible muscles), long arms and legs. Messy spiky black hair, tan-brown skin, big dark eyes, calm confident half-smile. Black hooded hardshell jacket, zipped up, with a small orange starburst symbol on the left chest; very baggy medium-blue jeans; chunky wheat-coloured lace-up work boots. A cocky, laid-back tech guy who solves everything with AI. His hands are EMPTY: no laptop, no phone, no bag, unless the animation below asks for one.
+
+ANIMATION (4 frames)
+Taunt: (1) pulling his phone out of his pocket, (2) looking at the screen and laughing, (3) turning the phone towards the viewer, showing it off with a cocky grin, (4) putting it away. Feet still.
+```
+
+### 27. `art/riga/anim/victory.jpg`
+
+```text
+Using the attached character sheet as the EXACT reference — same face, hair, outfit, accessories, body proportions, palette, 1-pixel dark outline and pixel size; do not redesign anything — create ONE horizontal animation strip of this character for a 2D side-view platform fighting game.
+
+LAYOUT (very important)
+- One single row of 4 frames, left to right, evenly spaced, all the same size. No second row.
+- Side view, the character FACING RIGHT in every frame.
+- Same scale as the side view on the reference sheet in every frame.
+- The feet rest on the same invisible ground line in every frame (unless the move is in the air), and the middle of the body stays at the same horizontal spot inside its frame: arms, legs and weapons may reach out, the body does not slide.
+- Leave clear empty space between frames so they never touch.
+
+STYLE
+- 16-bit era pixel art like the reference: hard square pixels on one exact grid, no anti-aliasing, no blur, no gradients, no motion blur, no glow.
+- NO speed lines, NO afterimages, NO ghost copies of limbs or heads: every pixel is either the character or flat magenta.
+- Flat pure magenta #FF00FF background, nothing else on it: no ground, no shadow, no speed lines, no text, no numbers, no frame borders.
+- Clear, readable key poses with strong silhouettes; exaggerate anticipation and follow-through like a fighting game.
+
+CHARACTER
+Riga: the tallest fighter, a tall young man with a normal build (no belly, no visible muscles), long arms and legs. Messy spiky black hair, tan-brown skin, big dark eyes, calm confident half-smile. Black hooded hardshell jacket, zipped up, with a small orange starburst symbol on the left chest; very baggy medium-blue jeans; chunky wheat-coloured lace-up work boots. A cocky, laid-back tech guy who solves everything with AI. His hands are EMPTY: no laptop, no phone, no bag, unless the animation below asks for one.
+
+ANIMATION (4 frames)
+Victory pose: (1) holding his open laptop, typing the last key, (2) closing the laptop with a snap, (3) tucking it under his arm, (4) cocky half-smile, a little nod, one finger pointing at the viewer.
+```

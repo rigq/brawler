@@ -21,6 +21,7 @@ import { drawBackdrop } from './Backdrop.ts';
 import { CameraRig } from './CameraRig.ts';
 import { DebugOverlay } from './DebugOverlay.ts';
 import { HitEffects } from './HitEffects.ts';
+import { MatchStats, type MatchSummary } from './MatchStats.ts';
 import { MIRROR_TINT, PLAYER_COLORS, playerColor } from './palette.ts';
 import { PlayerView, type VisualOffset } from './PlayerView.ts';
 import { ProjectileView } from './ProjectileView.ts';
@@ -39,6 +40,8 @@ export class MatchView {
   private readonly projectileView: ProjectileView;
   private readonly hitEffects: HitEffects;
   private readonly sounds = new MatchSounds();
+  private stats = new MatchStats();
+  private lastResult: MatchResult = { over: false };
   private readonly hud: StatsHud;
   private readonly playerHud: Hud;
   private readonly resultOverlay: ResultOverlay;
@@ -107,11 +110,14 @@ export class MatchView {
    */
   render(world: World, alpha: number, frameMs: number, options: RenderOptions = {}): void {
     const { offsets = [], result = matchResult(world.players) } = options;
-    world.players.forEach((player, i) => this.playerViews[i]?.render(player, alpha, frameMs, offsets[i]));
+    // In a 1v1 the rival is the other player (some effects depend on who it is).
+    world.players.forEach((player, i) => this.playerViews[i]?.render(player, alpha, frameMs, offsets[i], world.players[1 - i]));
     this.projectileView.render(world.projectiles, alpha, frameMs);
     this.debugOverlay.render(world.players, alpha);
     for (const dealt of this.hitEffects.update(world.players, frameMs)) this.shake(dealt);
     this.sounds.update(world, result.over);
+    this.stats.update(world);
+    this.lastResult = result;
     const onScreen = this.playerViews.filter((view) => view.isVisible);
     this.cameraRig.update(
       onScreen.map((view) => view.drawnBounds),
@@ -132,6 +138,17 @@ export class MatchView {
 
   hideResult(): void {
     this.resultOverlay.hide();
+    this.resetStats();
+  }
+
+  /** A new match: the stats start again on the next frame. */
+  resetStats(): void {
+    this.stats = new MatchStats();
+  }
+
+  /** How the match went (for the victory screen). */
+  summary(): MatchSummary {
+    return this.stats.summary(this.lastResult.over ? this.lastResult.winner : null);
   }
 
   /** Changes the line under the result (e.g. rematch votes online). */
