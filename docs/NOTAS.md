@@ -27,6 +27,11 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **Cañonazo de Donate con carga (20 nov)** — Manteniendo I en el suelo se carga hasta 1 s (`chargeTicks: 60`); al soltar (o al llegar al tope) dispara. A carga completa el obús es **el doble de grande**, pega **un 50 % más** (daño y lanzamiento) y vuela al 80 % de velocidad (`chargedProjectile`). El tiempo cargado cuenta como arranque, así que un toque sale igual que antes (20 ticks) y cargado sale 5 ticks después de soltar.
+  - Motor: la carga de los fuertes vale ahora para cualquier especial con `chargeTicks` (`advanceCharge`, `attackCharge` por ataque); el proyectil guarda `power` (se sincroniza solo) y el golpe lo aplica (`AttackSnapshot.power`).
+  - Dibujo: el obús y su explosión se dibujan a su tamaño; el tanque se ve entero mientras carga y Donate brilla y parpadea al máximo como con los fuertes. Sonido: cañonazo y explosión más graves cuanto más cargado.
+  - KO desde el borde, solo el lanzamiento: el obús normal casi nunca mata (Chachin 272 %); cargado al máximo, Chachin 154 %, Donate 184 %, Samu 240 %, Robert 268 % (más flojo que un fuerte cargado: dispara de lejos). Test nuevo en `projectiles.test.ts`.
+
 - **Escenario como el de una pantalla de combate clásica, todo más lento y sin dash (19 nov)** — Feedback de Samuel con una captura de referencia; decisiones de Riga: 2 plataformas, ~10 alturas de personaje, −20 %, fuera también el ataque en carrera.
   - **Escenario**: suelo de 740 px (antes 1200; ~10 alturas de personaje) y **solo 2 plataformas laterales**, con la parte de arriba a 84 px del suelo y finas (10 px): se cabe debajo y quien está encima recibe golpes desde abajo (test nuevo). Apariciones sobre las plataformas; límites a la misma distancia de los bordes que antes (1150 px).
   - **Cámara más cerca** (márgenes 160×130, zoom máximo 1,7): con los dos en sus plataformas el escenario llena el ancho y los personajes se ven ~60 % más grandes.

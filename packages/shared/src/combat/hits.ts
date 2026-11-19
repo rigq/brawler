@@ -17,6 +17,8 @@ export interface AttackSnapshot {
   charge: number;
   /** Landed with the sweet spot (if the attack has one). */
   sweet?: boolean;
+  /** Damage and launch multiplier of a charged projectile (default 1). */
+  power?: number;
 }
 
 export interface Hit {

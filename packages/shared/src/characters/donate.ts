@@ -9,9 +9,14 @@ export const donate: CharacterDefinition = {
   name: 'Donate',
   stats: { speed: 3, weight: 2, damage: 3, reach: 4 },
   attacks: {
-    /** "Cañonazo": the tank rolls in behind him (startup) and fires a slow, heavy shell. Ground only. */
+    /**
+     * "Cañonazo": the tank rolls in behind him (startup) and fires a slow, heavy shell. Ground only.
+     * 20 nov: hold the button to charge it for up to 1 s: at full charge the shell
+     * is twice as big, hits 50 % harder and flies a bit slower (it is heavier).
+     */
     specialNeutral: {
       startup: 20, active: 1, recovery: 36, groundOnly: true, cooldownTicks: 120,
+      chargeTicks: 60, chargedProjectile: { size: 2, power: 1.5, speed: 0.8 },
       projectile: { kind: 'shell', speed: 496, width: 44, height: 13, offsetX: 20, offsetY: 10, lifetimeTicks: 150 },
     },
     /** The shell itself. */

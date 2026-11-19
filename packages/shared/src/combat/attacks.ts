@@ -15,7 +15,7 @@ export type AttackPhase = 'none' | 'charge' | 'startup' | 'active' | 'recovery';
 export interface AttackState {
   /** Which attack is running, or 'none'. */
   attackId: AttackId | 'none';
-  /** Heavy only: still holding the button, before startup begins. */
+  /** Heavy (or a special with chargeTicks): still holding the button, before startup begins. */
   attackCharging: boolean;
   /** Heavy only: ticks spent charging; past HEAVY_MAX_CHARGE_TICKS it is held at full charge. Scales damage and knockback. */
   attackChargeTicks: number;
@@ -115,9 +115,11 @@ export function attackPhase(player: Player): AttackPhase {
   return 'recovery';
 }
 
-/** Heavy charge from 0 (tapped) to 1 (fully charged). */
+/** Charge from 0 (tapped) to 1 (fully charged), for heavies and chargeable specials. */
 export function attackCharge(player: Player): number {
-  return Math.min(1, player.attackChargeTicks / HEAVY_MAX_CHARGE_TICKS);
+  if (player.attackId === 'none') return 0;
+  const data = attackData(player, player.attackId);
+  return Math.min(1, player.attackChargeTicks / (data.chargeTicks ?? HEAVY_MAX_CHARGE_TICKS));
 }
 
 /**
@@ -175,8 +177,8 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
   const dirX = Number(input.right) - Number(input.left);
   // Aerials keep the facing: holding backwards means back aerial, not turning around.
   if (dirX !== 0 && data.landingLag === undefined) player.facing = dirX === 1 ? 1 : -1;
-  // Heavies charge only on the ground; in the air they fire at once.
-  player.attackCharging = data.heavy && player.grounded;
+  // Heavies (and chargeable specials) charge only on the ground; in the air they fire at once.
+  player.attackCharging = (data.heavy || data.chargeTicks !== undefined) && player.grounded;
   if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed, dirX);
   if (id === 'heavyUp' && !player.grounded) airHeavyUpBoost(player, dirX);
   beginAttack(player, id);
@@ -226,15 +228,7 @@ function launchRecovery(player: Player, speed: number, dirX: number): void {
 function advanceAttack(player: Player, input: PlayerInput): void {
   if (player.attackId === 'none') return;
   if (player.attackCharging) {
-    // Releasing the button starts the swing this very tick; full charge can be held a while (flashing).
-    if (input.heavy && player.attackChargeTicks < HEAVY_MAX_CHARGE_TICKS + HEAVY_MAX_HOLD_TICKS) {
-      player.attackChargeTicks += 1;
-    } else {
-      player.attackCharging = false;
-      // The charging pose was the wind-up: only the last ticks of the startup remain.
-      const { startup } = attackData(player, player.attackId);
-      player.attackTick = Math.max(0, startup - HEAVY_RELEASE_STARTUP_TICKS);
-    }
+    advanceCharge(player, input);
     return;
   }
   player.attackTick += 1;
@@ -273,6 +267,26 @@ export function flagReachable(player: Player): boolean {
   const dy = player.y + player.height - player.flagY;
   // Squared, so no square root: exact and deterministic.
   return dx * dx + dy * dy <= range * range;
+}
+
+/**
+ * Charging while the button is held. Heavies: releasing starts the swing this
+ * very tick, and full charge can be held a while (flashing). Chargeable
+ * specials fire on their own at full charge, and the time charged counts as wind-up.
+ */
+function advanceCharge(player: Player, input: PlayerInput): void {
+  if (player.attackId === 'none') return;
+  const data = attackData(player, player.attackId);
+  const held = data.heavy ? input.heavy : input.special;
+  const limit = data.heavy ? HEAVY_MAX_CHARGE_TICKS + HEAVY_MAX_HOLD_TICKS : (data.chargeTicks ?? 0);
+  if (held && player.attackChargeTicks < limit) {
+    player.attackChargeTicks += 1;
+    return;
+  }
+  player.attackCharging = false;
+  const quickest = Math.max(0, data.startup - HEAVY_RELEASE_STARTUP_TICKS);
+  // The charging pose was the wind-up: only the last ticks of the startup remain.
+  player.attackTick = data.heavy ? quickest : Math.min(player.attackChargeTicks, quickest);
 }
 
 /** Appears standing on the flag (the feet of the last spot the player stood on). */

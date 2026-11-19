@@ -179,7 +179,8 @@ export class CharacterSprite {
     this.prop.setVisible(showing);
     if (!showing) return;
     const { startup } = attackData(player, 'specialNeutral');
-    const t = player.attackTick;
+    // While charging (Donate holding the button) the tank is already there, aiming.
+    const t = player.attackCharging ? player.attackChargeTicks : player.attackTick;
     this.prop.setFrame(t < startup ? 0 : t < startup + PROP_FIRE_TICKS ? 1 : 2);
     this.prop.setAlpha(Math.min(1, (t + 1) / PROP_FADE_IN_TICKS));
     const width = this.prop.width;

@@ -4,8 +4,8 @@
 // from the server.
 
 import {
-  HEAVY_MAX_CHARGE_TICKS,
   SHIELD_BREAK_STUN_TICKS,
+  attackCharge,
   isActive,
   type AttackId,
   type CharacterId,
@@ -70,7 +70,7 @@ function seen(p: Player): Seen {
     dodgeKind: p.dodgeKind,
     attackId: p.attackId,
     attackCharging: p.attackCharging,
-    fullyCharged: p.attackCharging && p.attackChargeTicks >= HEAVY_MAX_CHARGE_TICKS,
+    fullyCharged: p.attackCharging && attackCharge(p) >= 1,
     shieldStunTicks: p.shieldStunTicks,
     hitstunTicks: p.hitstunTicks,
     holdTicks: p.holdTicks,
@@ -80,7 +80,7 @@ function seen(p: Player): Seen {
 
 export class MatchSounds {
   private last: Seen[] = [];
-  private projectiles = new Map<number, string>();
+  private projectiles = new Map<number, { kind: string; strength: number }>();
   private resultPlayed = false;
 
   private readonly play: Play;
@@ -103,11 +103,14 @@ export class MatchSounds {
   }
 
   private projectileSounds(world: World): void {
-    const current = new Map(world.projectiles.map((p) => [p.id, p.kind]));
-    for (const [id, kind] of current) if (!this.projectiles.has(id)) this.play(PROJECTILE_SOUND[kind]?.fire ?? 'zap');
-    for (const [id, kind] of this.projectiles) {
+    // Strength 0 for a normal shot, up to 1 for a fully charged one (power 1 → 1.5).
+    const current = new Map(world.projectiles.map((p) => [p.id, { kind: p.kind, strength: (p.power - 1) * 2 }]));
+    for (const [id, { kind, strength }] of current) {
+      if (!this.projectiles.has(id)) this.play(PROJECTILE_SOUND[kind]?.fire ?? 'zap', strength);
+    }
+    for (const [id, { kind, strength }] of this.projectiles) {
       const burst = PROJECTILE_SOUND[kind]?.burst;
-      if (!current.has(id) && burst) this.play(burst);
+      if (!current.has(id) && burst) this.play(burst, strength);
     }
     this.projectiles = current;
   }

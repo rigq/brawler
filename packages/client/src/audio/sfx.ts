@@ -48,15 +48,15 @@ const SOUNDS = {
   },
   ledge: (ctx, out) => tone(ctx, out, { type: 'triangle', freq: 520, to: 420, duration: 0.05, gain: 0.12 }),
   respawn: (ctx, out) => tone(ctx, out, { type: 'triangle', freq: midi(72), to: midi(84), duration: 0.35, gain: 0.1, attack: 0.05 }),
-  /** Donate's tank fires. */
-  cannon: (ctx, out) => {
-    noise(ctx, out, { filter: 'lowpass', freq: 1600, to: 90, duration: 0.5, gain: 0.55 });
-    tone(ctx, out, { freq: 110, to: 38, duration: 0.4, gain: 0.5 });
+  /** Donate's tank fires; `s` = how charged the shell was (0 = a tap): deeper and longer. */
+  cannon: (ctx, out, s) => {
+    noise(ctx, out, { filter: 'lowpass', freq: 1600 - 500 * s, to: 90, duration: 0.5 + 0.35 * s, gain: 0.55 + 0.25 * s });
+    tone(ctx, out, { freq: 110 - 35 * s, to: 38 - 10 * s, duration: 0.4 + 0.3 * s, gain: 0.5 + 0.25 * s });
   },
-  /** Something explodes where it lands. */
-  blast: (ctx, out) => {
-    noise(ctx, out, { filter: 'lowpass', freq: 2000, to: 120, duration: 0.45, gain: 0.45 });
-    tone(ctx, out, { freq: 70, to: 30, duration: 0.35, gain: 0.35 });
+  /** Something explodes where it lands; bigger with `s`. */
+  blast: (ctx, out, s) => {
+    noise(ctx, out, { filter: 'lowpass', freq: 2000 - 600 * s, to: 120, duration: 0.45 + 0.35 * s, gain: 0.45 + 0.3 * s });
+    tone(ctx, out, { freq: 70 - 20 * s, to: 30 - 8 * s, duration: 0.35 + 0.3 * s, gain: 0.35 + 0.25 * s });
   },
   /** Robert blows smoke. */
   puff: (ctx, out) => noise(ctx, out, { filter: 'lowpass', freq: 900, to: 250, duration: 0.45, gain: 0.3, attack: 0.08 }),
@@ -103,5 +103,5 @@ export function playSfx(name: SfxName, strength = 1): void {
   const ctx = audio.context;
   const out = audio.bus('sfx');
   if (!ctx || !out || ctx.state !== 'running') return;
-  SOUNDS[name](ctx, out, Math.max(0, Math.min(1, strength)));
+  SOUNDS[name](ctx, out, Number.isFinite(strength) ? Math.max(0, Math.min(1, strength)) : 1);
 }

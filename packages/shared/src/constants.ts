@@ -273,6 +273,14 @@ export interface AttackData {
   projectile?: ProjectileSpec;
   /** Wait after firing before the next projectile. */
   cooldownTicks?: number;
+  /**
+   * Specials: holding the button charges it (on the ground) for up to this many
+   * ticks, then it fires on its own. The time charged counts as wind-up, so a
+   * tap comes out as before and a full charge fires soon after letting go.
+   */
+  chargeTicks?: number;
+  /** With chargeTicks, at full charge the projectile is `size` times bigger, hits `power` times harder and flies at `speed` × its speed. */
+  chargedProjectile?: { size: number; power: number; speed: number };
   /** Cannot be started in the air. */
   groundOnly?: boolean;
   /** Launches the player upwards at this speed when it starts (uses up the recovery). */

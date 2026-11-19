@@ -13,7 +13,7 @@ export interface CharacterInfo {
 export const CHARACTER_INFO: Record<CharacterId, CharacterInfo> = {
   donate: {
     tagline: 'Heredero de la Guardia de Segovia. Su padre dispara desde el tanque.',
-    specials: ['Cañonazo', 'Salto de mortero'],
+    specials: ['Cañonazo (mantén para cargar)', 'Salto de mortero'],
     head: { top: 0, height: 24 },
   },
   robert: {

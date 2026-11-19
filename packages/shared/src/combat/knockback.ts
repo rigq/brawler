@@ -66,7 +66,7 @@ function launchChargeMultiplier(data: AttackData, attack: AttackSnapshot): numbe
 }
 
 function chargeMultiplier(data: AttackData, attack: AttackSnapshot): number {
-  return data.heavy ? 1 + HEAVY_CHARGE_BONUS * attack.charge : 1;
+  return data.heavy ? 1 + HEAVY_CHARGE_BONUS * attack.charge : (attack.power ?? 1);
 }
 
 /** The more hits already taken in this combo, the shorter the stun: combos always end. */

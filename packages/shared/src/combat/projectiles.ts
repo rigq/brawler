@@ -8,7 +8,7 @@ import type { StageGeometry } from '../sim/collision.ts';
 import type { Player } from '../sim/player.ts';
 import { blockHit } from '../sim/shield.ts';
 import { isActive } from '../sim/stocks.ts';
-import { attackData, attackPhase } from './attacks.ts';
+import { attackCharge, attackData, attackPhase } from './attacks.ts';
 import { hitstopTicks } from './hits.ts';
 import { applyKnockback, attackDamage } from './knockback.ts';
 
@@ -38,6 +38,8 @@ export interface Projectile {
   /** Ticks before it can hit again, and the wait it sets after each hit. */
   hitCooldown: number;
   hitInterval: number;
+  /** Damage and launch multiplier (a charged shot hits harder); 1 = as written. */
+  power: number;
 }
 
 /** The world fields projectiles need. */
@@ -50,7 +52,7 @@ export interface ProjectileWorld extends StageGeometry {
 export function createProjectile(): Projectile {
   return {
     id: 0, owner: 0, kind: '', x: 0, y: 0, prevX: 0, prevY: 0, vx: 0, vy: 0, gravity: 0, bouncesLeft: -1, width: 0, height: 0,
-    ticksLeft: 0, lifetime: 0, hitsLeft: 0, hitCooldown: 0, hitInterval: 0,
+    ticksLeft: 0, lifetime: 0, hitsLeft: 0, hitCooldown: 0, hitInterval: 0, power: 1,
   };
 }
 
@@ -93,13 +95,27 @@ function fireIfReady(world: ProjectileWorld, player: Player, slot: number): void
   const data = attackData(player, player.attackId);
   if (!data.projectile || attackPhase(player) !== 'active') return;
   player.specialCooldown = data.cooldownTicks ?? 0;
-  world.projectiles.push(spawn(world, player, slot, data.projectile));
+  world.projectiles.push(spawn(world, player, slot, data.projectile, charged(data.chargedProjectile, attackCharge(player))));
 }
 
-function spawn(world: ProjectileWorld, player: Player, slot: number, spec: ProjectileSpec): Projectile {
-  // offsetX is measured from the front edge of the body, outwards.
-  const front = player.facing === 1 ? player.x + player.width + spec.offsetX : player.x - spec.offsetX - spec.width;
-  const y = player.y + spec.offsetY;
+/** How a charge (0..1) changes the shot: everything 1 when the special does not charge. */
+function charged(full: { size: number; power: number; speed: number } | undefined, charge: number) {
+  const towards = (value: number | undefined) => 1 + ((value ?? 1) - 1) * charge;
+  return { size: towards(full?.size), power: towards(full?.power), speed: towards(full?.speed) };
+}
+
+function spawn(
+  world: ProjectileWorld,
+  player: Player,
+  slot: number,
+  spec: ProjectileSpec,
+  scale: { size: number; power: number; speed: number },
+): Projectile {
+  const width = spec.width * scale.size;
+  const height = spec.height * scale.size;
+  // offsetX is measured from the front edge of the body, outwards. A bigger shot keeps the same centre height.
+  const front = player.facing === 1 ? player.x + player.width + spec.offsetX : player.x - spec.offsetX - width;
+  const y = player.y + spec.offsetY - (height - spec.height) / 2;
   world.nextProjectileId += 1;
   return {
     id: world.nextProjectileId,
@@ -109,17 +125,18 @@ function spawn(world: ProjectileWorld, player: Player, slot: number, spec: Proje
     y,
     prevX: front,
     prevY: y,
-    vx: player.facing * spec.speed,
+    vx: player.facing * spec.speed * scale.speed,
     vy: spec.speedY ?? 0,
     gravity: spec.gravity ?? 0,
     bouncesLeft: spec.bounces ?? -1,
-    width: spec.width,
-    height: spec.height,
+    width,
+    height,
     ticksLeft: spec.lifetimeTicks,
     lifetime: spec.lifetimeTicks,
     hitsLeft: spec.hits ?? 1,
     hitCooldown: 0,
     hitInterval: spec.hitIntervalTicks ?? 0,
+    power: scale.power,
   };
 }
 
@@ -136,7 +153,7 @@ function findTarget(players: Player[], projectile: Projectile): Player | undefin
 
 /** Like a normal hit, but only the target freezes: the shooter is far away and keeps acting. */
 function hit(owner: Player, target: Player, projectile: Projectile): void {
-  const attack = { id: 'specialProjectile' as const, charge: 0 };
+  const attack = { id: 'specialProjectile' as const, charge: 0, power: projectile.power };
   const dealt = attackDamage(owner, attack);
   if (target.shielding) blockHit(target, projectile.vx > 0 ? 1 : -1, dealt);
   else applyKnockback(owner, target, attack);

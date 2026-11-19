@@ -18,6 +18,8 @@ function frameCount(sprite: Phaser.GameObjects.Sprite): number {
 interface Flying {
   object: Phaser.GameObjects.Sprite | Phaser.GameObjects.Arc;
   kind: string;
+  /** Drawn size / the art's size: a charged shot is bigger, and so is its explosion. */
+  scale: number;
   centerX: number;
   centerY: number;
 }
@@ -82,11 +84,12 @@ export class ProjectileView {
 
   private create(p: Projectile): Flying {
     const art = PROJECTILE_ART[p.kind];
+    const scale = art ? p.width / art.sheet.frameWidth : 1;
     const object = art
-      ? this.scene.add.sprite(p.x, p.y, art.sheet.key, 0).setOrigin(0.5, 0.5)
+      ? this.scene.add.sprite(p.x, p.y, art.sheet.key, 0).setOrigin(0.5, 0.5).setScale(scale)
       : this.scene.add.circle(p.x, p.y, p.width / 2, ORB_COLOR);
     this.onCreate(object);
-    const view: Flying = { object, kind: p.kind, centerX: p.x, centerY: p.y };
+    const view: Flying = { object, kind: p.kind, scale, centerX: p.x, centerY: p.y };
     this.flying.set(p.id, view);
     return view;
   }
@@ -104,7 +107,7 @@ export class ProjectileView {
   private explode(view: Flying): void {
     const burst = PROJECTILE_ART[view.kind]?.burst;
     if (!burst) return;
-    const sprite = this.scene.add.sprite(view.centerX, view.centerY, burst.key, 0).setOrigin(0.5, 0.5);
+    const sprite = this.scene.add.sprite(view.centerX, view.centerY, burst.key, 0).setOrigin(0.5, 0.5).setScale(view.scale);
     this.onCreate(sprite);
     this.bursts.push({ sprite, ageMs: 0 });
   }
