@@ -3,6 +3,7 @@
 import { ART_HITBOXES } from './artHitboxes.ts';
 import { buildCharacter } from './buildCharacter.ts';
 import { chachin } from './chachin.ts';
+import { riga } from './riga.ts';
 import { donate } from './donate.ts';
 import { robert } from './robert.ts';
 import { samu } from './samu.ts';
@@ -10,7 +11,7 @@ import type { Character, CharacterStats } from './types.ts';
 
 export type { Character, CharacterDefinition, CharacterStats } from './types.ts';
 
-const DEFINITIONS = { donate, robert, samu, chachin };
+const DEFINITIONS = { donate, robert, samu, chachin, riga };
 
 export type CharacterId = keyof typeof DEFINITIONS;
 export const DEFAULT_CHARACTER: CharacterId = 'donate';

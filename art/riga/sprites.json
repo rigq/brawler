@@ -1,0 +1,16 @@
+{
+  "outDir": "../../packages/client/public/sprites/riga",
+  "assets": [
+    {
+      "name": "riga",
+      "file": "riga.jpg",
+      "columns": [
+        [
+          578,
+          798
+        ]
+      ],
+      "height": 80
+    }
+  ]
+}

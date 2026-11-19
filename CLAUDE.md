@@ -124,7 +124,7 @@ brawler/
 - [x] P3 Samu y Chachin con especial neutral y arriba (el especial arriba es la recovery de todos, dirigible; desde el 18 nov ↑+K en el aire da un segundo impulso)
 
 **D · Diseño gráfico** (ene)
-- [ ] D1 Animaciones pixel art por personaje (26 tiras, `docs/PROMPTS_ANIMACIONES.md`): Donate ✔ · Robert ✔ · Samu ✔ (falta `throw`) · Chachin ✔
+- [ ] D1 Animaciones pixel art por personaje (26 tiras, `docs/PROMPTS_ANIMACIONES.md`): Donate ✔ · Robert ✔ · Samu ✔ (falta `throw`) · Chachin ✔ · Riga ✔ (rehacer `air-back` y `air-up`; prompts en `docs/prompts/riga.md`)
 - [ ] D2 Efectos: polvo al aterrizar, ~~arco de los golpes~~ (hecho 18 nov), destello de KO
 - [ ] D3 Escenario vivo (nubes, faroles que parpadean)
 

@@ -31,6 +31,11 @@ export const CHARACTER_INFO: Record<CharacterId, CharacterInfo> = {
     specials: ['Grito', 'Grito-cohete'],
     head: { top: 0, height: 18 },
   },
+  riga: {
+    tagline: 'El más alto. Lo resuelve todo con IA. Llega lejos, pega flojo.',
+    specials: ['Ruleta de IAs (pronto)', 'Prompt de emergencia (pronto)'],
+    head: { top: 0, height: 22 },
+  },
 };
 
 /** Labels of the 1–5 ratings, in the order they are shown. */

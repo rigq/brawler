@@ -29,6 +29,7 @@ export const SHEETS = {
   chachinScream: { key: 'chachin-scream', file: 'sprites/chachin/scream.png', frameWidth: 101, frameHeight: 128 },
   chachinRocket: { key: 'chachin-rocket', file: 'sprites/chachin/scream-rocket.png', frameWidth: 65, frameHeight: 96 },
   chachinDizzy: { key: 'chachin-dizzy', file: 'sprites/chachin/dizzy.png', frameWidth: 48, frameHeight: 35 },
+  rigaBody: { key: 'riga-body', file: 'sprites/riga/riga.png', frameWidth: 23, frameHeight: 80 },
 } as const satisfies Record<string, Sheet>;
 
 /** Frame sizes of a character's animation strips, as tools/pixelate.ts writes them (anims/<character>.json). */
@@ -83,6 +84,8 @@ export interface CharacterArt {
 const ROBERT_IDLE: IdleTiming = { restMs: 1000 };
 /** Samu: 1.5 s in guard, then grabs a dumbbell from his backpack, two curls, puts it back (~2 s). */
 const SAMU_IDLE: IdleTiming = { restMs: 1500, frameMs: 170 };
+/** Riga: 1.8 s standing, then checks his AI on the laptop (~1 s). */
+const RIGA_IDLE: IdleTiming = { restMs: 1800, frameMs: 200 };
 /** Chachin: 1.5 s bouncing in guard, then a quick ~0.9 s backflip. */
 const CHACHIN_IDLE: IdleTiming = { restMs: 1500, frameMs: 110 };
 
@@ -99,6 +102,8 @@ export const CHARACTER_ART: Partial<Record<CharacterId, CharacterArt>> = {
   },
   // His idle is a show-off backflip every couple of seconds.
   chachin: { body: SHEETS.chachinBody, anims: animSheets('chachin'), idle: CHACHIN_IDLE, neutralAura: SHEETS.chachinScream, upBlast: SHEETS.chachinRocket },
+  // His idle: pulls out the laptop, types a prompt, smirks at the answer, puts it away.
+  riga: { body: SHEETS.rigaBody, anims: animSheets('riga'), idle: RIGA_IDLE },
 };
 
 /**

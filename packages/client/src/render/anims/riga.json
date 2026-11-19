@@ -1,0 +1,127 @@
+{
+  "idle": {
+    "frameWidth": 35,
+    "frameHeight": 81,
+    "frames": 5
+  },
+  "run": {
+    "frameWidth": 56,
+    "frameHeight": 79,
+    "frames": 6
+  },
+  "jump": {
+    "frameWidth": 47,
+    "frameHeight": 64,
+    "frames": 2
+  },
+  "fall": {
+    "frameWidth": 58,
+    "frameHeight": 74,
+    "frames": 2
+  },
+  "hurt": {
+    "frameWidth": 73,
+    "frameHeight": 80,
+    "frames": 2
+  },
+  "jab": {
+    "frameWidth": 65,
+    "frameHeight": 80,
+    "frames": 3
+  },
+  "light-side": {
+    "frameWidth": 66,
+    "frameHeight": 80,
+    "frames": 3
+  },
+  "light-up": {
+    "frameWidth": 57,
+    "frameHeight": 82,
+    "frames": 3
+  },
+  "light-down": {
+    "frameWidth": 76,
+    "frameHeight": 80,
+    "frames": 3
+  },
+  "air-neutral": {
+    "frameWidth": 72,
+    "frameHeight": 62,
+    "frames": 3
+  },
+  "air-forward": {
+    "frameWidth": 60,
+    "frameHeight": 77,
+    "frames": 3
+  },
+  "air-back": {
+    "frameWidth": 71,
+    "frameHeight": 70,
+    "frames": 3
+  },
+  "air-up": {
+    "frameWidth": 71,
+    "frameHeight": 72,
+    "frames": 3
+  },
+  "air-down": {
+    "frameWidth": 53,
+    "frameHeight": 75,
+    "frames": 3
+  },
+  "heavy-side": {
+    "frameWidth": 57,
+    "frameHeight": 74,
+    "frames": 4
+  },
+  "heavy-up": {
+    "frameWidth": 38,
+    "frameHeight": 80,
+    "frames": 4
+  },
+  "heavy-down": {
+    "frameWidth": 38,
+    "frameHeight": 75,
+    "frames": 4
+  },
+  "shield": {
+    "frameWidth": 52,
+    "frameHeight": 73,
+    "frames": 1
+  },
+  "roll": {
+    "frameWidth": 43,
+    "frameHeight": 64,
+    "frames": 4
+  },
+  "dodge": {
+    "frameWidth": 61,
+    "frameHeight": 81,
+    "frames": 2
+  },
+  "grab": {
+    "frameWidth": 60,
+    "frameHeight": 79,
+    "frames": 2
+  },
+  "throw": {
+    "frameWidth": 65,
+    "frameHeight": 80,
+    "frames": 2
+  },
+  "ledge": {
+    "frameWidth": 42,
+    "frameHeight": 79,
+    "frames": 1
+  },
+  "special-neutral": {
+    "frameWidth": 59,
+    "frameHeight": 81,
+    "frames": 3
+  },
+  "special-up": {
+    "frameWidth": 68,
+    "frameHeight": 74,
+    "frames": 2
+  }
+}
