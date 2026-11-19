@@ -12,7 +12,7 @@ export const samu: CharacterDefinition = {
     specialNeutral: {
       startup: 12, active: 1, recovery: 22, cooldownTicks: 70,
       projectile: {
-        kind: 'ball', speed: 520, speedY: 380, gravity: 900, bounces: 1,
+        kind: 'ball', speed: 416, speedY: 304, gravity: 576, bounces: 1,
         width: 16, height: 16, offsetX: 0, offsetY: -6, lifetimeTicks: 90,
       },
     },
@@ -28,7 +28,7 @@ export const samu: CharacterDefinition = {
     specialUp: {
       startup: 28, active: 1, recovery: 22, box: { x: 0, y: 0, width: 0, height: 0 },
       damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0, hover: true, teleportToFlag: true, cooldownTicks: 150,
-      flagLifetimeTicks: 150, flagRange: 800,
+      flagLifetimeTicks: 150, flagRange: 640,
     },
     // His own normals (phase 3): volleyball. Sets up the rival in the air and spikes them down.
     /** "Colocación": pops the rival straight up, always to about the same height: start of a juggle. */

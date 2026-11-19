@@ -82,7 +82,7 @@ Con el **lote 1** el juego ya se siente vivo: andar, saltar y recibir golpes. De
 | `light-side.jpg` | 3 | Fast forward kick at waist height: (1) knee up, (2) leg fully extended forward, (3) recovering. |
 | `light-up.jpg` | 3 | Upward swipe: (1) crouched, arm down, (2) arm swinging in an arc above the head, (3) arm up high. |
 | `light-down.jpg` | 3 | Low sweep: (1) crouching, (2) leg sweeping forward along the floor, (3) still low, recovering. |
-| `dash-attack.jpg` | 3 | Running attack: (1) running lunge, (2) shoulder or flying kick charging forward, body almost horizontal, (3) stumbling to a stop. |
+| ~~`dash-attack.jpg`~~ (ya no hace falta: el juego no tiene ataque en carrera desde el 19 nov) | 3 | Running attack: (1) running lunge, (2) shoulder or flying kick charging forward, body almost horizontal, (3) stumbling to a stop. |
 
 ### Lote 3 · Aéreos (J en el aire)
 

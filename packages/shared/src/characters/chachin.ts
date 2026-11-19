@@ -26,8 +26,6 @@ export const chachin: CharacterDefinition = {
     // His own normals (phase 3): fast and many small hits; he wins by combos, not by one big hit.
     jab1: { startup: 2, recovery: 9 },
     jab2: { startup: 2, recovery: 9 },
-    /** "Derrape": the fastest dash attack. */
-    dash: { startup: 3, recovery: 16 },
     /** "Molinillo": spins in the air hitting 4 times (every 4 ticks), 2 % each. */
     airNeutral: { startup: 3, active: 16, rehitTicks: 4, damage: 2, kbBase: 160, kbScale: 2, kbX: 0.4, kbY: -0.4, landingLag: 4 },
     /** "Ventilador": flailing above his head, 3 hits that keep the rival up there. */
@@ -35,7 +33,7 @@ export const chachin: CharacterDefinition = {
     /** "Grito-cohete": screams at the ground and shoots up; the blast hits whoever is below. */
     specialUp: {
       startup: 0, active: 6, recovery: 18, box: { x: -10, y: 30, width: 50, height: 70 },
-      damage: 5, kbBase: 300, kbScale: 10, kbX: 0.3, kbY: 0.8, launchSpeed: 1400,
+      damage: 5, kbBase: 300, kbScale: 10, kbX: 0.3, kbY: 0.8, launchSpeed: 1120,
     },
   },
 };

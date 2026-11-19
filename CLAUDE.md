@@ -125,7 +125,7 @@ brawler/
 
 **D · Diseño gráfico** (ene)
 - [ ] D1 Animaciones pixel art por personaje (26 tiras, `docs/PROMPTS_ANIMACIONES.md`): Donate ✔ · Robert ✔ · Samu ✔ (falta `throw`) · Chachin ✔
-- [ ] D2 Efectos: polvo al aterrizar/dash, ~~arco de los golpes~~ (hecho 18 nov), destello de KO
+- [ ] D2 Efectos: polvo al aterrizar, ~~arco de los golpes~~ (hecho 18 nov), destello de KO
 - [ ] D3 Escenario vivo (nubes, faroles que parpadean)
 
 **I · Interfaz** (feb)
@@ -144,7 +144,7 @@ brawler/
 ## Referencia de jugabilidad
 `docs/JUGABILIDAD.md` (documento de Riga): **la base es Smash** (moveset por huecos, especiales como poderes, escudo · agarre · ataque, bordes) y de Brawlhalla solo lo que simplifica (enfriamiento de esquiva, stats simples, paredes, partidas a 3 vidas). Se inspira, no se copia: ni nombres, ni assets, ni valores exactos.
 
-Tabla completa de controles: `docs/CONTROLES.md`. Resumen (P1 / P2): salto Espacio / M · ataque J / `,` · fuerte K / `.` (mantener carga; brilla y parpadea al máximo) · escudo-esquiva L / `-` · agarre U o L+J / `-`+`,` · especial I / N (con arriba: especial arriba) · dash doble toque de dirección · con escudo: lado rueda, abajo esquiva.
+Tabla completa de controles: `docs/CONTROLES.md`. Resumen (P1 / P2): salto Espacio / M · ataque J / `,` · fuerte K / `.` (mantener carga; brilla y parpadea al máximo) · escudo-esquiva L / `-` · agarre U o L+J / `-`+`,` · especial I / N (con arriba: especial arriba) · con escudo: lado rueda, abajo esquiva (sin dash ni ataque en carrera desde el 19 nov).
 
 ## Fuera del MVP (no hacer)
 Armas recogibles, 2v2/4 jugadores, matchmaking aleatorio, ranking, cuentas, rollback netcode, móvil. También v2: especiales lateral y abajo (v1.1), desgaste de ataques, rage, DI, chase dodge, súper final.

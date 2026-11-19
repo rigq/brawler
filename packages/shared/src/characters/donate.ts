@@ -12,7 +12,7 @@ export const donate: CharacterDefinition = {
     /** "Cañonazo": the tank rolls in behind him (startup) and fires a slow, heavy shell. Ground only. */
     specialNeutral: {
       startup: 20, active: 1, recovery: 36, groundOnly: true, cooldownTicks: 120,
-      projectile: { kind: 'shell', speed: 620, width: 44, height: 13, offsetX: 20, offsetY: 10, lifetimeTicks: 150 },
+      projectile: { kind: 'shell', speed: 496, width: 44, height: 13, offsetX: 20, offsetY: 10, lifetimeTicks: 150 },
     },
     /** The shell itself. */
     specialProjectile: { damage: 12, kbBase: 400, kbScale: 7, kbX: 1, kbY: -0.45 },
@@ -23,7 +23,7 @@ export const donate: CharacterDefinition = {
      */
     specialUp: {
       startup: 0, active: 6, recovery: 16, box: { x: -10, y: 40, width: 60, height: 70 },
-      damage: 6, kbBase: 320, kbScale: 13, kbX: 0.4, kbY: -0.3, launchSpeed: 1350, parachute: true,
+      damage: 6, kbBase: 320, kbScale: 13, kbX: 0.4, kbY: -0.3, launchSpeed: 1080, parachute: true,
     },
     // His own normals (phase 3): a disciplined soldier who controls the space in front of him.
     /** "¡Firmes!": a flat push that sends you far away, to the edge. */
@@ -34,7 +34,5 @@ export const donate: CharacterDefinition = {
     airNeutral: { active: 10 },
     /** "Coz": the back kick is his kill move in the air. */
     airBack: { kbBase: 420, kbScale: 9.5 },
-    /** "Carga de infantería": a long slide. */
-    dash: { active: 8 },
   },
 };

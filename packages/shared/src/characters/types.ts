@@ -21,7 +21,7 @@ export interface CharacterDefinition {
 /** What the simulation reads: stats turned into real numbers and every attack resolved. */
 export interface Character {
   name: string;
-  /** Multiplies run and dash speed. */
+  /** Multiplies run speed. */
   speedMult: number;
   /** 100 = average; knockback is multiplied by 100 / weight. */
   weight: number;

@@ -1,44 +1,36 @@
-// Dash (double tap on the ground), roll and spot dodge (out of the shield) and air dodge.
+// Roll and spot dodge (out of the shield) and air dodge.
 // While one is active it owns the player's movement for a few ticks.
 
 import {
   AIR_DODGE_END_SPEED_MULT,
   AIR_DODGE_SPEED,
   AIR_DODGE_TICKS,
-  DASH_COOLDOWN_TICKS,
-  DASH_SPEED,
-  DASH_TAP_WINDOW_TICKS,
-  DASH_TICKS,
   DODGE_COOLDOWN_TICKS,
   ROLL_END_VULN_TICKS,
   ROLL_SPEED,
   ROLL_TICKS,
   SPOT_DODGE_TICKS,
 } from '../constants.ts';
-import { characterOf } from '../characters/index.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Player } from './player.ts';
 
-export type DodgeKind = 'none' | 'dash' | 'roll' | 'spot' | 'air';
+export type DodgeKind = 'none' | 'roll' | 'spot' | 'air';
 
 export interface DodgeState {
   dodgeKind: DodgeKind;
-  /** Ticks left in the current dash/dodge (0 when none is active). */
+  /** Ticks left in the current dodge (0 when none is active). */
   dodgeTicks: number;
-  /** Direction of the current dash/dodge; diagonals are normalised. */
+  /** Direction of the current dodge; diagonals are normalised. */
   dodgeDirX: number;
   dodgeDirY: number;
-  /** Ticks until a new dash/dodge can start. */
+  /** Ticks until a new dodge can start. */
   dodgeCooldown: number;
   /** One air dodge per time in the air; refilled on landing. */
   airDodgeAvailable: boolean;
   /** Dodge button state in the previous step, to detect a fresh press. */
   dodgeHeld: boolean;
-  /** Left/right held in the previous step (-1, 0, 1), to detect a fresh tap. */
+  /** Left/right held in the previous step (-1, 0, 1), to detect a fresh press (ledge options). */
   dirHeld: number;
-  /** Direction of the last tap, and ticks left to tap it again for a dash. */
-  tapDir: number;
-  tapTicks: number;
 }
 
 export function createDodgeState(): DodgeState {
@@ -51,8 +43,6 @@ export function createDodgeState(): DodgeState {
     airDodgeAvailable: true,
     dodgeHeld: false,
     dirHeld: 0,
-    tapDir: 0,
-    tapTicks: 0,
   };
 }
 
@@ -66,7 +56,7 @@ export function isInvulnerable(player: Player): boolean {
 export function updateDodge(player: Player, input: PlayerInput): void {
   const pressed = input.dodge && !player.dodgeHeld;
   player.dodgeHeld = input.dodge;
-  const doubleTap = readDoubleTap(player, input);
+  player.dirHeld = Number(input.right) - Number(input.left);
 
   if (player.dodgeKind !== 'none') {
     player.dodgeTicks -= 1;
@@ -77,8 +67,7 @@ export function updateDodge(player: Player, input: PlayerInput): void {
   if (player.dodgeCooldown > 0) player.dodgeCooldown -= 1;
   const free = player.attackId === 'none' && player.hitstunTicks === 0 && player.lagTicks === 0 && !player.parachuting;
   if (!free || player.shielding || player.dodgeCooldown > 0) return;
-  if (doubleTap && player.grounded) startDash(player, input);
-  else if (pressed && !player.grounded) startAirDodge(player, input);
+  if (pressed && !player.grounded) startAirDodge(player, input);
 }
 
 /** Starts a roll in direction `dirX`. The facing stays: you roll past or away without turning. */
@@ -90,12 +79,9 @@ export function startSpotDodge(player: Player): void {
   begin(player, 'spot', SPOT_DODGE_TICKS, 0, 0);
 }
 
-/** Sets the velocity for this step while a dash/dodge is active. */
+/** Sets the velocity for this step while a dodge is active. */
 export function applyDodgeMovement(player: Player): void {
   switch (player.dodgeKind) {
-    case 'dash':
-      player.vx = player.dodgeDirX * DASH_SPEED * characterOf(player).speedMult;
-      break;
     case 'roll':
       player.vx = player.dodgeDirX * ROLL_SPEED;
       break;
@@ -118,28 +104,9 @@ export function endDodge(player: Player): void {
     player.vy *= AIR_DODGE_END_SPEED_MULT;
   }
   if (player.dodgeKind === 'roll') player.vx = 0;
-  player.dodgeCooldown = player.dodgeKind === 'dash' ? DASH_COOLDOWN_TICKS : DODGE_COOLDOWN_TICKS;
+  player.dodgeCooldown = DODGE_COOLDOWN_TICKS;
   player.dodgeKind = 'none';
   player.dodgeTicks = 0;
-}
-
-/** True on the second tap of the same direction within DASH_TAP_WINDOW_TICKS. */
-function readDoubleTap(player: Player, input: PlayerInput): boolean {
-  const dir = Number(input.right) - Number(input.left);
-  const fresh = dir !== 0 && dir !== player.dirHeld;
-  player.dirHeld = dir;
-  if (player.tapTicks > 0) player.tapTicks -= 1;
-  if (!fresh) return false;
-  const doubled = dir === player.tapDir && player.tapTicks > 0;
-  player.tapDir = dir;
-  player.tapTicks = doubled ? 0 : DASH_TAP_WINDOW_TICKS;
-  return doubled;
-}
-
-function startDash(player: Player, input: PlayerInput): void {
-  const dirX = Number(input.right) - Number(input.left);
-  begin(player, 'dash', DASH_TICKS, dirX, 0);
-  player.facing = dirX === 1 ? 1 : -1;
 }
 
 function startAirDodge(player: Player, input: PlayerInput): void {

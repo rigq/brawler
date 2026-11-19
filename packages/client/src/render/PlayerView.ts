@@ -7,7 +7,6 @@ const DODGE_ALPHA = 0.4;
 /** After respawning the player blinks: this many ticks on, this many off. */
 const RESPAWN_BLINK_TICKS = 6;
 const RESPAWN_BLINK_ALPHA = { on: 0.9, off: 0.25 } as const;
-const DASH_COLOR = 0xffe0a8;
 const HIT_FLASH_COLOR = 0xffffff;
 const EYE_COLOR = 0x1d2330;
 const EYE_SIZE = 8;
@@ -140,7 +139,6 @@ export class PlayerView {
 
   private bodyColor(player: Player): number {
     if (player.hitFlashTicks > 0) return HIT_FLASH_COLOR;
-    if (player.dodgeKind === 'dash') return DASH_COLOR;
     return this.color;
   }
 

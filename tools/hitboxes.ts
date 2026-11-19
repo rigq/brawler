@@ -22,7 +22,7 @@ const OUT = resolve(ROOT, 'packages/shared/src/characters/artHitboxes.ts');
 
 /** Punches, kicks and heavies. Grabs keep their written reach; throws and specials have no hitbox of this kind. */
 const ATTACKS: AttackId[] = [
-  'jab1', 'jab2', 'jab3', 'dash', 'lightSide', 'lightUp', 'lightDown',
+  'jab1', 'jab2', 'jab3', 'lightSide', 'lightUp', 'lightDown',
   'airNeutral', 'airForward', 'airBack', 'airUp', 'airDown',
   'heavySide', 'heavyUp', 'heavyDown',
 ];

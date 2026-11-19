@@ -9,7 +9,7 @@ export interface PlayerInput {
   up: boolean;
   down: boolean;
   jump: boolean;
-  /** Dash on the ground with a direction, dodge otherwise. */
+  /** Shield on the ground (with a direction: roll; down: spot dodge), air dodge in the air. */
   dodge: boolean;
   /** Light attack; up/down held pick its direction, otherwise it goes sideways. */
   light: boolean;

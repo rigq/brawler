@@ -11,6 +11,7 @@ import {
   HITSTUN_TICKS_PER_SPEED,
   KNOCKBACK_GROWTH_MULT,
   KNOCKBACK_MAX_SPEED,
+  KNOCKBACK_SPEED_SCALE,
   WEIGHT_AVERAGE,
   type AttackData,
 } from '../constants.ts';
@@ -37,8 +38,9 @@ export function applyKnockback(attacker: Player, target: Player, attack: AttackS
   // Math.sqrt is exact in every JS engine, so this stays deterministic.
   const length = Math.sqrt(data.kbX * data.kbX + data.kbY * data.kbY);
 
-  target.vx = awayFrom(attacker, target) * (data.kbX / length) * speed;
-  target.vy = (data.kbY / length) * speed;
+  const flight = speed * KNOCKBACK_SPEED_SCALE;
+  target.vx = awayFrom(attacker, target) * (data.kbX / length) * flight;
+  target.vy = (data.kbY / length) * flight;
   target.hitstunTicks = hitstunFor(speed, target.comboHits, data.stunTicks ?? 0);
   target.comboHits += 1;
   target.hitFlashTicks = HIT_FLASH_TICKS;

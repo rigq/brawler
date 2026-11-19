@@ -33,7 +33,7 @@ const SOUNDS = {
   jump: (ctx, out) => tone(ctx, out, { type: 'square', freq: 260, to: 520, duration: 0.09, gain: 0.07, lowpass: 2200 }),
   airJump: (ctx, out) => tone(ctx, out, { type: 'square', freq: 390, to: 780, duration: 0.09, gain: 0.07, lowpass: 2600 }),
   land: (ctx, out, s) => noise(ctx, out, { filter: 'lowpass', freq: 380, to: 90, duration: 0.09, gain: 0.15 + 0.25 * s }),
-  /** Air rushing: dashes, rolls and dodges. */
+  /** Air rushing: rolls and dodges. */
   whoosh: (ctx, out, s) => noise(ctx, out, { filter: 'bandpass', freq: 500, to: 2200, q: 1.2, duration: 0.12 + 0.06 * s, gain: 0.12 + 0.1 * s, attack: 0.03 }),
   /** An attack cutting the air (lighter and shorter than a whoosh). */
   swing: (ctx, out, s) => noise(ctx, out, { filter: 'bandpass', freq: 1500 - 700 * s, to: 3200 - 1400 * s, q: 1.5, duration: 0.07 + 0.08 * s, gain: 0.1 + 0.08 * s, attack: 0.01 }),

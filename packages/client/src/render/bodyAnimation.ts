@@ -3,7 +3,7 @@ import { AIR_DODGE_TICKS, ROLL_TICKS, SPOT_DODGE_TICKS, attackData, attackPhase,
 /** Every body animation a character can have, named like its strip in art/<character>/anim/. */
 export const ANIM_NAMES = [
   'idle', 'run', 'jump', 'fall', 'hurt',
-  'jab', 'light-side', 'light-up', 'light-down', 'dash-attack',
+  'jab', 'light-side', 'light-up', 'light-down',
   'air-neutral', 'air-forward', 'air-back', 'air-up', 'air-down',
   'heavy-side', 'heavy-up', 'heavy-down',
   'shield', 'roll', 'dodge', 'grab', 'throw', 'ledge',
@@ -29,7 +29,7 @@ const SHIELD_RAISE_FRAME_MS = 50;
 const HIT_HOLD_SHARE = 0.4;
 
 export const ATTACK_ANIM: Record<AttackId, AnimName> = {
-  jab1: 'jab', jab2: 'jab', jab3: 'jab', dash: 'dash-attack',
+  jab1: 'jab', jab2: 'jab', jab3: 'jab',
   lightSide: 'light-side', lightUp: 'light-up', lightDown: 'light-down',
   airNeutral: 'air-neutral', airForward: 'air-forward', airBack: 'air-back', airUp: 'air-up', airDown: 'air-down',
   heavySide: 'heavy-side', heavyUp: 'heavy-up', heavyDown: 'heavy-down',
@@ -57,7 +57,6 @@ const FALLBACK: Partial<Record<AnimName, AnimName>> = {
   'light-up': 'heavy-up',
   'heavy-up': 'light-up',
   'air-down': 'fall',
-  'dash-attack': 'light-side',
   'air-neutral': 'fall',
   dodge: 'fall',
   'special-neutral': 'jab',
@@ -82,7 +81,7 @@ export function animFor(player: Player): AnimName {
   if (player.shielding) return 'shield';
   if (!player.grounded) return player.vy < 0 ? 'jump' : 'fall';
   if (player.lagTicks > 0) return 'jump';
-  if (player.dodgeKind === 'dash' || Math.abs(player.vx) > RUN_MIN_SPEED) return 'run';
+  if (Math.abs(player.vx) > RUN_MIN_SPEED) return 'run';
   return 'idle';
 }
 

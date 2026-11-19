@@ -23,7 +23,7 @@ const FULL_HIT_DAMAGE = 18;
 const LAND = { minSpeed: 250, fullSpeed: 1200 } as const;
 /** Attacks that cut the air with a swing sound (specials have their own). */
 const SWINGS = new Set<AttackId>([
-  'jab1', 'jab2', 'jab3', 'dash', 'lightSide', 'lightUp', 'lightDown',
+  'jab1', 'jab2', 'jab3', 'lightSide', 'lightUp', 'lightDown',
   'airNeutral', 'airForward', 'airBack', 'airUp', 'airDown',
   'heavySide', 'heavyUp', 'heavyDown',
 ]);
@@ -134,7 +134,7 @@ function movementSounds(play: Play, before: Seen, now: Seen): void {
   if (now.airJumpsLeft < before.airJumpsLeft) play('airJump');
   else if (before.grounded && !now.grounded && now.vy < 0 && now.attackId === 'none') play('jump');
   if (!before.grounded && now.grounded && before.vy > LAND.minSpeed) play('land', before.vy / LAND.fullSpeed);
-  if (now.dodgeKind !== 'none' && now.dodgeKind !== before.dodgeKind) play('whoosh', now.dodgeKind === 'dash' ? 1 : 0.5);
+  if (now.dodgeKind !== 'none' && now.dodgeKind !== before.dodgeKind) play('whoosh', 0.5);
   if (now.ledgeSide !== 0 && before.ledgeSide === 0) play('ledge');
 }
 

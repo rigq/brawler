@@ -21,22 +21,24 @@ export const WORLD_WIDTH = 1280;
 export const WORLD_HEIGHT = 720;
 
 // --- Stage: "floating temple" ---
-/** Main island (solid). (x, y) is its top-left corner. Centred on x = 640, 1200 px wide. */
+// 19 nov (playtest, compared with a classic battle stage): the island was ~17
+// character heights wide, now ~10, with two low side platforms only.
+/** Main island (solid). (x, y) is its top-left corner. Centred on x = 640, 740 px wide. */
 export const GROUND = {
-  x: 40,
+  x: 270,
   y: 560,
-  width: 1200,
+  width: 740,
   height: 40,
 } as const;
 /**
  * Floating one-way platforms: you can jump up through them and land on top.
- * The two side ones sit 140 px above the ground and the middle one 130 px above
- * those, so each is within a single jump (~160 px).
+ * Top 84 px above the ground, about one character height, and thin (the
+ * underside is 74 px up): everyone fits under them, and someone standing on one
+ * can be hit from below (up tilts of the tall ones, every up air).
  */
 export const PLATFORMS = [
-  { x: 150, y: 420, width: 240, height: 16 },
-  { x: 890, y: 420, width: 240, height: 16 },
-  { x: 520, y: 290, width: 240, height: 16 },
+  { x: 330, y: 476, width: 170, height: 10 },
+  { x: 780, y: 476, width: 170, height: 10 },
 ] as const;
 /** How many steps you ignore platforms after dropping through one (~0.2 s). */
 export const DROP_THROUGH_TICKS = 12;
@@ -48,18 +50,18 @@ export const DROP_THROUGH_TICKS = 12;
 export const DROP_HOLD_TICKS = 6;
 /**
  * Where each player appears (top-left of the player box), one per player.
- * Centred above each side platform, so they drop onto it, facing each other.
+ * Above each side platform, so they drop onto it, facing each other.
  */
 export const SPAWNS = [
-  { x: 250, y: 300, facing: 1 },
-  { x: 990, y: 300, facing: -1 },
+  { x: 395, y: 360, facing: 1 },
+  { x: 845, y: 360, facing: -1 },
 ] as const;
 /**
  * Death zone edges: a player whose box leaves this area is knocked out.
- * The island spans x 40–1240. 1150 px of room on each side, 1300 above the ground
+ * The island spans x 270–1010. 1150 px of room on each side, 1300 above the ground
  * and 900 below it (18 nov: further out, "you die too soon"; measured with tools/ko-percent.ts).
  */
-export const BLAST_ZONE = { left: -1110, right: 2390, top: GROUND.y - 1300, bottom: GROUND.y + 900 } as const;
+export const BLAST_ZONE = { left: -880, right: 2160, top: GROUND.y - 1300, bottom: GROUND.y + 900 } as const;
 
 // --- Ledges ---
 /** You grab a ledge when your body is within this many px of its side… */
@@ -76,7 +78,7 @@ export const LEDGE_REGRAB_TICKS = 30;
 /** Plain climb: unable to act for this long once up, so it can be read and punished. */
 export const LEDGE_CLIMB_LAG_TICKS = 8;
 /** Sideways speed of a jump from the ledge, towards the stage (px/s). */
-export const LEDGE_JUMP_PUSH_SPEED = 220;
+export const LEDGE_JUMP_PUSH_SPEED = 176;
 
 // --- Lives ---
 /** Lives per player. Losing the last one puts you out of the match. */
@@ -98,26 +100,29 @@ export const PLAYER_HEIGHT = 72;
 export const ATTACK_REFERENCE_BODY = { width: 40, height: 60 } as const;
 
 // --- Running (px/s and px/s²) ---
+// 19 nov (playtest: "too fast for PvP"): all movement 20 % slower, like slowing
+// time: speeds × 0.8 and accelerations × 0.64, so jumps, recoveries and launches
+// keep their shape and height but take 25 % longer. Attack frames did not change.
 // 18 nov: everything ~17 % slower than before (playtest: "they move too fast").
 /** Top horizontal speed. */
-export const RUN_SPEED = 350;
+export const RUN_SPEED = 280;
 /** How fast you reach RUN_SPEED on the ground. Higher = snappier. */
-export const GROUND_ACCEL = 3000;
+export const GROUND_ACCEL = 1920;
 /** How fast you stop on the ground when no direction is held. */
-export const GROUND_FRICTION = 4200;
+export const GROUND_FRICTION = 2688;
 /** Horizontal control in the air while holding a direction. */
-export const AIR_ACCEL = 1650;
+export const AIR_ACCEL = 1056;
 /** How fast horizontal speed fades in the air with no direction held. */
-export const AIR_DRAG = 600;
+export const AIR_DRAG = 384;
 
 // --- Jumping and gravity (px/s and px/s²) ---
-export const GRAVITY = 1950;
-/** Initial upward speed. Jump height = JUMP_SPEED² / (2 · GRAVITY) ≈ 169 px (the same as before the 18 nov slowdown, just floatier). */
-export const JUMP_SPEED = 811;
+export const GRAVITY = 1248;
+/** Initial upward speed. Jump height = JUMP_SPEED² / (2 · GRAVITY) ≈ 169 px (unchanged by the 18 and 19 nov slowdowns, just floatier). */
+export const JUMP_SPEED = 649;
 /** Releasing jump while rising multiplies vy by this: short tap = short hop. */
 export const JUMP_CUT = 0.45;
 /** Terminal falling speed. */
-export const MAX_FALL_SPEED = 1150;
+export const MAX_FALL_SPEED = 920;
 /** After walking off a ledge you can still use your ground jump for this many ticks ("coyote time"). */
 export const COYOTE_TICKS = 5;
 /** A jump pressed this many ticks before it becomes possible on the ground still happens ("jump buffer"). */
@@ -125,12 +130,12 @@ export const JUMP_BUFFER_TICKS = 6;
 /** Extra jumps available in the air; refilled on landing. */
 export const AIR_JUMPS = 2;
 /** Upward speed of an air jump. Height ≈ 739² / (2 · 1950) ≈ 140 px. */
-export const DOUBLE_JUMP_SPEED = 739;
+export const DOUBLE_JUMP_SPEED = 591;
 /**
  * Holding down in the air once you start falling snaps to this speed.
  * Must stay below ~60 px/step (3600 px/s) or bodies could skip thin platforms.
  */
-export const FAST_FALL_SPEED = 1400;
+export const FAST_FALL_SPEED = 1120;
 
 // --- Recovery (up special) ---
 /**
@@ -140,44 +145,38 @@ export const FAST_FALL_SPEED = 1400;
  */
 export const RECOVERY_TILT = { x: 0.574, y: 0.819 } as const;
 /** During the up special the sideways speed only fades this slowly (px/s²), so the tilt carries you back. */
-export const RECOVERY_AIR_DRAG = 300;
+export const RECOVERY_AIR_DRAG = 192;
 
 /**
  * Up heavy in the air also lifts you (once per time in the air, apart from the
  * up special): a second way back, so recoveries are less predictable. Tilted
  * like the up special when a direction is held. Height ≈ 700² / (2 · GRAVITY) ≈ 125 px.
  */
-export const AIR_HEAVY_UP_BOOST = 700;
+export const AIR_HEAVY_UP_BOOST = 560;
 
-// --- Dash and dodge (durations and cooldowns in simulation ticks, 60 = 1 s) ---
-/** Tapping a direction twice within this many ticks starts a dash. */
-export const DASH_TAP_WINDOW_TICKS = 14;
-/** Ground dash: burst of horizontal speed. Distance ≈ 820 · 10/60 ≈ 137 px. */
-export const DASH_SPEED = 820;
-export const DASH_TICKS = 10;
-/** Wait after a dash ends before the next dash or dodge. */
-export const DASH_COOLDOWN_TICKS = 30;
-/** Roll: shield + left/right. Distance ≈ 440 · 14/60 ≈ 103 px (18 nov: shorter, playtest). */
-export const ROLL_SPEED = 440;
+// --- Dodges (durations and cooldowns in simulation ticks, 60 = 1 s) ---
+// 19 nov (playtest): no more dash on a double tap, nor the dash attack.
+/** Roll: shield + left/right. Distance ≈ 352 · 14/60 ≈ 82 px. */
+export const ROLL_SPEED = 352;
 export const ROLL_TICKS = 14;
 /** The roll's last ticks are not invulnerable: that is where you punish it. */
 export const ROLL_END_VULN_TICKS = 5;
 /** Dodge in place: shield + down. Invulnerable. */
 export const SPOT_DODGE_TICKS = 14;
 /** Air dodge in the held direction (8 ways), gravity off. Invulnerable. */
-export const AIR_DODGE_SPEED = 620;
+export const AIR_DODGE_SPEED = 496;
 export const AIR_DODGE_TICKS = 10;
 /** Touching the ground during an air dodge leaves you this many ticks unable to act. */
 export const AIR_DODGE_LANDING_LAG = 10;
 /** Velocity kept when an air dodge ends (0 = full stop, 1 = keep all). */
 export const AIR_DODGE_END_SPEED_MULT = 0.35;
-/** Wait after a spot or air dodge ends before the next dash or dodge. */
+/** Wait after a dodge ends before the next one. */
 export const DODGE_COOLDOWN_TICKS = 54;
 
 // --- Characters ---
 /** Stats go from 1 to 5. Each point above or below average moves the real value by these steps. */
 export const STAT_AVERAGE = 3;
-/** Multiplies run and dash speed: 0.8 to 1.2. */
+/** Multiplies run speed: 0.8 to 1.2. */
 export const STAT_SPEED_STEP = 0.1;
 /** Weight: 80 to 120. */
 export const WEIGHT_AVERAGE = 100;
@@ -198,7 +197,7 @@ export const SHIELD_DAMAGE_MULT = 1.5;
 export const SHIELD_STUN_BASE_TICKS = 3;
 export const SHIELD_STUN_PER_DAMAGE = 0.5;
 /** Blocking slides you back at this speed (px/s); friction stops it. */
-export const SHIELD_PUSH_SPEED = 200;
+export const SHIELD_PUSH_SPEED = 160;
 /** Lowering the shield leaves you this long unable to act. Jumping out skips it. */
 export const SHIELD_DROP_LAG_TICKS = 6;
 /** A broken shield stuns for this long (2.5 s) and comes back at SHIELD_BREAK_REFILL. */
@@ -208,7 +207,7 @@ export const SHIELD_BREAK_REFILL = 40;
 // --- Combat: attacks ---
 /** Every attack in the game, by id. Light ones come from J, heavy ones from K. */
 export type AttackId =
-  | 'jab1' | 'jab2' | 'jab3' | 'dash'
+  | 'jab1' | 'jab2' | 'jab3'
   | 'lightSide' | 'lightUp' | 'lightDown'
   | 'airNeutral' | 'airForward' | 'airBack' | 'airUp' | 'airDown'
   | 'heavySide' | 'heavyUp' | 'heavyDown'
@@ -325,14 +324,6 @@ export const ATTACKS: Record<AttackId, AttackData> = {
     heavy: false, startup: 4, active: 3, recovery: 18, box: { x: 38, y: 10, width: 56, height: 32 },
     damage: 5, kbBase: 360, kbScale: 12, kbX: 1, kbY: -0.7,
   },
-  /**
-   * Dash attack: light during a dash. Keeps sliding (DASH_ATTACK_FRICTION) and
-   * pops the target up: a way in from afar, but very punishable if it misses.
-   */
-  dash: {
-    heavy: false, startup: 5, active: 5, recovery: 20, box: { x: 26, y: 10, width: 58, height: 44 },
-    damage: 8, kbBase: 360, kbScale: 7.5, kbX: 0.55, kbY: -1,
-  },
   /** Side tilt: light holding left/right, on the ground. */
   lightSide: {
     heavy: false, startup: 5, active: 3, recovery: 10, box: { x: 40, y: 14, width: 52, height: 26 },
@@ -408,7 +399,7 @@ export const ATTACKS: Record<AttackId, AttackData> = {
   specialNeutral: {
     heavy: false, startup: 12, active: 1, recovery: 20, box: { x: 0, y: 0, width: 0, height: 0 },
     damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0, cooldownTicks: 45,
-    projectile: { kind: 'orb', speed: 600, width: 16, height: 16, offsetX: 4, offsetY: 18, lifetimeTicks: 60 },
+    projectile: { kind: 'orb', speed: 480, width: 16, height: 16, offsetX: 4, offsetY: 18, lifetimeTicks: 60 },
   },
   /** What the neutral special's projectile does when it hits. */
   specialProjectile: {
@@ -418,7 +409,7 @@ export const ATTACKS: Record<AttackId, AttackData> = {
   /** Up special: the recovery. A rising hit that launches you up (replaces up + heavy in P3). */
   specialUp: {
     heavy: false, startup: 4, active: 8, recovery: 18, box: { x: -6, y: -40, width: 52, height: 44 },
-    damage: 5, kbBase: 300, kbScale: 12, kbX: 0.2, kbY: -1, launchSpeed: 1100,
+    damage: 5, kbBase: 300, kbScale: 12, kbX: 0.2, kbY: -1, launchSpeed: 880,
   },
   /** Heavies: slower, more reach, harder hits. A charge phase comes before startup. Long reach in front. */
   heavySide: {
@@ -446,8 +437,6 @@ export const THROW_MIN_HOLD_TICKS = 6;
 export const GRAB_RELEASE_LAG_TICKS = 12;
 /** Unable to act after a throw, once the hitstop ends. */
 export const THROW_LAG_TICKS = 14;
-/** How fast a dash attack's slide slows down (px/s²): from dash speed it slides ~170 px. */
-export const DASH_ATTACK_FRICTION = 3000;
 /**
  * Holding heavy reaches full charge after this long (~0.6 s).
  * Only on the ground: heavies in the air fire straight away.
@@ -477,7 +466,7 @@ export const HEAVY_CHARGE_LAUNCH_BONUS = 0.08;
 export const HEAVY_RELEASE_STARTUP_TICKS = 5;
 
 /** Stumbling back after a missed heavy (whiffLagTicks): this speed, slowed by friction. */
-export const WHIFF_STUMBLE_SPEED = 220;
+export const WHIFF_STUMBLE_SPEED = 176;
 /** Projectiles that bounce keep this fraction of their falling speed, going up. */
 export const PROJECTILE_BOUNCE = 0.6;
 /**
@@ -485,15 +474,21 @@ export const PROJECTILE_BOUNCE = 0.6;
  * the sideways speed drains at this rate (px/s²). 19 nov: it used to stop dead,
  * so Samu's teleport saved him from any launch.
  */
-export const HOVER_DRAG = 1400;
+export const HOVER_DRAG = 896;
 /** Under a parachute you fall at most this fast (px/s)… */
-export const PARACHUTE_FALL_SPEED = 180;
+export const PARACHUTE_FALL_SPEED = 144;
 /** …and steer at this fraction of the normal air speed. */
 export const PARACHUTE_DRIFT_MULT = 0.6;
 
 // --- Combat: getting hit ---
 /** Launch speed cap. Keeps a step under ~60 px so nobody tunnels through platforms. */
 export const KNOCKBACK_MAX_SPEED = 3600;
+/**
+ * Launches fly at this share of the knockback formula's speed (19 nov slowdown:
+ * with gravity × 0.64 they keep their path, 25 % slower). Hitstun is still
+ * worked out from the full speed, so combos last as long as before.
+ */
+export const KNOCKBACK_SPEED_SCALE = 0.8;
 /**
  * Multiplies how much knockback grows with damage (the kbScale term), for every
  * attack. Below 1 = people survive to higher %. (18 nov: 0.9, "you die too soon".)
@@ -513,7 +508,7 @@ export const HITSTUN_TICKS_PER_SPEED = 0.006;
 export const HITSTUN_COMBO_DECAY_TICKS = 2;
 export const HITSTUN_MIN_TICKS = 6;
 /** How fast horizontal launch speed fades during hitstun (px/s²). Low = flies further. */
-export const HITSTUN_DRAG = 1500;
+export const HITSTUN_DRAG = 960;
 /**
  * Hitstop: when a hit lands, attacker and target both freeze for
  * base + damage dealt × this ticks (capped), so the impact is felt.
@@ -528,11 +523,13 @@ export const HIT_FLASH_TICKS = 8;
 
 // --- Camera (render only: the simulation never reads these) ---
 /** Empty space kept around the players' bounding box, in world px. */
-export const CAMERA_PADDING_X = 280;
-export const CAMERA_PADDING_Y = 200;
+// 19 nov: closer (the stage is shorter), so the fighters look bigger: with both
+// on their spawn platforms the stage fills the screen width (zoom ≈ 1.6).
+export const CAMERA_PADDING_X = 160;
+export const CAMERA_PADDING_Y = 130;
 /** Zoom range. < 1 shows more than the 1280×720 canvas (0.45 still shows a player near a blast zone), > 1 zooms in. */
 export const CAMERA_MIN_ZOOM = 0.45;
-export const CAMERA_MAX_ZOOM = 1.35;
+export const CAMERA_MAX_ZOOM = 1.7;
 /**
  * Smoothing time constant in ms: after this long the camera has covered ~63 %
  * of the way to its target. Lower = snappier, higher = floatier.
@@ -551,7 +548,7 @@ export const SHAKE_EXTRA_MS = 90;
 /** The hit player trembles ± this many px while frozen in hitstop. */
 export const HITSTOP_JITTER_PX = 3;
 /** A launched player leaves afterimages while flying faster than this (px/s)… */
-export const TRAIL_MIN_SPEED = 700;
+export const TRAIL_MIN_SPEED = 560;
 /** …one every this many ms, each fading out over TRAIL_LIFE_MS. */
 export const TRAIL_INTERVAL_MS = 30;
 export const TRAIL_LIFE_MS = 220;

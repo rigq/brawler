@@ -16,7 +16,7 @@ export const robert: CharacterDefinition = {
     specialNeutral: {
       startup: 8, active: 1, recovery: 24, cooldownTicks: 100,
       projectile: {
-        kind: 'smoke', speed: 70, width: 40, height: 50, offsetX: -6, offsetY: 4,
+        kind: 'smoke', speed: 56, width: 40, height: 50, offsetX: -6, offsetY: 4,
         lifetimeTicks: 80, hits: 4, hitIntervalTicks: 14,
       },
     },
@@ -29,7 +29,7 @@ export const robert: CharacterDefinition = {
      */
     specialUp: {
       startup: 0, active: 7, recovery: 19, box: { x: -12, y: 40, width: 64, height: 70 },
-      damage: 6, kbBase: 340, kbScale: 12, kbX: 0.5, kbY: -0.6, launchSpeed: 1120,
+      damage: 6, kbBase: 340, kbScale: 12, kbX: 0.5, kbY: -0.6, launchSpeed: 896,
     },
     // His own normals (phase 3): slow, heavy, and the one who kills. Jabs that hurt.
     jab1: { startup: 4, damage: 4 },

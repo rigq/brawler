@@ -8,7 +8,6 @@ import {
 import { characterOf } from '../characters/index.ts';
 import type { PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
-import { endDodge } from '../sim/dodge.ts';
 import type { Player } from '../sim/player.ts';
 
 export type AttackPhase = 'none' | 'charge' | 'startup' | 'active' | 'recovery';
@@ -85,9 +84,7 @@ export function updateAttack(player: Player, input: PlayerInput): void {
     }
     return;
   }
-  // Attacks can start from a dash (it hands over its speed), not from other dodges.
-  const dodgeAllows = player.dodgeKind === 'none' || player.dodgeKind === 'dash';
-  if (!dodgeAllows || player.hitstunTicks > 0) return;
+  if (player.dodgeKind !== 'none' || player.hitstunTicks > 0) return;
   if (grabPressed && player.grounded) startAttack(player, input, 'grab');
   else if (lightPressed) startAttack(player, input, chooseLight(player, input));
   else if (heavyPressed) startAttack(player, input, chooseHeavy(input));
@@ -150,10 +147,9 @@ export function attackData(player: { characterId: string }, id: AttackId): Attac
   return characterOf(player).attacks[id];
 }
 
-/** Light: shield button held → grab; during a dash → dash attack; in the air → aerial; up/down → tilts; no direction → jab; else side tilt. */
+/** Light: shield button held → grab; in the air → aerial; up/down → tilts; no direction → jab; else side tilt. */
 function chooseLight(player: Player, input: PlayerInput): AttackId {
   if (player.grounded && input.dodge) return 'grab';
-  if (player.dodgeKind === 'dash') return 'dash';
   if (!player.grounded) return chooseAerial(player, input);
   if (input.up) return 'lightUp';
   if (input.down) return 'lightDown';
@@ -179,9 +175,6 @@ function startAttack(player: Player, input: PlayerInput, id: AttackId): void {
   const dirX = Number(input.right) - Number(input.left);
   // Aerials keep the facing: holding backwards means back aerial, not turning around.
   if (dirX !== 0 && data.landingLag === undefined) player.facing = dirX === 1 ? 1 : -1;
-  // Attacking out of a dash keeps its speed: dash attack, or a sliding heavy.
-  endDodge(player);
-
   // Heavies charge only on the ground; in the air they fire at once.
   player.attackCharging = data.heavy && player.grounded;
   if (data.launchSpeed !== undefined) launchRecovery(player, data.launchSpeed, dirX);

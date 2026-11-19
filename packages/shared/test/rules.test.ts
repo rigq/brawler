@@ -233,6 +233,21 @@ test('Samu teleports to a flag in range, but not to one too far away or expired'
   assert.equal(late.samu.attackId, 'none', 'expired: nothing happens');
 });
 
+test('from the ground, an up tilt reaches a rival standing on a side platform (and you fit under it)', () => {
+  const world = createWorld(['samu', 'robert']);
+  const [p1, p2] = world.players as [Player, Player];
+  const platform = PLATFORMS[0];
+  const middle = platform.x + platform.width / 2;
+  teleportPlayer(p1, { x: middle - p1.width / 2, y: GROUND.y - p1.height, facing: 1 });
+  teleportPlayer(p2, { x: middle - p2.width / 2, y: platform.y - p2.height, facing: -1 });
+  idle(world, 10);
+  assert.ok(p1.grounded && p1.y >= platform.y + platform.height, 'Samu stands on the ground under the platform');
+  assert.ok(p2.grounded && feet(p2) === platform.y, 'Robert stands on the platform');
+  stepWorld(world, [{ ...EMPTY_INPUT, light: true, up: true }, EMPTY_INPUT]);
+  idle(world, 20);
+  assert.ok(p2.damage > 0, 'hit from below');
+});
+
 test('up heavy in the air lifts you once per time in the air', () => {
   const world = createWorld(['samu', 'robert']);
   const player = world.players[0]!;

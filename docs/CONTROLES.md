@@ -22,7 +22,6 @@ Los dos juegos de teclas de P1 funcionan siempre: el de **J K L** para jugar sol
 | Doble salto (2 en el aire) | Saltar otra vez en el aire |
 | Caída rápida | Abajo cuando ya caes |
 | Bajar de una plataforma | Abajo encima de ella |
-| Dash | Doble toque de una dirección |
 | Escudo | Mantener escudo en el suelo |
 | Rodar | Escudo + izquierda/derecha |
 | Esquiva en el sitio | Escudo + abajo |
@@ -35,7 +34,6 @@ Los dos juegos de teclas de P1 funcionan siempre: el de **J K L** para jugar sol
 | --- | --- |
 | Jab (hasta 3 golpes) | Ligero sin dirección en el suelo; vuelve a pulsar para encadenar |
 | Golpe lateral / arriba / abajo | Ligero + dirección en el suelo |
-| Ataque en carrera | Ligero durante el dash |
 | Aéreos | Ligero en el aire: sin dirección (neutral), hacia donde miras (adelante), al revés (atrás), arriba o abajo |
 | Pesados (se cargan en el suelo) | Fuerte + lado, arriba o abajo |
 | Recovery (volver al escenario) | Especial + arriba, una vez hasta tocar suelo (cada personaje a su manera). **Manteniendo izquierda o derecha sale en diagonal hacia ese lado.** Además, **fuerte + arriba en el aire** da un segundo impulso (una vez por salto) |

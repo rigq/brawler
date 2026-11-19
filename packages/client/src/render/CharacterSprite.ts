@@ -34,7 +34,6 @@ const DIZZY_MIN_STUN_TICKS = 18;
 const DIZZY_MAX_SPEED = 300;
 const DIZZY_FRAME_MS = 110;
 const DIZZY_GAP = 6;
-const DASH_TINT = 0xffe0a8;
 const FLASH_TINT = 0xffffff;
 /** Effects behind the body (props, helpers) and in front of it (auras, sparks). */
 const DEPTH = { behind: -1, front: 1 } as const;
@@ -65,7 +64,7 @@ export class CharacterSprite {
   private readonly cords: Phaser.GameObjects.Graphics;
   private readonly dizzy: Sprite;
   private readonly art: CharacterArt;
-  /** The body's normal colour filter (null: none); the hit flash and the dash tint go over it. */
+  /** The body's normal colour filter (null: none); the hit flash goes over it. */
   private readonly tint: number | null;
   /** Where the current up special started (feet), so the helper stays there as the character rises. */
   private helperAt: { x: number; y: number } | null = null;
@@ -111,7 +110,6 @@ export class CharacterSprite {
     this.body.setVisible(true).setFlipX(player.facing === -1).setAlpha(opacity);
     this.renderBody(player, feetX, y, feetY, frameMs);
     if (player.hitFlashTicks > 0) this.body.setTintFill(FLASH_TINT);
-    else if (player.dodgeKind === 'dash') this.body.setTint(DASH_TINT);
     else if (this.tint !== null) this.body.setTint(this.tint);
     else this.body.clearTint();
     this.renderChargeGlow(player, opacity);

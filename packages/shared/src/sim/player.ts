@@ -5,7 +5,6 @@ import {
   AIR_JUMPS,
   ATTACK_MOVE_SPEED_MULT,
   COYOTE_TICKS,
-  DASH_ATTACK_FRICTION,
   DOUBLE_JUMP_SPEED,
   DROP_HOLD_TICKS,
   DROP_THROUGH_TICKS,
@@ -159,12 +158,9 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
   if (player.parachuting && ((input.jump && !player.jumpHeld) || (input.dodge && !player.dodgeHeld))) {
     player.parachuting = false;
   }
-  // Attacking out of a dash ends it and keeps its speed (see startAttack).
   updateAttack(player, input);
   updateDodge(player, input);
   updateShield(player, input);
-  // Jumping out of a dash keeps its speed ("dash jump").
-  if (player.dodgeKind === 'dash' && input.jump && !player.jumpHeld) endDodge(player);
 
   const stunned = player.hitstunTicks > 0;
   // Reset only on a free tick: a hit landing on the last stunned tick still extends the combo.
@@ -274,11 +270,8 @@ function applyHitstunDrag(player: Player): void {
 function applyAttackDrift(player: Player, input: PlayerInput): void {
   if (player.grounded && player.attackId === 'grab') {
     player.vx = approach(player.vx, 0, GROUND_FRICTION * FIXED_DT);
-  } else if (player.grounded && player.attackId === 'dash') {
-    // The dash attack slides on with the dash's speed, slowing down.
-    player.vx = approach(player.vx, 0, DASH_ATTACK_FRICTION * FIXED_DT);
   } else if (player.grounded) {
-    // Keep running while attacking, a bit slower. A dash-attack bleeds its extra speed off.
+    // Keep running while attacking, a bit slower.
     const dir = Number(input.right) - Number(input.left);
     const accel = dir !== 0 ? GROUND_ACCEL : GROUND_FRICTION;
     const speed = RUN_SPEED * characterOf(player).speedMult * ATTACK_MOVE_SPEED_MULT;

@@ -76,7 +76,6 @@ const MOVEMENT: ControlsSection = {
     ['Doble salto (2 en el aire)', 'Saltar otra vez en el aire'],
     ['Caída rápida', 'Abajo cuando ya caes'],
     ['Bajar de una plataforma', 'Abajo encima de ella'],
-    ['Dash', 'Doble toque de una dirección'],
     ['Escudo', 'Mantener escudo en el suelo'],
     ['Rodar', 'Escudo + izquierda/derecha'],
     ['Esquiva en el sitio', 'Escudo + abajo'],
@@ -91,7 +90,6 @@ const ATTACKS: ControlsSection = {
   rows: [
     ['Jab (hasta 3 golpes)', 'Ligero sin dirección en el suelo; pulsa otra vez para encadenar'],
     ['Golpe lateral / arriba / abajo', 'Ligero + dirección en el suelo'],
-    ['Ataque en carrera', 'Ligero durante el dash'],
     ['Aéreos', 'Ligero en el aire: sin dirección, adelante, atrás, arriba o abajo'],
     ['Fuertes', 'Fuerte + lado, arriba o abajo (mantén para cargar)'],
     ['Especial neutral', 'Especial sin arriba'],
