@@ -89,8 +89,15 @@ export interface CharacterArt {
 const ROBERT_IDLE: IdleTiming = { restMs: 1000 };
 /** Samu: 1.5 s in guard, then grabs a dumbbell from his backpack, two curls, puts it back (~2 s). */
 const SAMU_IDLE: IdleTiming = { restMs: 1500, frameMs: 170 };
-/** Riga: 1.8 s standing, then checks his AI on the laptop (~1 s). */
-const RIGA_IDLE: IdleTiming = { restMs: 1800, frameMs: 200 };
+/**
+ * Riga: 2 s standing, then out comes the laptop and he really works on it
+ * (~3.5 s): looks at the screen, types, looks, types, smiles at the answer, puts it away.
+ * Frames: 0 standing, 1 laptop under the arm, 2 open (looking), 3 typing, 4 putting it away.
+ */
+const RIGA_IDLE: IdleTiming = {
+  restMs: 2000,
+  sequence: [[1, 300], [2, 450], [3, 500], [2, 300], [3, 600], [2, 350], [3, 700], [4, 350]],
+};
 /** Chachin: 1.5 s bouncing in guard, then a quick ~0.9 s backflip. */
 const CHACHIN_IDLE: IdleTiming = { restMs: 1500, frameMs: 110 };
 

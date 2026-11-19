@@ -71,6 +71,25 @@ const FALLBACK: Partial<Record<AnimName, AnimName>> = {
 export interface IdleTiming {
   restMs?: number;
   frameMs?: number;
+  /**
+   * The play-through as [frame, ms] steps, instead of every frame once at
+   * `frameMs`: frames can repeat and last differently (look, type, look, type…).
+   */
+  sequence?: [frame: number, ms: number][];
+}
+
+export interface IdleStep {
+  frame: number;
+  ms: number;
+}
+
+/** One loop of the idle: the rest on the first frame, then the play-through. */
+export function idleSteps(idle: IdleTiming, frames: number): IdleStep[] {
+  const rest = idle.restMs ? [{ frame: 0, ms: idle.restMs }] : [];
+  const play = idle.sequence
+    ? idle.sequence.map(([frame, ms]) => ({ frame: Math.min(frame, frames - 1), ms }))
+    : Array.from({ length: frames }, (_, frame) => ({ frame, ms: idle.frameMs ?? IDLE_FRAME_MS }));
+  return [...rest, ...play];
 }
 
 /** What the player is doing, as an animation name (it may not exist for this character). */
@@ -120,7 +139,7 @@ export function frameFor(
   switch (anim) {
     case 'run': return Math.floor(clockMs / RUN_FRAME_MS) % frames;
     // Counted from when the player stopped, so a rest always comes before the first play-through.
-    case 'idle': return idleFrame(frames, stateMs, idle.restMs ?? 0, idle.frameMs ?? IDLE_FRAME_MS);
+    case 'idle': return idleFrame(idleSteps(idle, frames), stateMs);
     case 'jump': return player.grounded ? 0 : last;
     case 'fall': return Math.abs(player.vy) < APEX_SPEED ? 0 : last;
     case 'hurt': return Math.hypot(player.vx, player.vy) > HURT_LAUNCH_SPEED ? last : 0;
@@ -136,9 +155,14 @@ export function frameFor(
  * Idle loop. With `restMs`, the first frame is held that long before each
  * play-through: an action (a drag on a cigarette) every few seconds instead of non-stop.
  */
-function idleFrame(frames: number, idleMs: number, restMs: number, frameMs: number): number {
-  const t = idleMs % (restMs + frames * frameMs);
-  return t < restMs ? 0 : Math.floor((t - restMs) / frameMs);
+function idleFrame(steps: IdleStep[], idleMs: number): number {
+  const total = steps.reduce((sum, step) => sum + step.ms, 0);
+  let t = total > 0 ? idleMs % total : 0;
+  for (const step of steps) {
+    if (t < step.ms) return step.frame;
+    t -= step.ms;
+  }
+  return 0;
 }
 
 /** 0 when `ticksLeft` is the whole duration, close to 1 at the end. */

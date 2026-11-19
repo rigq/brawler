@@ -1,6 +1,6 @@
 import type { CharacterId } from '@brawler/shared';
 import { CHARACTER_ART } from '../../render/art.ts';
-import { IDLE_FRAME_MS } from '../../render/bodyAnimation.ts';
+import { idleSteps, type IdleStep } from '../../render/bodyAnimation.ts';
 import { CHARACTER_INFO } from '../characterInfo.ts';
 
 const url = (file: string) => `url("${import.meta.env.BASE_URL}${file}")`;
@@ -18,16 +18,15 @@ export function idleSprite(id: CharacterId, scale: number): HTMLElement {
   const art = CHARACTER_ART[id];
   const sheet = art?.anims?.idle ?? (art ? { ...art.body, frames: 1 } : undefined);
   if (!art || !sheet) return el;
-  const frameMs = art.idle?.frameMs ?? IDLE_FRAME_MS;
-  const restMs = art.idle?.restMs ?? 0;
+  const steps = idleSteps(art.idle ?? {}, sheet.frames);
   const width = sheet.frameWidth * scale;
   el.style.width = `${width}px`;
   el.style.height = `${sheet.frameHeight * scale}px`;
   el.style.backgroundImage = url(sheet.file);
   el.style.backgroundSize = `${width * sheet.frames}px 100%`;
   if (sheet.frames > 1) {
-    const name = keyframes(id, sheet.frames, frameMs, restMs, width);
-    el.style.animation = `${name} ${restMs + sheet.frames * frameMs}ms infinite`;
+    const name = keyframes(id, steps, width);
+    el.style.animation = `${name} ${steps.reduce((sum, step) => sum + step.ms, 0)}ms infinite`;
   }
   return el;
 }
@@ -51,19 +50,21 @@ export function headPortrait(id: CharacterId, size?: number): HTMLElement {
 }
 
 /**
- * Steps through the strip frame by frame (no blending between frames), holding
- * the first one for `restMs` first. Built per character because the timing differs.
+ * Steps through the idle (no blending between frames), the same steps and
+ * timing as in the game (idleSteps). Built per character because the timing differs.
  */
-function keyframes(id: string, frames: number, frameMs: number, restMs: number, frameWidth: number): string {
+function keyframes(id: string, steps: IdleStep[], frameWidth: number): string {
   const name = `idle-${id}-${frameWidth}`;
   if (addedKeyframes.has(name)) return name;
-  const total = restMs + frames * frameMs;
-  const steps = Array.from({ length: frames }, (_, i) => {
-    const at = i === 0 ? 0 : ((restMs + i * frameMs) / total) * 100;
-    return `${at.toFixed(3)}% { background-position-x: ${-i * frameWidth}px; animation-timing-function: step-end; }`;
+  const total = steps.reduce((sum, step) => sum + step.ms, 0);
+  let elapsed = 0;
+  const frames = steps.map((step) => {
+    const at = (elapsed / total) * 100;
+    elapsed += step.ms;
+    return `${at.toFixed(3)}% { background-position-x: ${-step.frame * frameWidth}px; animation-timing-function: step-end; }`;
   });
   const style = document.createElement('style');
-  style.textContent = `@keyframes ${name} { ${steps.join(' ')} 100% { background-position-x: 0; } }`;
+  style.textContent = `@keyframes ${name} { ${frames.join(' ')} 100% { background-position-x: 0; } }`;
   document.head.append(style);
   addedKeyframes.add(name);
   return name;
