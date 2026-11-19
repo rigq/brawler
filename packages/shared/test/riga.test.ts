@@ -83,3 +83,16 @@ test('the emergency prompt hooks a ledge in reach and hangs him from it; out of 
   for (let i = 0; i < 12; i++) stepWorld(far.world, [EMPTY_INPUT, EMPTY_INPUT]);
   assert.equal(far.riga.ledgeSide, 0, 'nothing to hook');
 });
+
+test('while typing the emergency prompt he is frozen dead still in the air', () => {
+  const { world, riga } = setup();
+  teleportPlayer(riga, { x: GROUND.x + GROUND.width + 120, y: GROUND.y + 100, facing: -1 });
+  riga.grounded = false;
+  riga.vx = 500;
+  riga.vy = 300;
+  stepWorld(world, [{ ...EMPTY_INPUT, up: true, special: true }, EMPTY_INPUT]);
+  const at = { x: riga.x, y: riga.y };
+  for (let i = 0; i < 12; i++) stepWorld(world, [EMPTY_INPUT, EMPTY_INPUT]);
+  assert.equal(riga.attackId, 'specialUp');
+  assert.deepEqual({ x: riga.x, y: riga.y }, at, 'did not move while typing');
+});

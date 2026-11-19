@@ -47,6 +47,9 @@ const HIT_FRAME: Partial<Record<AnimName, number>> = {
   'heavy-side': 2, 'heavy-up': 2, 'heavy-down': 2, grab: 0, 'special-up': 0,
 };
 
+/** A character's own strike frame for some animations (CharacterArt.hitFrames). */
+export type HitFrames = Partial<Record<AnimName, number>>;
+
 /** Index of the strike frame of `anim`, a strip of `frames` frames. tools/hitboxes.ts measures the hitbox on it. */
 export function hitFrame(anim: AnimName, frames: number): number {
   const last = frames - 1;
@@ -108,11 +111,12 @@ export function frameFor(
   stateMs: number,
   clockMs: number,
   idle: IdleTiming = {},
+  hitFrames: HitFrames = {},
 ): number {
   const last = frames - 1;
   const clamp = (f: number) => Math.max(0, Math.min(last, Math.floor(f)));
   if (player.holdTicks > 0) return last;
-  if (player.attackId !== 'none') return attackFrame(player, anim, last);
+  if (player.attackId !== 'none') return attackFrame(player, anim, last, hitFrames[anim]);
   switch (anim) {
     case 'run': return Math.floor(clockMs / RUN_FRAME_MS) % frames;
     // Counted from when the player stopped, so a rest always comes before the first play-through.
@@ -143,9 +147,9 @@ function progress(ticksLeft: number, total: number): number {
 }
 
 /** Wind-up frames over the startup, the hit frame while active (and a while after), follow-through over the rest of the recovery. */
-function attackFrame(player: Player, anim: AnimName, last: number): number {
+function attackFrame(player: Player, anim: AnimName, last: number, hitOverride?: number): number {
   if (player.attackId === 'none') return 0;
-  const hit = hitFrame(anim, last + 1);
+  const hit = hitOverride === undefined ? hitFrame(anim, last + 1) : Math.min(hitOverride, last);
   const { startup, active, recovery } = attackData(player, player.attackId);
   const t = player.attackTick;
   switch (attackPhase(player)) {

@@ -159,7 +159,7 @@ export class CharacterSprite {
       this.body.setTexture(this.art.body.key, 0).setOrigin(0.5, 1).setPosition(feetX, feetY);
       return;
     }
-    const frame = frameFor(player, anim, sheet.frames, this.animMs, this.clockMs, this.art.idle);
+    const frame = frameFor(player, anim, sheet.frames, this.animMs, this.clockMs, this.art.idle, this.art.hitFrames);
     const hanging = anim === 'ledge';
     this.body.setTexture(sheet.key, frame).setOrigin(0.5, hanging ? 0 : 1).setPosition(feetX, hanging ? top : feetY);
   }

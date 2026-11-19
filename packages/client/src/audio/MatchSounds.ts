@@ -6,6 +6,7 @@
 import {
   SHIELD_BREAK_STUN_TICKS,
   attackCharge,
+  attackData,
   attackPhase,
   counterHolds,
   rouletteChoice,
@@ -20,6 +21,8 @@ import { playSfx, type SfxName } from './sfx.ts';
 /** Plays a sound (tests pass one that just records the names). */
 export type Play = (name: SfxName, strength?: number) => void;
 
+/** While typing a prompt, one key click every this many ticks. */
+const TYPE_EVERY_TICKS = 3;
 /** A hit of this much damage (or more) sounds as hard as it gets. */
 const FULL_HIT_DAMAGE = 18;
 /** Landing faster than this (px/s) makes a thud; harder up to `fullLandSpeed`. */
@@ -67,6 +70,8 @@ interface Seen {
   attackTick: number;
   /** A tether pulling (active phase with a ledge hooked). */
   pulling: boolean;
+  /** Starting up a tether recovery (typing the prompt). */
+  typing: boolean;
 }
 
 function seen(p: Player): Seen {
@@ -90,6 +95,7 @@ function seen(p: Player): Seen {
     countering: counterHolds(p),
     attackTick: p.attackTick,
     pulling: p.tetherSide !== 0 && attackPhase(p) === 'active',
+    typing: p.attackId !== 'none' && attackPhase(p) === 'startup' && attackData(p, p.attackId).tether !== undefined,
   };
 }
 
@@ -162,6 +168,8 @@ function attackSounds(play: Play, before: Seen, now: Seen, character: CharacterI
   // Refused: the counter jumped straight to its recovery instead of running out.
   if (before.countering && !now.countering && now.attackId === before.attackId && now.attackTick - before.attackTick > 1) play('counter');
   if (now.pulling && !before.pulling) play('zip');
+  // Typing the emergency prompt, frozen in the air: a key every few ticks.
+  if (now.typing && now.attackTick !== before.attackTick && now.attackTick % TYPE_EVERY_TICKS === 0) play('type');
   const started = now.attackId !== 'none' && now.attackId !== before.attackId;
   const released = before.attackCharging && !now.attackCharging && now.attackId !== 'none';
   if (released || (started && !now.attackCharging && SWINGS.has(now.attackId as AttackId))) {

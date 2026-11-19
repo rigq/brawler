@@ -60,13 +60,14 @@ export const riga: CharacterDefinition = {
       },
     },
     /**
-     * "Prompt de emergencia": types for a moment (hovering), then a giant cursor
+     * "Prompt de emergencia": frozen still in the air for 0.3 s, typing (easy to
+     * hit if you are close: that is the price), then a giant cursor
      * hooks the nearest ledge within 580 px (picked the moment you press it) and pulls him to it, hanging. With no
      * ledge in reach it only lifts him a little: miss it and you fall.
      */
     specialUp: {
-      startup: 8, active: 40, recovery: 20, box: NO_BOX, damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
-      launchSpeed: undefined, hover: true,
+      startup: 18, active: 40, recovery: 20, box: NO_BOX, damage: 0, kbBase: 0, kbScale: 0, kbX: 1, kbY: 0,
+      launchSpeed: undefined, hover: true, hoverFreeze: true,
       tether: { range: 580, speed: 1100, missLift: 480 },
     },
   },

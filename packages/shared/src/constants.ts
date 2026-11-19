@@ -302,6 +302,8 @@ export interface AttackData {
   parachute?: boolean;
   /** Stands still in the air during startup (no falling). */
   hover?: boolean;
+  /** With hover: frozen dead still in the air (no drift at all) instead of slowly losing the launch's speed. */
+  hoverFreeze?: boolean;
   /** On the first active tick, the player appears at their flag (where they last stood). */
   teleportToFlag?: boolean;
   /** With teleportToFlag: after this long in the air the flag is gone and the special cannot be used. */

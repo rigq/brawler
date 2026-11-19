@@ -176,7 +176,8 @@ export function stepPlayer(player: Player, input: PlayerInput, stage: StageGeome
     player.vx = approach(player.vx, 0, GROUND_FRICTION * FIXED_DT);
     if (player.shieldStunTicks === 0) applyJump(player, input);
   } else if (isHovering(player)) {
-    player.vx = approach(player.vx, 0, HOVER_DRAG * FIXED_DT);
+    const freeze = player.attackId !== 'none' && attackData(player, player.attackId).hoverFreeze === true;
+    player.vx = freeze ? 0 : approach(player.vx, 0, HOVER_DRAG * FIXED_DT);
     player.vy = 0;
   } else if (isAttacking(player)) {
     // An attack (the down attack) cancels a drop that was about to happen.
