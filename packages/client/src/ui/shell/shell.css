@@ -781,3 +781,32 @@
   .victory__panel { flex-direction: column; }
   .victory__stage { min-height: 200px; }
 }
+
+/* ---------- Screen wipe (transition.ts) ---------- */
+
+.wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wipe__band {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 160%;
+  left: -30%;
+  transform: translateX(-120%) skewX(-18deg);
+  animation: wipe-across 0.7s cubic-bezier(0.7, 0, 0.3, 1) both;
+}
+
+.wipe__band--a { background: var(--lantern, #ffb703); }
+.wipe__band--b { background: var(--night-900, #0b1026); animation-delay: 0.06s; }
+
+@keyframes wipe-across {
+  0% { transform: translateX(-120%) skewX(-18deg); }
+  45%, 55% { transform: translateX(0) skewX(-18deg); }
+  100% { transform: translateX(120%) skewX(-18deg); }
+}

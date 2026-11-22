@@ -125,8 +125,8 @@ brawler/
 
 **D · Diseño gráfico** (ene)
 - [ ] D1 Animaciones pixel art por personaje (26 tiras, `docs/PROMPTS_ANIMACIONES.md`): Donate ✔ · Robert ✔ · Samu ✔ (falta `throw`) · Chachin ✔ · Riga ✔ (rehacer `air-back` y `air-up`; prompts en `docs/prompts/riga.md`)
-- [ ] D2 Efectos: polvo al aterrizar, ~~arco de los golpes~~ (hecho 18 nov), destello de KO
-- [ ] D3 Escenario vivo (nubes, faroles que parpadean)
+- [x] D2 Efectos: polvo al saltar/aterrizar, haz de KO, cuenta atrás "3, 2, 1, ¡YA!" y transición de pantalla (22 nov; el arco de los golpes se quitó el 19 nov)
+- [x] D3 Escenario vivo: nubes, faroles que parpadean, luciérnagas, estrella fugaz, islotes con ruinas, hierba, raíces y cristales (22 nov, `render/StageLife.ts`)
 
 **I · Interfaz** (feb)
 - [x] I1 Menú principal (Local / Entrenamiento / Online / Controles)

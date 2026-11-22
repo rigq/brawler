@@ -13,6 +13,7 @@ import { mainMenu, type MenuChoice } from '../ui/shell/MainMenu.ts';
 import { pauseMenu } from '../ui/shell/PauseMenu.ts';
 import { Shell } from '../ui/shell/Shell.ts';
 import { soundSettings } from '../ui/shell/SoundSettings.ts';
+import { playWipe } from '../ui/shell/transition.ts';
 import { victoryScreen } from '../ui/shell/VictoryScreen.ts';
 
 const BACKDROP = 'BackdropScene';
@@ -77,6 +78,7 @@ export class App {
   }
 
   private startMatch(key: string, scene: Phaser.Scene, hideBackdrop: boolean): void {
+    playWipe();
     this.stopMatch();
     music.play('match');
     this.shell.hide();
@@ -95,6 +97,7 @@ export class App {
   }
 
   private exitToMenu(): void {
+    playWipe();
     this.stopMatch();
     this.game.scene.wake(BACKDROP);
     // Drop ?online=CODE and friends: reloading now shows the menu.
