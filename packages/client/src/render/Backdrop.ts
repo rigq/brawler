@@ -16,11 +16,36 @@ export function drawBackdrop(scene: Phaser.Scene): Phaser.GameObjects.GameObject
     drawHorizonGlow(scene),
     drawMountains(scene, { color: THEME.mountainsFar, scroll: 0.25, baseY: 980, peakMin: 360, peakMax: 520, step: 140, seed: 7 }),
     drawMountains(scene, { color: THEME.mountainsNear, scroll: 0.5, baseY: 1120, peakMin: 560, peakMax: 680, step: 220, seed: 21 }),
+    drawIslets(scene),
   ];
 }
 
+/** Floating islets far away, some with the ruins of a temple: the rest of the "floating temple". */
+function drawIslets(scene: Phaser.Scene): Phaser.GameObjects.GameObject {
+  const g = scene.add.graphics().setScrollFactor(0.3).setDepth(DEPTH.islets);
+  const islets = [
+    { x: 80, y: 300, w: 120, pillars: 2 },
+    { x: 1130, y: 250, w: 150, pillars: 3 },
+    { x: 560, y: 150, w: 70, pillars: 0 },
+    { x: -260, y: 420, w: 90, pillars: 1 },
+    { x: 1480, y: 430, w: 100, pillars: 0 },
+  ];
+  for (const isl of islets) {
+    g.fillStyle(THEME.islet.rock, 1).fillTriangle(isl.x - isl.w / 2, isl.y, isl.x + isl.w / 2, isl.y, isl.x, isl.y + isl.w * 0.7);
+    g.fillStyle(THEME.islet.top, 1).fillRect(isl.x - isl.w / 2, isl.y - 6, isl.w, 8);
+    for (let i = 0; i < isl.pillars; i++) {
+      const px = isl.x - isl.w * 0.35 + (i * isl.w * 0.7) / Math.max(1, isl.pillars - 1);
+      const ph = 28 + ((i * 13) % 20);
+      g.fillStyle(THEME.islet.pillar, 1).fillRect(px - 4, isl.y - 6 - ph, 8, ph);
+      g.fillRect(px - 7, isl.y - 9 - ph, 14, 4);
+    }
+    if (isl.pillars >= 2) g.fillStyle(THEME.islet.pillar, 1).fillRect(isl.x - isl.w * 0.4, isl.y - 50, isl.w * 0.8, 6);
+  }
+  return bake(g, { x: -420, y: 80, width: 2100, height: 520 });
+}
+
 /** Depths: backdrop far behind, stage behind the players (which use 0). */
-const DEPTH = { sky: -100, stars: -95, moon: -90, glow: -85, mountains: -80 } as const;
+const DEPTH = { sky: -100, stars: -95, moon: -90, glow: -85, mountains: -80, islets: -78 } as const;
 
 /** Big enough to fill the screen even fully zoomed out. */
 const COVER_W = (WORLD_WIDTH / CAMERA_MIN_ZOOM) * 1.2;

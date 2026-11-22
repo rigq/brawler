@@ -27,7 +27,13 @@ export const THEME = {
     rock: 0x4a4e69,
     rockDark: 0x2f3247,
     stone: 0x5c6080,
+    root: 0x3a5a40,
+    leaf: 0x588157,
+    crystal: 0x7fdbda,
+    flower: [0xffd6e0, 0xfff3b0, 0xcdb4db] as readonly number[],
   },
+  /** Far floating islets with temple ruins, in the backdrop. */
+  islet: { rock: 0x1f2a48, top: 0x2c3e5c, pillar: 0x34476b },
   platform: { top: 0xd4a373, body: 0xb08968, underside: 0x7f5539, rope: 0x9c7a56 },
   lantern: { body: 0xffb703, glow: 0xffd166, post: 0x2f3247 },
 } as const;

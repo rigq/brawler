@@ -27,6 +27,7 @@ import { MatchStats, type MatchSummary } from './MatchStats.ts';
 import { MIRROR_TINT, PLAYER_COLORS, playerColor } from './palette.ts';
 import { PlayerView, type VisualOffset } from './PlayerView.ts';
 import { ProjectileView } from './ProjectileView.ts';
+import { StageLife } from './StageLife.ts';
 import { drawStage } from './StageView.ts';
 
 /**
@@ -42,6 +43,7 @@ export class MatchView {
   private readonly projectileView: ProjectileView;
   private readonly hitEffects: HitEffects;
   private readonly fx: MatchFx;
+  private readonly stageLife: StageLife;
   private readonly sounds = new MatchSounds();
   private stats = new MatchStats();
   private lastResult: MatchResult = { over: false };
@@ -55,7 +57,8 @@ export class MatchView {
 
   constructor(scene: Phaser.Scene, world: World, rematchHint: string) {
     this.scene = scene;
-    const worldObjects = [...drawBackdrop(scene), ...drawStage(scene, world)];
+    this.stageLife = new StageLife(scene, world);
+    const worldObjects = [...drawBackdrop(scene), ...drawStage(scene, world), ...this.stageLife.gameObjects];
     // Same character as someone before them (Donate vs Donate): tinted, so the two look different.
     this.playerViews = world.players.map((player, i) => {
       const repeated = world.players.slice(0, i).some((other) => other.characterId === player.characterId);
@@ -127,6 +130,7 @@ export class MatchView {
     this.debugOverlay.render(world.players, alpha);
     for (const dealt of this.hitEffects.update(world.players, frameMs)) this.shake(dealt);
     this.fx.update(world, frameMs);
+    this.stageLife.update(frameMs);
     this.sounds.update(world, result.over);
     this.stats.update(world);
     this.lastResult = result;

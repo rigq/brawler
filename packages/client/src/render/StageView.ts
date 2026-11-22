@@ -74,10 +74,54 @@ function drawIsland(scene: Phaser.Scene, r: Rect): Phaser.GameObjects.Graphics {
     g.fillStyle(THEME.island.stone, 0.9).fillRoundedRect(x, y, 18 + random() * 22, 7 + random() * 6, 3);
   }
 
+  drawCrystals(g, r, bottom, random);
+  drawRoots(g, r, bottom, depth, random);
+
   // Grass strip with a darker lip, slightly overhanging the edges.
   g.fillStyle(THEME.island.grassShadow, 1).fillRoundedRect(r.x - 6, r.y - 2, r.width + 12, GRASS_HEIGHT + 4, 5);
   g.fillStyle(THEME.island.grass, 1).fillRoundedRect(r.x - 6, r.y - 4, r.width + 12, GRASS_HEIGHT, 5);
+  drawTufts(g, r, random);
   return g;
+}
+
+/** Blades of grass and a few small flowers poking up along the top edge. */
+function drawTufts(g: Phaser.GameObjects.Graphics, r: Rect, random: () => number): void {
+  for (let x = r.x + 4; x < r.x + r.width - 4; x += 9 + random() * 14) {
+    const h = 4 + random() * 6;
+    g.fillStyle(random() < 0.5 ? THEME.island.grass : THEME.island.grassShadow, 1);
+    g.fillTriangle(x - 2, r.y - 3, x + 2, r.y - 3, x + (random() - 0.5) * 3, r.y - 3 - h);
+    if (random() < 0.12) {
+      const colors = THEME.island.flower;
+      g.fillStyle(colors[Math.floor(random() * colors.length)] ?? 0xffffff, 1).fillCircle(x, r.y - 4 - h, 2);
+    }
+  }
+}
+
+/** Roots and vines hanging from the underside, swaying nowhere (it is a picture), leaves on some. */
+function drawRoots(g: Phaser.GameObjects.Graphics, r: Rect, bottom: number, depth: number, random: () => number): void {
+  for (let i = 0; i < 14; i++) {
+    const t = 0.08 + random() * 0.84;
+    const x = r.x + t * r.width;
+    const start = bottom + Math.sin(t * Math.PI) * depth * 0.55;
+    const length = 20 + random() * 60;
+    g.lineStyle(2, THEME.island.root, 0.9).beginPath();
+    g.moveTo(x, start);
+    g.lineTo(x + (random() - 0.5) * 10, start + length * 0.5);
+    g.lineTo(x + (random() - 0.5) * 14, start + length);
+    g.strokePath();
+    if (random() < 0.6) g.fillStyle(THEME.island.leaf, 1).fillEllipse(x + 4, start + length * 0.6, 7, 4);
+  }
+}
+
+/** Little glowing crystals stuck in the rock under the grass. */
+function drawCrystals(g: Phaser.GameObjects.Graphics, r: Rect, bottom: number, random: () => number): void {
+  for (let i = 0; i < 6; i++) {
+    const x = r.x + 30 + random() * (r.width - 60);
+    const y = bottom + 6 + random() * 30;
+    const s = 4 + random() * 4;
+    g.fillStyle(THEME.island.crystal, 0.08).fillCircle(x, y, s * 1.8);
+    g.fillStyle(THEME.island.crystal, 0.95).fillTriangle(x - s * 0.6, y + s, x + s * 0.6, y + s, x, y - s * 1.4);
+  }
 }
 
 /** Wooden planks: light top edge, body with plank seams, darker underside. */
@@ -96,22 +140,26 @@ function drawPlatform(scene: Phaser.Scene, r: Rect): Phaser.GameObjects.Graphics
   return g;
 }
 
-/**
- * Lanterns on posts along the island (LANTERN_SPOTS). The glow uses additive
- * blending: it adds light to what is behind instead of painting over it.
- */
+/** Where the lanterns hang (their flickering light is drawn by StageLife). */
+export function lanternSpots(ground: Rect): { x: number; y: number }[] {
+  return LANTERN_SPOTS.map((spot) => ({ x: ground.x + ground.width * spot, y: ground.y - LANTERN.postHeight }));
+}
+
+/** Lanterns on posts along the island (LANTERN_SPOTS); their light flickers in StageLife. */
 function drawLanterns(scene: Phaser.Scene, ground: Rect): Phaser.GameObjects.Graphics[] {
-  const glow = scene.add.graphics().setDepth(DEPTH.decor).setBlendMode(Phaser.BlendModes.ADD);
   const g = scene.add.graphics().setDepth(DEPTH.decor);
   for (const spot of LANTERN_SPOTS) {
     const x = ground.x + ground.width * spot;
     const top = ground.y - LANTERN.postHeight;
-    for (const [radius, alpha] of [[LANTERN.glowRadius, 0.08], [LANTERN.glowRadius * 0.65, 0.12], [LANTERN.glowRadius * 0.35, 0.18]] as const) {
-      glow.fillStyle(THEME.lantern.glow, alpha).fillCircle(x, top, radius);
-    }
     g.fillStyle(THEME.lantern.post, 1).fillRect(x - 3, top, 6, LANTERN.postHeight);
     g.fillStyle(THEME.lantern.body, 1).fillRoundedRect(x - LANTERN.size / 2, top - LANTERN.size / 2, LANTERN.size, LANTERN.size, 4);
     g.fillStyle(THEME.lantern.post, 1).fillRect(x - LANTERN.size / 2 - 2, top - LANTERN.size / 2 - 4, LANTERN.size + 4, 4);
   }
-  return [glow, g];
+  // The lantern panes glow a little brighter inside.
+  for (const spot of LANTERN_SPOTS) {
+    const x = ground.x + ground.width * spot;
+    const top = ground.y - LANTERN.postHeight;
+    g.fillStyle(THEME.lantern.glow, 1).fillRect(x - 3, top - 4, 6, 8);
+  }
+  return [g];
 }

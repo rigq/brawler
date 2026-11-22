@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { WORLD_WIDTH, createWorld } from '@brawler/shared';
 import { drawBackdrop } from '../render/Backdrop.ts';
+import { StageLife } from '../render/StageLife.ts';
 import { drawStage } from '../render/StageView.ts';
 
 /** Slight zoom so the slow drift never shows the edges. */
@@ -12,6 +13,7 @@ const SWAY_MS = 14000;
 /** The night stage, empty and slowly drifting: what you see behind the menus. */
 export class BackdropScene extends Phaser.Scene {
   private elapsedMs = 0;
+  private life: StageLife | null = null;
 
   constructor() {
     super('BackdropScene');
@@ -19,12 +21,15 @@ export class BackdropScene extends Phaser.Scene {
 
   create(): void {
     drawBackdrop(this);
-    drawStage(this, createWorld());
+    const world = createWorld();
+    drawStage(this, world);
+    this.life = new StageLife(this, world);
     this.cameras.main.setZoom(ZOOM);
   }
 
   update(_time: number, delta: number): void {
     this.elapsedMs += delta;
+    this.life?.update(delta);
     const sway = Math.sin((this.elapsedMs / SWAY_MS) * Math.PI * 2) * SWAY_PX;
     this.cameras.main.centerOn(WORLD_WIDTH / 2 + sway, this.cameras.main.height / 2);
   }
