@@ -60,6 +60,8 @@ export type PlayerState = SchemaType<typeof PlayerState>;
 export const MatchState = schema(
   {
     tick: t.uint32(),
+    /** World.frozenUntil: the countdown before a match ends at this tick. */
+    frozenUntil: t.uint32(),
     /** players[slot] mirrors World.players[slot]. */
     players: t.array(PlayerState),
     /** Session id → slot of each connected client. */

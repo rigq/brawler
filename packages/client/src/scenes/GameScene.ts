@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { FixedStepAccumulator, createWorld, stepWorld, type CharacterId, type World } from '@brawler/shared';
+import { FixedStepAccumulator, createWorld, startCountdown, stepWorld, type CharacterId, type World } from '@brawler/shared';
 import { GamepadInput } from '../input/GamepadInput.ts';
 import { CombinedInput, type InputSource } from '../input/InputSource.ts';
 import { KeyboardInput, P1_BINDINGS, P2_BINDINGS, type KeyBindings } from '../input/KeyboardInput.ts';
@@ -43,7 +43,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.world = createWorld(this.characters);
+    this.world = this.newWorld();
     this.view = new MatchView(this, this.world, 'Revancha: Enter, R o Start · Personaje o menú: Esc');
     this.input.keyboard?.on('keydown-ESC', () => this.pause());
     if (this.mode === 'training') {
@@ -108,8 +108,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private restart(): void {
-    this.world = createWorld(this.characters);
+    this.world = this.newWorld();
     if (import.meta.env.DEV) exposeForDebugging(this.world, this.game);
+  }
+
+  /** A fresh match: versus starts with the "3, 2, 1, ¡YA!"; training straight away. */
+  private newWorld(): World {
+    const world = createWorld(this.characters);
+    if (this.mode === 'versus') startCountdown(world);
+    return world;
   }
 
   /** Player i: its half of the keyboard, plus gamepad number i if one is connected. */

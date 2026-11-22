@@ -110,6 +110,13 @@ const SOUNDS = {
   },
   /** A bomb let go: a short falling whistle. */
   drop: (ctx, out) => tone(ctx, out, { freq: 1400, to: 500, duration: 0.25, gain: 0.06 }),
+  /** "3", "2", "1". */
+  countBeep: (ctx, out) => tone(ctx, out, { type: 'square', freq: midi(69), duration: 0.14, gain: 0.08, lowpass: 2500 }),
+  /** "¡YA!": higher and longer, with a hit of noise. */
+  countGo: (ctx, out) => {
+    tone(ctx, out, { type: 'square', freq: midi(81), duration: 0.4, gain: 0.1, lowpass: 3000 });
+    noise(ctx, out, { filter: 'bandpass', freq: 1800, duration: 0.15, gain: 0.15 });
+  },
   menuMove: (ctx, out) => tone(ctx, out, { type: 'triangle', freq: 700, duration: 0.04, gain: 0.08 }),
   menuConfirm: (ctx, out) => {
     tone(ctx, out, { type: 'triangle', freq: midi(76), duration: 0.07, gain: 0.12 });

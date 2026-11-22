@@ -13,6 +13,7 @@ import {
   type World,
 } from '@brawler/shared';
 import { MatchSounds } from '../audio/MatchSounds.ts';
+import { Countdown } from '../ui/hud/Countdown.ts';
 import { Hud } from '../ui/hud/Hud.ts';
 import { gameLayer } from '../ui/layer.ts';
 import { ResultOverlay } from '../ui/ResultOverlay.ts';
@@ -21,6 +22,7 @@ import { drawBackdrop } from './Backdrop.ts';
 import { CameraRig } from './CameraRig.ts';
 import { DebugOverlay } from './DebugOverlay.ts';
 import { HitEffects } from './HitEffects.ts';
+import { MatchFx } from './MatchFx.ts';
 import { MatchStats, type MatchSummary } from './MatchStats.ts';
 import { MIRROR_TINT, PLAYER_COLORS, playerColor } from './palette.ts';
 import { PlayerView, type VisualOffset } from './PlayerView.ts';
@@ -39,11 +41,13 @@ export class MatchView {
   private readonly debugOverlay: DebugOverlay;
   private readonly projectileView: ProjectileView;
   private readonly hitEffects: HitEffects;
+  private readonly fx: MatchFx;
   private readonly sounds = new MatchSounds();
   private stats = new MatchStats();
   private lastResult: MatchResult = { over: false };
   private readonly hud: StatsHud;
   private readonly playerHud: Hud;
+  private readonly countdown: Countdown;
   private readonly resultOverlay: ResultOverlay;
   /** Everything this view created, for destroy(). */
   private readonly owned: Phaser.GameObjects.GameObject[];
@@ -60,26 +64,32 @@ export class MatchView {
     worldObjects.push(...this.playerViews.flatMap((view) => view.gameObjects));
     this.hitEffects = new HitEffects(scene, PLAYER_COLORS);
     worldObjects.push(...this.hitEffects.gameObjects);
+    this.fx = new MatchFx(scene, PLAYER_COLORS);
+    worldObjects.push(...this.fx.worldObjects);
     this.debugOverlay = new DebugOverlay(scene);
     worldObjects.push(this.debugOverlay.gameObject);
 
     this.hud = new StatsHud(scene);
     // HTML over the canvas: removed with the scene (back to the menu, rematch online…).
     this.playerHud = new Hud(gameLayer(scene.game.canvas), world.players.map((p) => p.characterId));
+    this.countdown = new Countdown(gameLayer(scene.game.canvas));
     for (const event of [Phaser.Scenes.Events.SHUTDOWN, Phaser.Scenes.Events.DESTROY]) {
-      scene.events.once(event, () => this.playerHud.destroy());
+      scene.events.once(event, () => {
+        this.playerHud.destroy();
+        this.countdown.destroy();
+      });
     }
     this.resultOverlay = new ResultOverlay(scene, PLAYER_COLORS, rematchHint);
 
     this.cameraRig = new CameraRig(scene.cameras.main);
-    this.addUi([this.hud.gameObject, ...this.resultOverlay.gameObjects]);
+    this.addUi([this.hud.gameObject, ...this.resultOverlay.gameObjects, ...this.fx.screenObjects]);
     // A second, fixed camera draws only the UI, so text stays put whatever the zoom.
     const uiCamera = scene.cameras.add(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     uiCamera.ignore(worldObjects);
     this.uiCamera = uiCamera;
     // Projectiles come and go during the match: each new object is hidden from the UI camera as it appears.
     this.projectileView = new ProjectileView(scene, (object) => uiCamera.ignore(object));
-    this.owned = [...worldObjects, this.hud.gameObject, ...this.resultOverlay.gameObjects];
+    this.owned = [...worldObjects, this.hud.gameObject, ...this.resultOverlay.gameObjects, ...this.fx.screenObjects];
   }
 
   /**
@@ -90,6 +100,7 @@ export class MatchView {
     for (const object of this.owned) object.destroy();
     this.projectileView.destroy();
     this.playerHud.destroy();
+    this.countdown.destroy();
     this.scene.cameras.remove(this.uiCamera);
   }
 
@@ -115,6 +126,7 @@ export class MatchView {
     this.projectileView.render(world.projectiles, alpha, frameMs);
     this.debugOverlay.render(world.players, alpha);
     for (const dealt of this.hitEffects.update(world.players, frameMs)) this.shake(dealt);
+    this.fx.update(world, frameMs);
     this.sounds.update(world, result.over);
     this.stats.update(world);
     this.lastResult = result;
@@ -125,6 +137,7 @@ export class MatchView {
     );
     this.hud.update(frameMs);
     this.playerHud.update(world.players);
+    this.countdown.update(world);
     this.resultOverlay.update(result, frameMs);
   }
 

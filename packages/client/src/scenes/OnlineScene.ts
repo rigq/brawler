@@ -221,7 +221,8 @@ export class OnlineScene extends Phaser.Scene {
 
   /** You only send and predict while you are seated, connected and the match isn't paused. */
   private canPlay(room: MatchRoom, mySlot: number | undefined): mySlot is number {
-    return mySlot !== undefined && this.view !== null && this.connection === 'connected' && !isPaused(room);
+    const counting = room.state.tick < room.state.frozenUntil;
+    return mySlot !== undefined && this.view !== null && this.connection === 'connected' && !isPaused(room) && !counting;
   }
 
   /**
@@ -250,6 +251,7 @@ export class OnlineScene extends Phaser.Scene {
     }
     this.lastServerTick = tick;
     this.mirror.tick = tick;
+    this.mirror.frozenUntil = room.state.frozenUntil;
     // Projectiles come straight from the server (no prediction): only the server decides hits.
     const projectiles = Array.from(room.state.projectiles ?? [], (synced) => {
       const copy = createProjectile();

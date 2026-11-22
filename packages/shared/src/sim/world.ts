@@ -4,7 +4,7 @@ import { resolveGrabs } from '../combat/grabs.ts';
 import { resolveHits } from '../combat/hits.ts';
 import { stepProjectiles, type Projectile } from '../combat/projectiles.ts';
 import { DEFAULT_LINEUP, type CharacterId } from '../characters/index.ts';
-import { GROUND, PLATFORMS, SPAWNS } from '../constants.ts';
+import { COUNTDOWN_TICKS, GROUND, PLATFORMS, SPAWNS } from '../constants.ts';
 import { EMPTY_INPUT, type PlayerInput } from '../input.ts';
 import type { Rect } from '../math/rect.ts';
 import type { StageGeometry } from './collision.ts';
@@ -22,6 +22,8 @@ export interface World extends StageGeometry {
   projectiles: Projectile[];
   /** Last projectile id handed out (ids only go up). */
   nextProjectileId: number;
+  /** Until this tick, inputs are ignored (the countdown before a match). */
+  frozenUntil: number;
 }
 
 /** `characters[i]` is player i's character; missing ones come from DEFAULT_LINEUP. */
@@ -33,7 +35,18 @@ export function createWorld(characters: readonly CharacterId[] = DEFAULT_LINEUP)
     platforms: PLATFORMS.map((platform) => ({ ...platform })),
     projectiles: [],
     nextProjectileId: 0,
+    frozenUntil: 0,
   };
+}
+
+/** Starts the "3, 2, 1, ¡YA!": nobody can act for COUNTDOWN_TICKS from now (they still fall onto the stage). */
+export function startCountdown(world: World): void {
+  world.frozenUntil = world.tick + COUNTDOWN_TICKS;
+}
+
+/** True while the countdown runs. */
+export function isFrozen(world: World): boolean {
+  return world.tick < world.frozenUntil;
 }
 
 /**
@@ -41,9 +54,10 @@ export function createWorld(characters: readonly CharacterId[] = DEFAULT_LINEUP)
  * `inputs[i]` belongs to `world.players[i]`; missing inputs count as nothing pressed.
  */
 export function stepWorld(world: World, inputs: readonly PlayerInput[]): void {
+  const frozen = isFrozen(world);
   world.players.forEach((player, i) => {
     const spawn = SPAWNS[i];
-    if (isActive(player)) stepPlayer(player, inputs[i] ?? EMPTY_INPUT, world);
+    if (isActive(player)) stepPlayer(player, frozen ? EMPTY_INPUT : (inputs[i] ?? EMPTY_INPUT), world);
     else if (spawn) advanceRespawn(player, spawn);
   });
   // After everyone has moved, so hits use this step's final positions.

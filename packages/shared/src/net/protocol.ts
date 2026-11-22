@@ -80,6 +80,8 @@ export type EndReason = '' | 'ko' | 'forfeit';
 export interface NetMatchState {
   /** Server simulation tick. Keeps counting across rematches. */
   tick: number;
+  /** World.frozenUntil: the countdown before a match ends at this tick. */
+  frozenUntil: number;
   /** players[slot]: same order as World.players, split into parts (readSyncedPlayer). */
   players: ArrayLike<SyncedPlayer>;
   /** Which slot each connected client controls, keyed by session id. */

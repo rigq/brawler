@@ -120,3 +120,44 @@
   image-rendering: pixelated;
   background-repeat: no-repeat;
 }
+
+/* "3, 2, 1, ¡YA!" (Countdown.ts) */
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.countdown span {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-style: italic;
+  color: #f4f1de;
+  text-shadow: 0.06em 0.06em 0 #0b1026, 0 0 0.4em rgba(255, 183, 3, 0.6);
+  -webkit-text-stroke: 0.03em #0b1026;
+}
+
+.countdown__num {
+  font-size: 11em;
+  animation: countdown-pop 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.countdown__go {
+  font-size: 9em;
+  color: #ffb703 !important;
+  animation: countdown-go 0.66s ease-out both;
+}
+
+/* Stays on screen until the next number replaces it (the game decides when, not the clock). */
+@keyframes countdown-pop {
+  0% { opacity: 0; transform: scale(2.4) rotate(-8deg); }
+  25% { opacity: 1; transform: scale(1) rotate(0); }
+  100% { opacity: 1; transform: scale(0.9); }
+}
+
+@keyframes countdown-go {
+  0% { opacity: 0; transform: scale(0.4) skewX(-10deg); letter-spacing: -0.1em; }
+  30% { opacity: 1; transform: scale(1.15) skewX(-10deg); letter-spacing: 0.05em; }
+  100% { opacity: 0; transform: scale(1.6) skewX(-10deg); letter-spacing: 0.2em; }
+}

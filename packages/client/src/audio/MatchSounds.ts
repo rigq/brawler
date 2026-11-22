@@ -16,6 +16,7 @@ import {
   type Player,
   type World,
 } from '@brawler/shared';
+import { countdownLabel } from '../ui/hud/Countdown.ts';
 import { playSfx, type SfxName } from './sfx.ts';
 
 /** Plays a sound (tests pass one that just records the names). */
@@ -109,6 +110,7 @@ export class MatchSounds {
   private last: Seen[] = [];
   private projectiles = new Map<number, { kind: string; strength: number }>();
   private resultPlayed = false;
+  private lastCount = '';
 
   private readonly play: Play;
 
@@ -118,6 +120,9 @@ export class MatchSounds {
 
   /** Call once per rendered frame with the World being drawn. */
   update(world: World, matchOver: boolean): void {
+    const count = countdownLabel(world);
+    if (count && count !== this.lastCount) this.play(count === '¡YA!' ? 'countGo' : 'countBeep');
+    this.lastCount = count;
     const now = world.players.map(seen);
     world.players.forEach((player, i) => {
       const before = this.last[i];

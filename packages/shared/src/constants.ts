@@ -504,6 +504,8 @@ export const ATTACKS: Record<AttackId, AttackData> = {
     damage: 11, kbBase: 460, kbScale: 8.18, kbX: 1, kbY: -0.7,
   },
 };
+/** "3, 2, 1, ¡YA!" before a match: nobody can act for this long (2.4 s; 0.8 s per number). */
+export const COUNTDOWN_TICKS = 144;
 /** A taunt lasts this long (~1 s): you cannot act meanwhile, so it is a risk. */
 export const TAUNT_TICKS = 60;
 /** How long you can hold someone before they get away (1.5 s). */

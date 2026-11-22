@@ -18,6 +18,7 @@ import {
   parseCharacter,
   parseLineup,
   parseInputMessage,
+  startCountdown,
   stepWorld,
   type CharacterId,
   type CreateRoomOptions,
@@ -197,6 +198,7 @@ export class MatchRoom extends Room<{ state: MatchState }> {
       this.state.rematchVotes[slot] = false;
     });
     this.setPhase('playing');
+    startCountdown(this.world);
     this.syncState();
     this.log('match started');
   }
@@ -230,6 +232,7 @@ export class MatchRoom extends Room<{ state: MatchState }> {
    */
   private syncState(): void {
     this.state.tick = this.world.tick;
+    this.state.frozenUntil = this.world.frozenUntil;
     this.world.players.forEach((player, slot) => {
       const synced = this.state.players[slot];
       if (synced) writeSyncedPlayer(synced as unknown as SyncedPlayer, player);
