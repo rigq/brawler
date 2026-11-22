@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { HITSTOP_JITTER_PX, SHIELD_MAX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
 import { CHARACTER_ART } from './art.ts';
 import { CharacterSprite } from './CharacterSprite.ts';
+import { LaunchTrail } from './LaunchTrail.ts';
 import { SpecialFx } from './SpecialFx.ts';
 
 const DODGE_ALPHA = 0.4;
@@ -55,16 +56,24 @@ export class PlayerView {
   private readonly sprite: CharacterSprite | null;
   /** Roulette icon, counter glow, tether line. */
   private readonly fx: SpecialFx;
+  private readonly trail: LaunchTrail;
   private visible = true;
   /** Time the last active hitbox stays on screen after its active phase ended. */
   private swingLeftMs = 0;
 
   /** `tint`: multiplies the character's art (null: drawn as is). */
-  constructor(scene: Phaser.Scene, player: Player, color: number, tint: number | null = null) {
+  constructor(
+    scene: Phaser.Scene,
+    player: Player,
+    color: number,
+    tint: number | null = null,
+    onCreate: (object: Phaser.GameObjects.GameObject) => void = () => {},
+  ) {
     this.color = color;
     const art = CHARACTER_ART[player.characterId];
     this.sprite = art ? new CharacterSprite(scene, art, tint) : null;
     this.fx = new SpecialFx(scene, art?.rouletteIcons);
+    this.trail = new LaunchTrail(scene, color, onCreate);
     // With art the rectangle stays as an invisible box: the camera frames it.
     this.body = scene.add.rectangle(player.x, player.y, player.width, player.height, color).setOrigin(0, 0);
     this.eye = scene.add.rectangle(0, 0, EYE_SIZE, EYE_SIZE, EYE_COLOR).setOrigin(0, 0);
@@ -118,6 +127,7 @@ export class PlayerView {
     }
     this.renderShield(player, x, y);
     this.fx.render(player, x, y, frameMs, rival);
+    this.trail.update(player, this.sprite?.bodySprite ?? null, x, y, frameMs);
   }
 
   /** False while the player is knocked out or out of the match; the camera skips it. */

@@ -31,6 +31,9 @@ export const SHEETS = {
   chachinRocket: { key: 'chachin-rocket', file: 'sprites/chachin/scream-rocket.png', frameWidth: 65, frameHeight: 96 },
   chachinDizzy: { key: 'chachin-dizzy', file: 'sprites/chachin/dizzy.png', frameWidth: 48, frameHeight: 35 },
   rigaBody: { key: 'riga-body', file: 'sprites/riga/riga.png', frameWidth: 23, frameHeight: 80 },
+  // Effects for everyone (art/common).
+  fxSpark: { key: 'fx-spark', file: 'sprites/common/hit-spark.png', frameWidth: 41, frameHeight: 40 },
+  fxDust: { key: 'fx-dust', file: 'sprites/common/dust.png', frameWidth: 53, frameHeight: 34 },
 } as const satisfies Record<string, Sheet>;
 
 /** Frame sizes of a character's animation strips, as tools/pixelate.ts writes them (anims/<character>.json). */

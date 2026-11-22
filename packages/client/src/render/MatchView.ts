@@ -60,14 +60,16 @@ export class MatchView {
     this.stageLife = new StageLife(scene, world);
     const worldObjects = [...drawBackdrop(scene), ...drawStage(scene, world), ...this.stageLife.gameObjects];
     // Same character as someone before them (Donate vs Donate): tinted, so the two look different.
+    // Effects that appear mid-match: the UI camera must not draw them (it is created below, used later).
+    const worldOnly = (object: Phaser.GameObjects.GameObject) => this.uiCamera.ignore(object);
     this.playerViews = world.players.map((player, i) => {
       const repeated = world.players.slice(0, i).some((other) => other.characterId === player.characterId);
-      return new PlayerView(scene, player, playerColor(i), repeated ? MIRROR_TINT : null);
+      return new PlayerView(scene, player, playerColor(i), repeated ? MIRROR_TINT : null, worldOnly);
     });
     worldObjects.push(...this.playerViews.flatMap((view) => view.gameObjects));
-    this.hitEffects = new HitEffects(scene, PLAYER_COLORS);
+    this.hitEffects = new HitEffects(scene, worldOnly);
     worldObjects.push(...this.hitEffects.gameObjects);
-    this.fx = new MatchFx(scene, PLAYER_COLORS);
+    this.fx = new MatchFx(scene, PLAYER_COLORS, worldOnly);
     worldObjects.push(...this.fx.worldObjects);
     this.debugOverlay = new DebugOverlay(scene);
     worldObjects.push(this.debugOverlay.gameObject);

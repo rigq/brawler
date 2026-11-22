@@ -164,6 +164,11 @@ export class CharacterSprite {
     this.body.setTexture(sheet.key, frame).setOrigin(0.5, hanging ? 0 : 1).setPosition(feetX, hanging ? top : feetY);
   }
 
+  /** The body as drawn this frame (for afterimages). */
+  get bodySprite(): Sprite {
+    return this.body;
+  }
+
   hide(): void {
     for (const o of [this.body, this.prop, this.helper, this.aura, this.blast, this.teleport, this.flag, this.canopy, this.dizzy]) {
       o?.setVisible(false);

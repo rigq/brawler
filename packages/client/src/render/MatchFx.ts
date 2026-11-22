@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { GROUND, isActive, type World } from '@brawler/shared';
+import { SHEETS } from './art.ts';
+import { OneShots } from './OneShots.ts';
 
 /** Depth: in front of the stage, behind the players' sparks. */
 const DEPTH = { dust: 2, ko: 9 } as const;
@@ -13,6 +15,8 @@ const DUST = {
   speed: 70,
   radius: 4,
 } as const;
+/** The pixel-art dust cloud (art/common/dust): 4 frames, puffing up and thinning out. */
+const DUST_SHEET = { key: SHEETS.fxDust.key, frames: 4, frameMs: 80 } as const;
 const KO = {
   lifeMs: 650,
   /** In screen px: the beam is drawn on the screen, not in the world (the camera moves away as soon as someone is out). */
@@ -56,8 +60,11 @@ export class MatchFx {
   private puffs: Puff[] = [];
   private beams: Beam[] = [];
 
-  constructor(scene: Phaser.Scene, colors: readonly number[]) {
+  private readonly shots: OneShots;
+
+  constructor(scene: Phaser.Scene, colors: readonly number[], onCreate: (object: Phaser.GameObjects.GameObject) => void = () => {}) {
     this.graphics = scene.add.graphics().setDepth(DEPTH.dust);
+    this.shots = new OneShots(scene, DEPTH.dust, onCreate);
     this.screen = scene.add.graphics().setDepth(DEPTH.ko);
     this.camera = scene.cameras.main;
     this.colors = colors;
@@ -87,22 +94,15 @@ export class MatchFx {
       this.last[i] = { grounded: p.grounded, vy: p.vy, stocks: p.stocks, x: feetX, y: p.y + p.height / 2, airJumps: p.airJumpsLeft };
     });
     this.age(frameMs);
+    this.shots.update(frameMs);
     this.draw();
   }
 
-  /** Puffs rolling out to both sides of the feet. Render only: Math.random is fine. */
+  /** Two dust clouds rolling out to both sides of the feet, bigger for harder landings. */
   private dust(x: number, y: number, count: number): void {
-    for (let i = 0; i < Math.round(count); i++) {
-      const side = i % 2 === 0 ? 1 : -1;
-      this.puffs.push({
-        x: x + side * (4 + Math.random() * 8),
-        y: y - 2,
-        vx: side * DUST.speed * (0.5 + Math.random()),
-        vy: -15 - Math.random() * 25,
-        radius: DUST.radius * (0.7 + Math.random() * 0.8),
-        ageMs: 0,
-      });
-    }
+    const scale = Math.min(1.3, 0.45 + count * 0.07);
+    this.shots.play(DUST_SHEET, x - 12 * scale, y, { scale, originY: 1, flipX: true });
+    this.shots.play(DUST_SHEET, x + 12 * scale, y, { scale, originY: 1 });
   }
 
   /** An air jump: a small ring of air kicked downwards. */

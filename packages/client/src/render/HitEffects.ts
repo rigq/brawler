@@ -1,14 +1,13 @@
 import Phaser from 'phaser';
+import { SHEETS } from './art.ts';
+import { OneShots } from './OneShots.ts';
 import {
-  TRAIL_INTERVAL_MS,
-  TRAIL_LIFE_MS,
-  TRAIL_MIN_SPEED,
   isActive,
   type Player,
 } from '@brawler/shared';
 
 /** Sparks in front of the players, afterimages just behind them (players are at depth 0). */
-const DEPTH = { trail: -1, sparks: 10 } as const;
+const DEPTH = { sparks: 10 } as const;
 const SPARK = {
   lifeMs: 180,
   /** Rays per hit: base + damage dealt × perDamage. */
@@ -23,8 +22,11 @@ const SPARK = {
   scalePerDamage: 1 / 12,
   maxScale: 2,
   color: 0xfff3c4,
+  /** Hits at least this big (scale) also get the drawn rays and ring over the pixel-art spark. */
+  raysFrom: 1.3,
 } as const;
-const TRAIL_START_ALPHA = 0.35;
+/** The pixel-art impact (art/common/hit-spark): 3 frames. */
+const SPARK_SHEET = { key: SHEETS.fxSpark.key, frames: 3, frameMs: 55 } as const;
 
 interface Spark {
   x: number;
@@ -36,37 +38,26 @@ interface Spark {
   ageMs: number;
 }
 
-interface Ghost {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: number;
-  ageMs: number;
-}
 
 /**
- * Impact sparks and the launch trail. It finds hits on its own by watching each
+ * Impact sparks (the launch trail is LaunchTrail). It finds hits on its own by watching each
  * player's damage go up (with the hit flash on), so it works the same with a local World and with one
  * mirrored from the server. Render only: Math.random is fine here.
  */
 export class HitEffects {
   private readonly sparksGraphics: Phaser.GameObjects.Graphics;
-  private readonly trailGraphics: Phaser.GameObjects.Graphics;
-  private readonly colors: readonly number[];
   private readonly lastDamage: number[] = [];
-  private readonly sinceGhostMs: number[] = [];
   private sparks: Spark[] = [];
-  private ghosts: Ghost[] = [];
 
-  constructor(scene: Phaser.Scene, colors: readonly number[]) {
-    this.colors = colors;
+  private readonly shots: OneShots;
+
+  constructor(scene: Phaser.Scene, onCreate: (object: Phaser.GameObjects.GameObject) => void = () => {}) {
+    this.shots = new OneShots(scene, DEPTH.sparks, onCreate);
     this.sparksGraphics = scene.add.graphics().setDepth(DEPTH.sparks).setBlendMode(Phaser.BlendModes.ADD);
-    this.trailGraphics = scene.add.graphics().setDepth(DEPTH.trail);
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.trailGraphics, this.sparksGraphics];
+    return [this.sparksGraphics];
   }
 
   /** Returns the damage dealt by each hit found this frame (empty if none), for the screen shake. */
@@ -80,9 +71,9 @@ export class HitEffects {
         hits.push(dealt);
         this.spawnSpark(player, dealt);
       }
-      this.updateTrail(player, i, frameMs);
     });
     this.age(frameMs);
+    this.shots.update(frameMs);
     this.draw();
     return hits;
   }
@@ -95,47 +86,19 @@ export class HitEffects {
       const angle = Math.random() * Math.PI * 2;
       return { dx: Math.cos(angle), dy: Math.sin(angle) };
     });
-    this.sparks.push({
-      x: player.x + player.width / 2 + (side * player.width) / 2,
-      y: player.y + player.height * 0.4,
-      rays,
-      scale: Math.min(SPARK.minScale + dealt * SPARK.scalePerDamage, SPARK.maxScale),
-      ageMs: 0,
-    });
-  }
-
-  /** Drops an afterimage every TRAIL_INTERVAL_MS while the player flies fast in hitstun. */
-  private updateTrail(player: Player, slot: number, frameMs: number): void {
-    const flying = isActive(player) && player.hitstunTicks > 0 && player.hitstopTicks === 0;
-    const fast = player.vx * player.vx + player.vy * player.vy > TRAIL_MIN_SPEED * TRAIL_MIN_SPEED;
-    if (!flying || !fast) {
-      this.sinceGhostMs[slot] = TRAIL_INTERVAL_MS; // first ghost appears at once next time
-      return;
-    }
-    const since = (this.sinceGhostMs[slot] ?? 0) + frameMs;
-    if (since < TRAIL_INTERVAL_MS) {
-      this.sinceGhostMs[slot] = since;
-      return;
-    }
-    this.sinceGhostMs[slot] = 0;
-    const { x, y, width, height } = player;
-    this.ghosts.push({ x, y, width, height, color: this.colors[slot] ?? 0xffffff, ageMs: 0 });
+    const x = player.x + player.width / 2 + (side * player.width) / 2;
+    const y = player.y + player.height * 0.4;
+    const scale = Math.min(SPARK.minScale + dealt * SPARK.scalePerDamage, SPARK.maxScale);
+    this.shots.play(SPARK_SHEET, x, y, { scale: scale * 1.2, rotation: Math.random() * Math.PI * 2 });
+    if (scale >= SPARK.raysFrom) this.sparks.push({ x, y, rays, scale, ageMs: 0 });
   }
 
   private age(frameMs: number): void {
     for (const spark of this.sparks) spark.ageMs += frameMs;
-    for (const ghost of this.ghosts) ghost.ageMs += frameMs;
     this.sparks = this.sparks.filter((spark) => spark.ageMs < SPARK.lifeMs);
-    this.ghosts = this.ghosts.filter((ghost) => ghost.ageMs < TRAIL_LIFE_MS);
   }
 
   private draw(): void {
-    const g = this.trailGraphics.clear();
-    for (const ghost of this.ghosts) {
-      const alpha = TRAIL_START_ALPHA * (1 - ghost.ageMs / TRAIL_LIFE_MS);
-      g.fillStyle(ghost.color, alpha).fillRect(ghost.x, ghost.y, ghost.width, ghost.height);
-    }
-
     const s = this.sparksGraphics.clear();
     for (const spark of this.sparks) {
       const t = spark.ageMs / SPARK.lifeMs;
