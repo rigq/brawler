@@ -34,6 +34,17 @@ export const SHEETS = {
   // Effects for everyone (art/common).
   fxSpark: { key: 'fx-spark', file: 'sprites/common/hit-spark.png', frameWidth: 41, frameHeight: 40 },
   fxDust: { key: 'fx-dust', file: 'sprites/common/dust.png', frameWidth: 53, frameHeight: 34 },
+  // art/fx (docs/prompts/efectos.md).
+  fxHeavySpark: { key: 'fx-heavy-spark', file: 'sprites/fx/heavy-spark.png', frameWidth: 55, frameHeight: 56 },
+  fxKoBurst: { key: 'fx-ko-burst', file: 'sprites/fx/ko-burst.png', frameWidth: 120, frameHeight: 110 },
+  fxShield: { key: 'fx-shield', file: 'sprites/fx/shield.png', frameWidth: 98, frameHeight: 96 },
+  fxCounter: { key: 'fx-counter', file: 'sprites/fx/counter.png', frameWidth: 49, frameHeight: 70 },
+  fxBubble: { key: 'fx-bubble', file: 'sprites/fx/bubble.png', frameWidth: 24, frameHeight: 19 },
+  fxStar: { key: 'fx-star', file: 'sprites/fx/star.png', frameWidth: 20, frameHeight: 20 },
+  fxCursor: { key: 'fx-cursor', file: 'sprites/fx/cursor.png', frameWidth: 21, frameHeight: 40 },
+  fxBomb: { key: 'fx-bomb', file: 'sprites/fx/bomb.png', frameWidth: 18, frameHeight: 21 },
+  fxSmokePuff: { key: 'fx-smoke-puff', file: 'sprites/fx/smoke-puff.png', frameWidth: 20, frameHeight: 22 },
+  fxCharge: { key: 'fx-charge', file: 'sprites/fx/charge.png', frameWidth: 64, frameHeight: 75 },
 } as const satisfies Record<string, Sheet>;
 
 /** Frame sizes of a character's animation strips, as tools/pixelate.ts writes them (anims/<character>.json). */
@@ -137,12 +148,18 @@ export interface ProjectileArt {
   sheet: Sheet;
   animation: 'loop' | 'life';
   burst?: Sheet;
+  /** Size of the burst (default: the shot's own scale). */
+  burstScale?: number;
 }
 
 export const PROJECTILE_ART: Record<string, ProjectileArt | undefined> = {
   shell: { sheet: SHEETS.donateShell, animation: 'loop', burst: SHEETS.donateExplosion },
   smoke: { sheet: SHEETS.robertSmoke, animation: 'life' },
   ball: { sheet: SHEETS.samuBall, animation: 'loop' },
+  // Riga's AIs and Donate's bombs (art/fx).
+  bubble: { sheet: SHEETS.fxBubble, animation: 'life' },
+  star: { sheet: SHEETS.fxStar, animation: 'loop' },
+  bomb: { sheet: SHEETS.fxBomb, animation: 'loop', burst: SHEETS.donateExplosion, burstScale: 0.55 },
 };
 
 /** Every sheet to load: the fixed ones and each character's animations. */

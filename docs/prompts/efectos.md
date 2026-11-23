@@ -2,7 +2,7 @@
 
 En Gemini o Flow: **adjunta una hoja de personaje** (por ejemplo `art/riga/riga.png`) solo como referencia de estilo, pega el bloque y guarda la imagen con el nombre del título en `art/fx/`. Una tira por mensaje. Yo las proceso y las meto en el juego.
 
-Ya hechos y en uso: chispa de golpe (`art/common/hit-spark.jpg`) y polvo (`art/common/dust.jpg`).
+Ya hechos y en uso: chispa de golpe (`art/common/hit-spark.jpg`), polvo (`art/common/dust.jpg`) y **los 10 de esta lista** (23 nov, en `art/fx/`; se procesan con `node tools/pixelate.ts art/fx/sprites.json`).
 
 **Lo que no va con imágenes** (queda mejor en código): el haz de KO, la luz de los faroles, las nubes, la cuenta atrás y los iconos de la ruleta de Riga (para no acabar con logos de marcas).
 

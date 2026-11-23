@@ -27,6 +27,10 @@ const SPARK = {
 } as const;
 /** The pixel-art impact (art/common/hit-spark): 3 frames. */
 const SPARK_SHEET = { key: SHEETS.fxSpark.key, frames: 3, frameMs: 55 } as const;
+/** Strong hits (art/fx/heavy-spark): a bigger star with a ring, 4 frames. */
+const HEAVY_SPARK_SHEET = { key: SHEETS.fxHeavySpark.key, frames: 4, frameMs: 60 } as const;
+/** Hits of at least this much damage use the heavy spark. */
+const HEAVY_SPARK_DAMAGE = 10;
 
 interface Spark {
   x: number;
@@ -89,8 +93,10 @@ export class HitEffects {
     const x = player.x + player.width / 2 + (side * player.width) / 2;
     const y = player.y + player.height * 0.4;
     const scale = Math.min(SPARK.minScale + dealt * SPARK.scalePerDamage, SPARK.maxScale);
-    this.shots.play(SPARK_SHEET, x, y, { scale: scale * 1.2, rotation: Math.random() * Math.PI * 2 });
-    if (scale >= SPARK.raysFrom) this.sparks.push({ x, y, rays, scale, ageMs: 0 });
+    if (dealt >= HEAVY_SPARK_DAMAGE) this.shots.play(HEAVY_SPARK_SHEET, x, y, { scale: Math.min(1.6, scale * 0.9) });
+    else this.shots.play(SPARK_SHEET, x, y, { scale: scale * 1.2, rotation: Math.random() * Math.PI * 2 });
+    // The drawn rays only for the very biggest hits, on top of the art.
+    if (scale >= SPARK.raysFrom + 0.4) this.sparks.push({ x, y, rays, scale, ageMs: 0 });
   }
 
   private age(frameMs: number): void {

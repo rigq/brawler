@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { HITSTOP_JITTER_PX, SHIELD_MAX, attackBoxAt, attackData, attackCharge, attackPhase, isActive, isInvulnerable, type Player, type Rect } from '@brawler/shared';
-import { CHARACTER_ART } from './art.ts';
+import { CHARACTER_ART, SHEETS } from './art.ts';
 import { CharacterSprite } from './CharacterSprite.ts';
 import { LaunchTrail } from './LaunchTrail.ts';
 import { SpecialFx } from './SpecialFx.ts';
@@ -30,6 +30,9 @@ const CHARGE_BAR_HEIGHT = 5;
 const CHARGE_BAR_GAP = 8;
 /** The shield bubble shrinks from max to min radius as it wears out. */
 const SHIELD_RADIUS = { min: 22, max: 56 } as const;
+/** The bubble (art/fx/shield): frames cycle this fast; drawn see-through. */
+const SHIELD_FRAME_MS = 120;
+const SHIELD_SPRITE_ALPHA = 0.55;
 const SHIELD_ALPHA = 0.35;
 const SHIELD_OUTLINE_WIDTH = 2;
 
@@ -51,6 +54,8 @@ export class PlayerView {
   private readonly swing: Phaser.GameObjects.Rectangle;
   private readonly chargeBar: Phaser.GameObjects.Rectangle;
   private readonly shield: Phaser.GameObjects.Arc;
+  private readonly shieldSprite: Phaser.GameObjects.Sprite | null;
+  private clockMs = 0;
   private readonly color: number;
   /** Null: no art for this character, the rectangle is the body. */
   private readonly sprite: CharacterSprite | null;
@@ -87,6 +92,11 @@ export class PlayerView {
       .circle(0, 0, SHIELD_RADIUS.max, color, SHIELD_ALPHA)
       .setStrokeStyle(SHIELD_OUTLINE_WIDTH, color)
       .setVisible(false);
+    // The pixel-art bubble if it is loaded; the drawn circle (now only a thin ring in the player's colour) shows whose it is.
+    this.shieldSprite = scene.textures.exists(SHEETS.fxShield.key)
+      ? scene.add.sprite(0, 0, SHEETS.fxShield.key, 0).setAlpha(SHIELD_SPRITE_ALPHA).setVisible(false)
+      : null;
+    if (this.shieldSprite) this.shield.setFillStyle(color, 0);
   }
 
   /**
@@ -94,6 +104,7 @@ export class PlayerView {
    * Drawing in between keeps motion smooth on screens faster than 60 Hz.
    */
   render(player: Player, alpha: number, frameMs: number, offset: VisualOffset = NO_OFFSET, rival?: Player): void {
+    this.clockMs += frameMs;
     // Knocked out (waiting to respawn) or out of the match: draw nothing.
     this.visible = isActive(player);
     this.body.setVisible(this.visible);
@@ -104,6 +115,7 @@ export class PlayerView {
       this.swing.setVisible(false);
       this.chargeBar.setVisible(false);
       this.shield.setVisible(false);
+      this.shieldSprite?.setVisible(false);
       return;
     }
 
@@ -141,7 +153,7 @@ export class PlayerView {
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield, ...this.fx.gameObjects];
+    return [this.swing, this.body, this.eye, ...(this.sprite?.gameObjects ?? []), this.chargeBar, this.shield, ...(this.shieldSprite ? [this.shieldSprite] : []), ...this.fx.gameObjects];
   }
 
   /** Blinking right after respawning, see-through while dodging, solid otherwise. */
@@ -179,10 +191,15 @@ export class PlayerView {
   /** Bubble around the body: its size is how much shield is left. */
   private renderShield(player: Player, x: number, y: number): void {
     this.shield.setVisible(player.shielding);
+    this.shieldSprite?.setVisible(player.shielding);
     if (!player.shielding) return;
     const left = player.shieldHealth / SHIELD_MAX;
     const radius = SHIELD_RADIUS.min + (SHIELD_RADIUS.max - SHIELD_RADIUS.min) * left;
     this.shield.setPosition(x + player.width / 2, y + player.height / 2).setRadius(radius);
+    this.shieldSprite
+      ?.setPosition(x + player.width / 2, y + player.height / 2)
+      .setScale((radius * 2) / SHEETS.fxShield.frameWidth)
+      .setFrame(Math.floor(this.clockMs / SHIELD_FRAME_MS) % 3);
   }
 
   /** Bar above the head that fills while a heavy attack charges. */

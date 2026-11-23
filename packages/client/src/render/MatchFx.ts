@@ -17,6 +17,8 @@ const DUST = {
 } as const;
 /** The pixel-art dust cloud (art/common/dust): 4 frames, puffing up and thinning out. */
 const DUST_SHEET = { key: SHEETS.fxDust.key, frames: 4, frameMs: 80 } as const;
+/** The explosion on the screen edge where someone is knocked out (art/fx/ko-burst): 7 frames. */
+const KO_BURST_SHEET = { key: SHEETS.fxKoBurst.key, frames: 7, frameMs: 70 } as const;
 const KO = {
   lifeMs: 650,
   /** In screen px: the beam is drawn on the screen, not in the world (the camera moves away as soon as someone is out). */
@@ -61,10 +63,18 @@ export class MatchFx {
   private beams: Beam[] = [];
 
   private readonly shots: OneShots;
+  /** On the screen (the UI camera): the KO explosion. */
+  private readonly screenShots: OneShots;
 
-  constructor(scene: Phaser.Scene, colors: readonly number[], onCreate: (object: Phaser.GameObjects.GameObject) => void = () => {}) {
+  constructor(
+    scene: Phaser.Scene,
+    colors: readonly number[],
+    onCreate: (object: Phaser.GameObjects.GameObject) => void = () => {},
+    onCreateOnScreen: (object: Phaser.GameObjects.GameObject) => void = () => {},
+  ) {
     this.graphics = scene.add.graphics().setDepth(DEPTH.dust);
     this.shots = new OneShots(scene, DEPTH.dust, onCreate);
+    this.screenShots = new OneShots(scene, DEPTH.ko + 1, onCreateOnScreen);
     this.screen = scene.add.graphics().setDepth(DEPTH.ko);
     this.camera = scene.cameras.main;
     this.colors = colors;
@@ -95,6 +105,7 @@ export class MatchFx {
     });
     this.age(frameMs);
     this.shots.update(frameMs);
+    this.screenShots.update(frameMs);
     this.draw();
   }
 
@@ -126,6 +137,7 @@ export class MatchFx {
     const cy = Phaser.Math.Clamp(at.y, KO.margin, this.camera.height - KO.margin);
     const length = Math.hypot(at.x - stage.x, at.y - stage.y) || 1;
     this.beams.push({ x: cx, y: cy, dx: (at.x - stage.x) / length, dy: (at.y - stage.y) / length, color, ageMs: 0 });
+    this.screenShots.play(KO_BURST_SHEET, cx, cy, { scale: 1.3 });
     this.camera.flash(140, 255, 255, 255, true);
     this.camera.shake(380, 0.02, true);
   }

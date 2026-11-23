@@ -1,0 +1,15 @@
+{
+  "outDir": "../../packages/client/public/sprites/fx",
+  "assets": [
+    { "name": "heavy-spark", "file": "heavy-spark.jpg", "detect": 4, "height": 56, "alignY": "center" },
+    { "name": "ko-burst", "file": "ko-burst.jpg", "detect": 7, "height": 110, "alignY": "center" },
+    { "name": "shield", "file": "shield.jpg", "detect": 3, "height": 96, "alignY": "center" },
+    { "name": "counter", "file": "counter.jpg", "detect": 3, "height": 70, "alignY": "center" },
+    { "name": "bubble", "file": "bubble.jpg", "detect": 4, "width": 24, "alignY": "center" },
+    { "name": "star", "file": "star.jpg", "detect": 4, "width": 20, "alignY": "center" },
+    { "name": "cursor", "file": "cursor.jpg", "frames": 5, "clean": true, "height": 40, "alignX": "left", "alignY": "bottom" },
+    { "name": "bomb", "file": "bomb.jpg", "detect": 2, "height": 22, "alignX": "left", "alignY": "bottom" },
+    { "name": "smoke-puff", "file": "smoke-puff.jpg", "detect": 6, "height": 22, "alignY": "center" },
+    { "name": "charge", "file": "charge.jpg", "detect": 4, "width": 64 }
+  ]
+}

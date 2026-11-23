@@ -34,14 +34,6 @@ function drawSpiral(g: Phaser.GameObjects.Graphics, x: number, y: number, scale:
   g.lineStyle(2 * scale, 0xc9a6ff, 1).strokePoints(points, false);
 }
 
-/** Donate's bomb: a black ball with a lit fuse, centred at (x, y). */
-export function drawBomb(g: Phaser.GameObjects.Graphics, x: number, y: number, radius: number): void {
-  g.fillStyle(0x1d2330, 1).fillCircle(x, y, radius);
-  g.fillStyle(0x5c6a8a, 1).fillCircle(x - radius * 0.35, y - radius * 0.35, radius * 0.3);
-  g.lineStyle(2, 0xb08a5a, 1).lineBetween(x, y - radius, x + 3, y - radius - 4);
-  g.fillStyle(0xffb703, 1).fillCircle(x + 3, y - radius - 5, 2);
-}
-
 /** Rays round a centre, like an asterisk. Render only: trigonometry is fine here. */
 function drawSpark(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number): void {
   g.lineStyle(SPARK.width * scale, SPARK.color, 1);
@@ -67,8 +59,8 @@ function drawKnot(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: n
   }
 }
 
-/** A four-pointed star, also the shape of the Gemini shots. */
-export function drawStar(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number, outer: number, inner: number): void {
+/** A four-pointed star. */
+function drawStar(g: Phaser.GameObjects.Graphics, x: number, y: number, scale: number, outer: number, inner: number): void {
   const s = STAR.size * scale;
   const t = s * 0.28;
   const star = [
@@ -77,13 +69,4 @@ export function drawStar(g: Phaser.GameObjects.Graphics, x: number, y: number, s
   ];
   g.fillStyle(outer, 1).fillPoints(star, true);
   g.fillStyle(inner, 1).fillCircle(x, y, t);
-}
-
-/** A white speech bubble with "…" (the ChatGPT shots), centred at (x, y). */
-export function drawBubble(g: Phaser.GameObjects.Graphics, x: number, y: number, width: number, height: number): void {
-  g.fillStyle(0xffffff, 1).fillRoundedRect(x - width / 2, y - height / 2, width, height, 4);
-  g.fillTriangle(x - width / 2 + 3, y + height / 2 - 1, x - width / 2 + 9, y + height / 2 - 1, x - width / 2 + 2, y + height / 2 + 4);
-  g.lineStyle(1, 0x2b3a67, 1).strokeRoundedRect(x - width / 2, y - height / 2, width, height, 4);
-  g.fillStyle(0x10a37f, 1);
-  for (let i = -1; i <= 1; i++) g.fillCircle(x + i * 4, y, 1.4);
 }

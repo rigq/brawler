@@ -1,7 +1,8 @@
 import type Phaser from 'phaser';
-import { attackData, attackPhase, counterHolds, rouletteChoice, type Player } from '@brawler/shared';
+import { attackCharge, attackData, attackPhase, counterHolds, rouletteChoice, type Player } from '@brawler/shared';
 import { COUNTER_LINES, TAUNT_LINES } from '../ui/quotes.ts';
 import { drawAiIcon, type AiIcon } from './aiIcons.ts';
+import { SHEETS } from './art.ts';
 
 /** Above the head, in px. */
 const ICON_GAP = 18;
@@ -10,7 +11,13 @@ const POP_MS = 120;
 const COUNTER = { color: 0xd97757, radius: 12, pulseMs: 220 } as const;
 const CURSOR = { color: 0xffffff, outline: 0x0b1026 } as const;
 /** Power stacks (Robert's smoke): puffs going round the head. */
-const PUFF = { color: 0xb8bcc8, radius: 5, orbit: 18, turnMs: 1400 } as const;
+const PUFF = { orbit: 18, turnMs: 1400 } as const;
+/** Robert gathers up to 3 stacks. */
+const MAX_PUFFS = 3;
+/** Each click frame of the cursor lasts this many ticks. */
+const CURSOR_CLICK_TICKS = 3;
+/** At full charge the flames switch frame this often (ms). */
+const FLAME_MS = 90;
 const BUBBLE_STYLE = {
   fontFamily: 'system-ui, sans-serif',
   fontSize: '11px',
@@ -37,20 +44,32 @@ export class SpecialFx {
   private clockMs = 0;
 
   private readonly bubble: Phaser.GameObjects.Text;
+  /** Pixel-art pieces (art/fx): Claude's hand, the tether cursor, smoke stacks, the charge flames. */
+  private readonly hand: Phaser.GameObjects.Sprite;
+  private readonly cursor: Phaser.GameObjects.Sprite;
+  private readonly puffs: Phaser.GameObjects.Sprite[];
+  private readonly flames: Phaser.GameObjects.Sprite;
 
   constructor(scene: Phaser.Scene, icons: readonly AiIcon[] = []) {
     this.graphics = scene.add.graphics().setDepth(5);
     this.bubble = scene.add.text(0, 0, '', BUBBLE_STYLE).setOrigin(0.5, 1).setDepth(6).setResolution(2).setVisible(false);
     this.icons = icons;
+    const sprite = (key: string, depth: number) => scene.add.sprite(0, 0, key, 0).setDepth(depth).setVisible(false);
+    this.hand = sprite(SHEETS.fxCounter.key, 4).setAlpha(0.9).setScale(0.7);
+    this.cursor = sprite(SHEETS.fxCursor.key, 6).setOrigin(0, 0).setScale(1.2);
+    this.puffs = Array.from({ length: MAX_PUFFS }, () => sprite(SHEETS.fxSmokePuff.key, 4).setFrame(2).setAlpha(0.85).setScale(0.8));
+    // Behind the body: the flames rise around the feet.
+    this.flames = sprite(SHEETS.fxCharge.key, -1).setOrigin(0.5, 0.92);
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.graphics, this.bubble];
+    return [this.graphics, this.bubble, this.hand, this.cursor, ...this.puffs, this.flames];
   }
 
   hide(): void {
     this.graphics.clear();
     this.bubble.setVisible(false);
+    for (const s of [this.hand, this.cursor, ...this.puffs, this.flames]) s.setVisible(false);
   }
 
   render(player: Player, x: number, y: number, frameMs: number, rival?: Player): void {
@@ -58,9 +77,25 @@ export class SpecialFx {
     const g = this.graphics.clear();
     this.renderRoulette(g, player, x, y, frameMs);
     if (counterHolds(player)) this.renderCounter(g, player, x, y);
+    else this.hand.setVisible(false);
     this.renderTether(g, player, x, y);
-    this.renderStacks(g, player, x, y);
+    this.renderStacks(player, x, y);
+    this.renderCharge(player, x, y);
     this.renderBubble(player, x, y, rival);
+  }
+
+  /** Charging a heavy (or a chargeable special): a ring of flames at the feet, growing with the charge. */
+  private renderCharge(player: Player, x: number, y: number): void {
+    const charging = attackPhase(player) === 'charge';
+    this.flames.setVisible(charging);
+    if (!charging) return;
+    const charge = attackCharge(player);
+    this.flames
+      .setPosition(x + player.width / 2, y + player.height)
+      .setScale(((player.width + 24) / SHEETS.fxCharge.frameWidth) * (0.7 + 0.3 * charge))
+      .setAlpha(0.45 + 0.55 * charge)
+      // Frames 0–1 while it grows; at full charge the two biggest alternate: the flames dance.
+      .setFrame(charge >= 1 ? 2 + (Math.floor(this.clockMs / FLAME_MS) % 2) : Math.floor(charge * 2));
   }
 
   /** Taunting: the character's line. Countering: what Claude says to this rival. */
@@ -77,17 +112,18 @@ export class SpecialFx {
     this.bubble.setPosition(x + player.width / 2, y - BUBBLE_GAP);
   }
 
-  /** Smoke stacks: grey puffs going round the head, one per stack. */
-  private renderStacks(g: Phaser.GameObjects.Graphics, player: Player, x: number, y: number): void {
+  /** Smoke stacks: puffs of smoke going round the head, one per stack. */
+  private renderStacks(player: Player, x: number, y: number): void {
     const cx = x + player.width / 2;
     const cy = y + 6;
-    for (let i = 0; i < player.powerStacks; i++) {
+    this.puffs.forEach((puff, i) => {
+      const on = i < player.powerStacks;
+      puff.setVisible(on);
+      if (!on) return;
       const angle = (this.clockMs / PUFF.turnMs) * Math.PI * 2 + (i / Math.max(1, player.powerStacks)) * Math.PI * 2;
-      const px = cx + Math.cos(angle) * PUFF.orbit;
-      const py = cy + Math.sin(angle) * PUFF.orbit * 0.4;
-      g.fillStyle(PUFF.color, 0.75).fillCircle(px, py, PUFF.radius);
-      g.fillStyle(0xffffff, 0.35).fillCircle(px - 1.5, py - 1.5, PUFF.radius * 0.45);
-    }
+      // In front of the head on the near half of the circle, behind it on the far half.
+      puff.setPosition(cx + Math.cos(angle) * PUFF.orbit, cy + Math.sin(angle) * PUFF.orbit * 0.4).setDepth(Math.sin(angle) > 0 ? 4 : -1);
+    });
   }
 
   private renderRoulette(g: Phaser.GameObjects.Graphics, player: Player, x: number, y: number, frameMs: number): void {
@@ -105,37 +141,38 @@ export class SpecialFx {
     drawAiIcon(g, icon, x + player.width / 2, y - ICON_GAP, pop);
   }
 
-  /** "Lo siento, no puedo ayudarte con eso": a pulsing orange ring, a hand up. */
+  /** "Lo siento, no puedo ayudarte con eso": a hand of orange light raised in front of him, and a faint ring. */
   private renderCounter(g: Phaser.GameObjects.Graphics, player: Player, x: number, y: number): void {
     const pulse = 0.5 + 0.5 * Math.sin((this.clockMs / COUNTER.pulseMs) * Math.PI * 2);
     const cx = x + player.width / 2;
     const cy = y + player.height / 2;
     const radius = Math.max(player.width, player.height) / 2 + COUNTER.radius;
-    g.fillStyle(COUNTER.color, 0.12 + 0.1 * pulse).fillCircle(cx, cy, radius);
-    g.lineStyle(3, COUNTER.color, 0.6 + 0.4 * pulse).strokeCircle(cx, cy, radius);
+    g.fillStyle(COUNTER.color, 0.06 + 0.06 * pulse).fillCircle(cx, cy, radius);
+    g.lineStyle(2, COUNTER.color, 0.35 + 0.3 * pulse).strokeCircle(cx, cy, radius);
+    const started = player.attackTick - attackData(player, player.attackId === 'none' ? 'jab1' : player.attackId).startup;
+    this.hand
+      .setVisible(true)
+      .setPosition(cx + player.facing * (player.width / 2 + 10), cy - 6)
+      .setFlipX(player.facing === -1)
+      .setFrame(started < 3 ? 0 : 1 + (Math.floor(this.clockMs / COUNTER.pulseMs) % 2));
   }
 
-  /** While typing the prompt the cursor blinks on the hooked ledge; while pulling, a line joins them. */
+  /** While typing the prompt the cursor blinks on the hooked ledge; when it pulls, it clicks and a line joins them. */
   private renderTether(g: Phaser.GameObjects.Graphics, player: Player, x: number, y: number): void {
-    if (player.attackId === 'none' || player.tetherSide === 0 || !attackData(player, player.attackId).tether) return;
+    const data = player.attackId === 'none' ? undefined : attackData(player, player.attackId);
     const phase = attackPhase(player);
-    if (phase !== 'startup' && phase !== 'active') return;
+    const showing = player.tetherSide !== 0 && data?.tether !== undefined && (phase === 'startup' || phase === 'active');
+    this.cursor.setVisible(showing);
+    if (!showing || !data) return;
     const hand = { x: x + player.width / 2, y: y + 6 };
     if (phase === 'active') {
       g.lineStyle(4, CURSOR.outline, 0.9).lineBetween(hand.x, hand.y, player.tetherX, player.tetherY);
       g.lineStyle(2, CURSOR.color, 1).lineBetween(hand.x, hand.y, player.tetherX, player.tetherY);
     }
-    if (phase === 'active' || Math.floor(this.clockMs / 90) % 2 === 0) drawCursor(g, player.tetherX, player.tetherY);
+    // Frames: 0 the pointer, 1–4 the click growing and fading.
+    const pulling = player.attackTick - data.startup;
+    const frame = phase === 'active' ? Math.min(4, 1 + Math.floor(pulling / CURSOR_CLICK_TICKS)) : 0;
+    const blinkOff = phase === 'startup' && Math.floor(this.clockMs / 90) % 2 === 1;
+    this.cursor.setPosition(player.tetherX, player.tetherY).setFrame(frame).setAlpha(blinkOff ? 0.35 : 1);
   }
-}
-
-/** A big mouse pointer with its tip at (x, y). */
-function drawCursor(g: Phaser.GameObjects.Graphics, x: number, y: number): void {
-  const s = 2;
-  const arrow = [
-    { x, y }, { x, y: y + 14 * s }, { x: x + 4 * s, y: y + 10 * s }, { x: x + 7 * s, y: y + 16 * s },
-    { x: x + 9 * s, y: y + 15 * s }, { x: x + 6 * s, y: y + 9 * s }, { x: x + 11 * s, y: y + 9 * s },
-  ];
-  g.fillStyle(CURSOR.color, 1).fillPoints(arrow, true);
-  g.lineStyle(2, CURSOR.outline, 1).strokePoints(arrow, true);
 }

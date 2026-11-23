@@ -69,7 +69,7 @@ export class MatchView {
     worldObjects.push(...this.playerViews.flatMap((view) => view.gameObjects));
     this.hitEffects = new HitEffects(scene, worldOnly);
     worldObjects.push(...this.hitEffects.gameObjects);
-    this.fx = new MatchFx(scene, PLAYER_COLORS, worldOnly);
+    this.fx = new MatchFx(scene, PLAYER_COLORS, worldOnly, (object) => this.scene.cameras.main.ignore(object));
     worldObjects.push(...this.fx.worldObjects);
     this.debugOverlay = new DebugOverlay(scene);
     worldObjects.push(this.debugOverlay.gameObject);

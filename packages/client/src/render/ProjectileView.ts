@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import type { Projectile } from '@brawler/shared';
-import { drawBomb, drawBubble, drawStar } from './aiIcons.ts';
 import { PROJECTILE_ART, SHEETS, type ProjectileArt } from './art.ts';
 
 /** Projectiles without art: a plain glowing ball. */
@@ -24,11 +23,8 @@ interface BurstStyle {
 }
 
 /** Shots drawn in code, centred on (0, 0) of their Graphics; `spin`: turns per second. */
-const DRAWN: Record<string, { draw: (g: Phaser.GameObjects.Graphics, p: Projectile) => void; spin?: number; burst?: BurstStyle }> = {
-  bubble: { draw: (g, p) => drawBubble(g, 0, 0, p.width, p.height) },
-  star: { draw: (g, p) => drawStar(g, 0, 0, p.width / 18, 0x4e8cff, 0xa57bff), spin: 2 },
-  bomb: { draw: (g, p) => drawBomb(g, 0, 0, p.width / 2), burst: { key: SHEETS.donateExplosion.key, scale: 0.55 } },
-};
+// (Bubbles, stars and bombs were drawn here until their pixel art arrived: see PROJECTILE_ART.)
+const DRAWN: Record<string, { draw: (g: Phaser.GameObjects.Graphics, p: Projectile) => void; spin?: number; burst?: BurstStyle }> = {};
 
 /**
  * Shots that borrow a character's animation: Riga's hallucination is his own
@@ -154,7 +150,8 @@ export class ProjectileView {
 
   private explode(view: Flying): void {
     const sheet = PROJECTILE_ART[view.kind]?.burst;
-    const style: BurstStyle | undefined = sheet ? { key: sheet.key, scale: view.scale } : view.burst;
+    const art = PROJECTILE_ART[view.kind];
+    const style: BurstStyle | undefined = sheet ? { key: sheet.key, scale: art?.burstScale ?? view.scale } : view.burst;
     if (!style) return;
     const sprite = this.scene.add.sprite(view.centerX, view.centerY, style.key, 0).setOrigin(0.5, 0.5).setScale(style.scale);
     if (style.tint !== undefined) sprite.setTint(style.tint);

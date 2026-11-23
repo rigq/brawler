@@ -27,6 +27,12 @@ Se actualiza al cerrar cada sesión. Lo más reciente, arriba.
 
 - **El código de sala no se dejaba escribir (16 nov)** — Tras jugar una partida, Phaser seguía "capturando" las teclas del juego (W, A, S, D, J, K, L…) aunque la escena ya no existiera, y esas letras no llegaban al campo del código. `App.stopMatch` llama a `clearCaptures()` al quitar la partida. Reproducido y comprobado con el navegador (antes: "" al escribir WASD tras una partida; ahora: "WASD").
 
+- **Efectos dibujados por Riga (23 nov)** — 10 tiras de `art/fx/` (prompts en `docs/prompts/efectos.md`), procesadas con `node tools/pixelate.ts art/fx/sprites.json` a `public/sprites/fx/` y cargadas en `render/art.ts` (`SHEETS.fx*`).
+  - **Golpes**: chispa grande para golpes de 10 % o más (`HitEffects`); **KO**: explosión en el borde de la pantalla junto al haz (`MatchFx`, cámara de la interfaz); **escudo**: burbuja dibujada que se encoge como antes (`PlayerView`, transparencia 0,55).
+  - **Proyectiles con dibujo**: bocadillos de ChatGPT, estrellas de Gemini y bombas de Donate (la explosión de la bomba reutiliza la del cañón, más pequeña: `burstScale`).
+  - **Especiales** (`render/SpecialFx.ts`): mano naranja de Claude delante de Riga mientras dura el contraataque; cursor que parpadea en el borde al escribir el prompt y hace clic al tirar; humo de Robert girando alrededor de la cabeza (delante y detrás); **llamas a los pies al cargar** un fuerte o un especial cargable, que crecen con la carga y bailan al máximo.
+  - Fuera el código que dibujaba bombas, bocadillos y estrellas con formas (`aiIcons.ts` solo dibuja ya los iconos de la ruleta). Comprobado en el navegador: carga, contraataque, cursor, humo, escudo y chispa fuerte.
+
 - **Estética: que parezca un producto terminado (22 nov)** — Riga se centra en lo visual; lo técnico lo verá con Samu.
   - **Cuenta atrás "3, 2, 1, ¡YA!"** antes de cada partida (no en entrenamiento): `World.frozenUntil` hace que se ignoren los controles (`startCountdown`, `isFrozen`; los personajes siguen cayendo a sus plataformas). Online la arranca el servidor en `startMatch` y viaja en `MatchState.frozenUntil`; el cliente no envía ni predice mientras tanto. Números grandes en HTML (`ui/hud/Countdown.ts`) con pitidos.
   - **Haz de KO**: en el borde de la pantalla por donde salió, del color del jugador, apuntando al escenario, con destello y sacudida. Se dibuja en coordenadas de pantalla (cámara de la interfaz) porque la cámara del mundo se recoloca en cuanto alguien muere (`render/MatchFx.ts`).
