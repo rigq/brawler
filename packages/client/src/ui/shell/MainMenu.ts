@@ -33,7 +33,7 @@ export function mainMenu(onChoose: (choice: MenuChoice) => void, onSound: () => 
     show(
       [
         { label: 'Local', note: '2 jugadores, un teclado', run: () => onChoose({ mode: 'versus' }) },
-        { label: 'Entrenamiento', note: 'contra un muñeco', run: () => onChoose({ mode: 'training' }) },
+        { label: 'Entrenamiento', note: 'contra la CPU', run: () => onChoose({ mode: 'training' }) },
         { label: 'Online', note: 'con un código de sala', run: showOnline },
         { label: 'Controles', note: 'tecla H', run: () => setControlsPanelOpen(true) },
         { label: 'Sonido', note: 'música y efectos', run: onSound },

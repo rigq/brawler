@@ -41,6 +41,7 @@ brawler/
 - Hitboxes/hurtboxes rectangulares (AABB). Modo debug con tecla `F1` que las dibuje. Las cajas de los golpes normales salen del dibujo (`tools/hitboxes.ts`): pegan donde está el puño o el pie. El cuerpo mide lo que el dibujo de pie (72 px; Robert 74, Chachin 30×54) y las cajas de ataque se escriben para un cuerpo de referencia de 40×60 que `buildCharacter` adapta a cada uno.
 - Interfaz (menús, selección, pausa, HUD) en **HTML/CSS sobre el lienzo** (`client/src/ui/shell/`, `ui/hud/`), no en Phaser: texto nítido y fácil de animar. `app/App.ts` es la máquina de pantallas; las partidas son escenas que se añaden al empezar y se quitan al salir.
 - Online, el jugador viaja partido en bloques de campos (`PLAYER_PARTS` en `shared/net/protocol.ts`): un esquema de Colyseus admite 63 campos como mucho. Añadir campos a `Player` no requiere tocar nada más.
+- **CPU del entrenamiento** (`shared/src/ai/`): no tiene reglas a mano; prueba cada opción (ataques, saltos, escudo…) en una copia del mundo y elige la mejor. Sus pesos y niveles en `constants.ts` (`BOT_*`). Solo la ejecuta el cliente.
 - Cambios en `shared` → `npm test`. El test de determinismo falla si se cuela algo aleatorio, de reloj o dependiente del orden.
 
 ## Online (fase F3)
@@ -58,7 +59,7 @@ brawler/
 - `npm install` — instalar todo
 - `npm run dev` — cliente (http://localhost:5173: menú principal → selección de personaje → partida; Esc pausa). Escucha también en la red local (`vite --host`): la línea "Network" que imprime es la dirección para otros PCs de la misma red
 - `npm run dev:server` — servidor Colyseus en local (puerto 2567; Node 24 ejecuta `.ts` directamente)
-- Atajos de desarrollo (se saltan los menús): `?local`, `?training` (R reinicia, 8 escudo del muñeco, 9/0 cambian su %), `?online` (crea sala), con `?p1=samu&p2=chachin`
+- Atajos de desarrollo (se saltan los menús): `?local`, `?training` (contra la CPU; R reinicia, 7 cambia el rival: CPU experta / normal / muñeco, 8 escudo del muñeco, 9/0 cambian su %), `?online` (crea sala), con `?p1=samu&p2=chachin`
 - `node tools/pixelate.ts art/<personaje>/sprites.json` — limpia los sprites generados con IA y los deja en `packages/client/public/sprites/` (JPG: Windows lo lee solo; Linux/Mac necesitan ImageMagick). Con `art/<personaje>/anim/sprites.json` el personaje usa sus animaciones sin tocar código
 - Online (necesita `npm run dev:server`): Online → Crear sala; el enlace `?online=CÓDIGO` lleva a la selección de personaje y entra en esa sala. Cada jugador elige su personaje
 - `&lag=150` — (solo desarrollo) simula 150 ms de lag en los mensajes enviados
@@ -66,6 +67,7 @@ brawler/
 - `npm run typecheck` — comprobar tipos en los tres paquetes (tests incluidos)
 - `npm test` — tests con `node:test` (determinismo, reglas, proyectiles, red); el CI de GitHub pasa typecheck + tests + build en cada push
 - `node tools/hitboxes.ts` — saca las cajas de golpe de los puños y pies dibujados en cada tira (`shared/characters/artHitboxes.ts`). Ejecutarlo después de cambiar la tira de un ataque
+- `node tools/bot-match.ts [p1 p2]` — pone a prueba la CPU del entrenamiento (`shared/src/ai/`): partidas CPU contra CPU (`LEVELS=expert,normal`) o contra un machacabotones (`LEVELS=expert,masher`); muestra KOs, caídas propias y ms por tick. Usarlo después de tocar la CPU o los números del combate
 - `node tools/ko-percent.ts [atacante]` — a qué % muere cada personaje (golpe fuerte lateral y arriba desde el borde, sin intentar volver y volviendo como un jugador; golpea Samu salvo que se nombre otro). Usarlo antes y después de tocar gravedad, velocidades, knockback o límites
 - `docs/DEPLOY.md` — cómo desplegar (L3): `Dockerfile` del servidor, `VITE_SERVER_URL` para el cliente
 

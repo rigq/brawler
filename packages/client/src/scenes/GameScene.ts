@@ -53,9 +53,8 @@ export class GameScene extends Phaser.Scene {
       // With menus around (App), the victory screen has the rematch button instead.
       if (!this.hooks.onMatchOver) new RematchInput(this, () => this.rematch());
     }
-    this.inputs = this.world.players.map((_, i) =>
-      this.training && i === DUMMY_SLOT ? this.training.dummyInput : this.createInput(i),
-    );
+    // In training the rival's buttons come from TrainingMode, step by step (the CPU thinks every tick).
+    this.inputs = this.world.players.map((_, i) => this.createInput(i));
     if (import.meta.env.DEV) exposeForDebugging(this.world, this.game);
   }
 
@@ -66,6 +65,7 @@ export class GameScene extends Phaser.Scene {
     const steps = this.accumulator.consume(delta);
     for (let i = 0; i < steps; i++) {
       this.training?.beforeStep(this.world);
+      if (this.training) frameInputs[DUMMY_SLOT] = this.training.rivalInput(this.world, frameInputs[0]!);
       stepWorld(this.world, frameInputs);
       this.training?.afterStep(this.world);
     }

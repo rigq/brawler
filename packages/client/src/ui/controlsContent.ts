@@ -122,8 +122,9 @@ const GAME_KEYS: ControlsSection = {
     ['Enter, R o Start', 'Revancha al terminar'],
     ['Esc', 'Pausa: cambiar personaje, controles o salir'],
     ['R', 'Reiniciar (entrenamiento)'],
+    ['7', 'Rival: CPU experta, CPU normal o muñeco (entrenamiento)'],
     ['8', 'El muñeco se cubre o no (entrenamiento)'],
-    ['9 / 0', '−10 % / +10 % al muñeco (entrenamiento)'],
+    ['9 / 0', '−10 % / +10 % al rival (entrenamiento)'],
   ],
 };
 

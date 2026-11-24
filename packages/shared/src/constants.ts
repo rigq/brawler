@@ -689,3 +689,60 @@ export const SERVER_CLOCK_CORRECTION = 0.1;
 export const SERVER_CLOCK_SNAP_TICKS = 15;
 /** A player whose connection drops keeps their seat this long (s); the match pauses meanwhile. */
 export const RECONNECT_GRACE_SECONDS = 20;
+
+// --- Training CPU (ai/) ---
+/**
+ * The CPU tries each option it has (every attack, jump, shield, dodge…) in a
+ * copy of the world, this many ticks ahead, and keeps the best one.
+ */
+export const BOT_HORIZON_TICKS = 45;
+/** Off the stage it looks further ahead: getting back takes a while. */
+export const BOT_RECOVERY_HORIZON_TICKS = 110;
+/**
+ * How good it is. reactionTicks: an attack or shot it has not seen for this long
+ * does not exist for it yet (a person needs ~15–20). replanTicks: while moving or
+ * shielding it rethinks every this many ticks. noise: random points added to
+ * every option, so it is not predictable (more = more mistakes).
+ */
+export const BOT_LEVELS = {
+  expert: { reactionTicks: 9, replanTicks: 3, noise: 1.5, label: 'CPU experta' },
+  normal: { reactionTicks: 24, replanTicks: 10, noise: 14, label: 'CPU normal' },
+} as const;
+/** What an option is worth, in "points" at the end of its look-ahead. */
+export const BOT_SCORE = {
+  /** Per % of damage dealt / taken. Taking hurts more: it plays safe. */
+  dealt: 1,
+  taken: 1.4,
+  /** Knocking the rival out / being knocked out. */
+  rivalKo: 150,
+  selfKo: 600,
+  /** Per px/s the rival flies at after the hit, weighted by their damage /100 (hits that kill are worth more). */
+  launch: 0.02,
+  /** Per tick stuck in an attack's end, close to a rival who is free to punish. */
+  exposed: 0.35,
+  /** Per tick busy in its own attack (or charging it), hit or miss: shots from afar are not free. */
+  commit: 0.08,
+  /** Closer than this (px between centres) the rival can punish. */
+  exposedRange: 130,
+  /** Per % of shield taken off the rival. */
+  shieldPressure: 0.08,
+  /** Per px away from the middle of the stage (it stays away from the edges). */
+  center: 0.012,
+  /** Per px away from its favourite distance to the rival, ×(1 + their damage/100): keeps the pressure on, more so to finish. */
+  spacing: 0.04,
+  idealRange: 75,
+  /** Ending off the stage. */
+  offstage: 25,
+  /** Per px the rival ends away from the ledge while off the stage, ×(1 + their damage/100): sends them out and keeps them out. */
+  rivalOut: 0.06,
+} as const;
+/**
+ * It cannot know what the rival will press, so each option is scored against
+ * two guesses: the rival keeps moving as it was, or it shields (in the air: dodges).
+ * The weights say how much each guess counts.
+ */
+export const BOT_RIVAL_GUESSES = { moves: 0.65, shields: 0.35 } as const;
+/** Only the best this many options (against a rival who keeps moving) are also tried against one who shields. */
+export const BOT_SHORTLIST = 10;
+/** Further than this from the rival (px), it does not bother trying its close attacks. */
+export const BOT_ATTACK_RANGE = { x: 260, y: 220 } as const;

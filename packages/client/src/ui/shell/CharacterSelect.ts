@@ -8,7 +8,7 @@ import type { Screen } from './Shell.ts';
 
 /**
  * 'versus': P1 and P2 pick at the same time with their own keys.
- * 'training': P1 picks a fighter, then the dummy.
+ * 'training': P1 picks a fighter, then the rival (the CPU, or a dummy).
  * 'online': P1 picks; the rival picks on their own screen.
  */
 export type SelectMode = 'versus' | 'training' | 'online';
@@ -41,7 +41,7 @@ export function characterSelect(
   const startCursor = (i: number) => Math.max(0, CHARACTER_IDS.indexOf(current[i] ?? CHARACTER_IDS[i]!));
   const seats: Seat[] = [
     { cursor: startCursor(0), ready: false, controller: 0, label: 'P1' },
-    { cursor: startCursor(1), ready: false, controller: mode === 'versus' ? 1 : null, label: mode === 'training' ? 'Muñeco' : 'P2' },
+    { cursor: startCursor(1), ready: false, controller: mode === 'versus' ? 1 : null, label: mode === 'training' ? 'CPU' : 'P2' },
   ];
   const roster = h('div', 'roster');
   const panels = seats.map((_, i) => h('div', `fighter fighter--p${i + 1}`));
@@ -65,7 +65,7 @@ export function characterSelect(
     const button = h(
       'button',
       `card${here.includes(0) ? ' has-p1' : ''}${here.includes(1) ? ' has-p2' : ''}`,
-      h('div', 'card__tags', ...here.map((i) => h('span', `tag tag--p${i + 1}`, seats[i]!.label === 'Muñeco' ? 'CPU' : seats[i]!.label))),
+      h('div', 'card__tags', ...here.map((i) => h('span', `tag tag--p${i + 1}`, seats[i]!.label))),
       headPortrait(id, CARD_PORTRAIT),
       h('span', 'display card__name', characterOf({ characterId: id }).name),
     );

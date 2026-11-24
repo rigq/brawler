@@ -65,15 +65,16 @@ En el aire no te giras: "adelante" y "atrás" dependen de hacia dónde mirabas a
 | Enter, R o Start | Revancha (partida local, al terminar) |
 | Esc | Pausa (online: menú): continuar, cambiar personaje, controles, sonido o salir |
 | R | Reiniciar (entrenamiento) |
+| 7 | Rival del entrenamiento: CPU experta → CPU normal → muñeco |
 | 8 | El muñeco se cubre o deja de cubrirse (entrenamiento) |
-| 9 / 0 | −10 % / +10 % al muñeco (entrenamiento) |
+| 9 / 0 | −10 % / +10 % al rival (entrenamiento) |
 
 ## Direcciones (hasta que haya menú)
 
 | Dirección | Modo |
 | --- | --- |
 | http://localhost:5173 | 1 contra 1 en el mismo teclado |
-| `?training` | Entrenamiento contra un muñeco |
+| `?training` | Entrenamiento contra la CPU (7 cambia a muñeco) |
 | `?p1=samu&p2=chachin` | Elegir personajes: `donate`, `robert`, `samu`, `chachin` (sin elegir: Donate contra Robert). Online los elige quien crea la sala: `?online&p1=donate&p2=donate` |
 | `?online` | Crear sala online (comparte el enlace `?online=CÓDIGO`) |
 

@@ -12,12 +12,14 @@ const LIVE_COLOR = '#ffffff';
 /** The last combo stays on screen, dimmed, once the target escapes. */
 const ENDED_ALPHA = 0.45;
 const HELP_COLOR = '#c9d1e0';
-const HELP_TEXT = 'R reiniciar   8 escudo del muñeco   9 / 0  −/+ 10 %';
+const HELP_TEXT = 'R reiniciar   7 rival   8 escudo del muñeco   9 / 0  −/+ 10 %';
+const RIVAL_COLOR = '#ffd166';
 
 /** Training mode panel, top-right: current combo, best combo and the keys. */
 export class TrainingHud {
   private readonly combo: Phaser.GameObjects.Text;
   private readonly best: Phaser.GameObjects.Text;
+  private readonly rival: Phaser.GameObjects.Text;
   private readonly objects: Phaser.GameObjects.GameObject[];
 
   constructor(scene: Phaser.Scene) {
@@ -28,14 +30,16 @@ export class TrainingHud {
     this.combo = scene.add.text(x, TOP + 30, '', { ...FONT, fontSize: '34px', color: LIVE_COLOR }).setOrigin(1, 0);
     this.best = scene.add.text(x, TOP + 74, '', { ...FONT, fontSize: '16px', color: HELP_COLOR }).setOrigin(1, 0);
     const help = scene.add.text(x, TOP + 98, HELP_TEXT, { ...FONT, fontSize: '14px', color: HELP_COLOR }).setOrigin(1, 0);
-    this.objects = [title, this.combo, this.best, help];
+    this.rival = scene.add.text(x, TOP + 118, '', { ...FONT, fontSize: '14px', color: RIVAL_COLOR }).setOrigin(1, 0);
+    this.objects = [title, this.combo, this.best, help, this.rival];
   }
 
   get gameObjects(): Phaser.GameObjects.GameObject[] {
     return this.objects;
   }
 
-  update(current: ComboStats, best: ComboStats, live: boolean): void {
+  update(current: ComboStats, best: ComboStats, live: boolean, rival: string): void {
+    this.rival.setText(`Rival: ${rival}`);
     this.combo.setText(current.hits > 0 ? describe(current) : '—').setAlpha(live ? 1 : ENDED_ALPHA);
     this.best.setText(best.hits > 0 ? `Mejor: ${describe(best)}` : '');
   }
